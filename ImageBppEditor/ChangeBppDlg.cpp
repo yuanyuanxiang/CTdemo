@@ -148,6 +148,7 @@ void CChangeBppDlg::Bpp8To24()
 			*(pDstTemp + 2) = *(pDstTemp + 1) = *pDstTemp = *pSrcTemp;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 8位色转32位色
@@ -175,6 +176,7 @@ void CChangeBppDlg::Bpp8To32()
 			*(pDstTemp + 2) = *(pDstTemp + 1) = *pDstTemp = *pSrcTemp;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 24位色转8位色
@@ -211,6 +213,7 @@ void CChangeBppDlg::Bpp24To8()
 			*pDstTemp = (9798 * R + 19235 * G + 3735 * B) / 32768;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 24位色转32位色
@@ -241,6 +244,7 @@ void CChangeBppDlg::Bpp24To32()
 			*pDstTemp = *pSrcTemp;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 32位色转8位色
@@ -278,6 +282,7 @@ void CChangeBppDlg::Bpp32To8()
 			*pDstTemp = (9798 * R + 19235 * G + 3735 * B) / 32768;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 32位色转24位色
@@ -307,6 +312,7 @@ void CChangeBppDlg::Bpp32To24()
 			*pDstTemp = *pSrcTemp;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 将二进制图像转换为8位色图像
@@ -344,6 +350,7 @@ void CChangeBppDlg::Bpp1To8()
 			*pDstTemp = 255 * temp;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 将二进制图像转换为24位色图像
@@ -374,6 +381,7 @@ void CChangeBppDlg::Bpp1To24()
 			*pDstTemp = *(pDstTemp + 1) = *(pDstTemp + 2) = 255 * temp;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 // 将二进制图像转换为32位色图像
@@ -404,6 +412,7 @@ void CChangeBppDlg::Bpp1To32()
 			*pDstTemp = *(pDstTemp + 1) = *(pDstTemp + 2) = 255 * temp;
 		}
 	}
+	SAFE_DELETE(pSrc);
 }
 
 int CChangeBppDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)

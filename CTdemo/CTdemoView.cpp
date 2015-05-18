@@ -42,15 +42,15 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_COMMAND(ID_TOOLBAR_BPP, &CCTdemoView::OnToolbarBpp)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_BPP, &CCTdemoView::OnUpdateToolbarBpp)
 	ON_WM_CREATE()
-	ON_COMMAND(ID_TOOLBAR_TRS, &CCTdemoView::OnToolbarTrs)
-	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_TRS, &CCTdemoView::OnUpdateToolbarTrs)
+	ON_COMMAND(ID_TOOLBAR_TRS, &CCTdemoView::OnToolbarTransform)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_TRS, &CCTdemoView::OnUpdateToolbarTransform)
 	ON_COMMAND(ID_TOOLBAR_PRJ, &CCTdemoView::OnToolbarProject)
-	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PRJ, &CCTdemoView::OnUpdateToolbarPrj)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PRJ, &CCTdemoView::OnUpdateToolbarProject)
 	ON_COMMAND(ID_PROJECT_SETTINGS, &CCTdemoView::OnProjectSettings)
 	ON_COMMAND(ID_SAVE_PROJECT, &CCTdemoView::OnSaveProjectImg)
 	ON_UPDATE_COMMAND_UI(ID_SAVE_PROJECT, &CCTdemoView::OnUpdateSaveProjectImg)
 	ON_COMMAND(ID_TOOLBAR_CONV, &CCTdemoView::OnToolbarConvolute)
-	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_CONV, &CCTdemoView::OnUpdateToolbarConv)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_CONV, &CCTdemoView::OnUpdateToolbarConvolute)
 	ON_COMMAND(ID_TOOLBAR_BKP, &CCTdemoView::OnToolbarBackProject)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_BKP, &CCTdemoView::OnUpdateToolbarBackProject)
 	ON_COMMAND(ID_SAVE_BACK_PROJECT_IMG, &CCTdemoView::OnSaveBackProjectImg)
@@ -60,10 +60,10 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_COMMAND(ID_TOOLBAR_POPUP, &CCTdemoView::OnToolbarPopupImage)
 	ON_WM_TIMER()
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_POPUP, &CCTdemoView::OnUpdateToolbarPopupImage)
-	ON_COMMAND(ID_CONV_USING_GPU, &CCTdemoView::OnConvUsingGpu)
-	ON_UPDATE_COMMAND_UI(ID_CONV_USING_GPU, &CCTdemoView::OnUpdateConvUsingGpu)
-	ON_COMMAND(ID_BKP_USING_GPU, &CCTdemoView::OnBkpUsingGpu)
-	ON_UPDATE_COMMAND_UI(ID_BKP_USING_GPU, &CCTdemoView::OnUpdateBkpUsingGpu)
+	ON_COMMAND(ID_CONV_USING_GPU, &CCTdemoView::OnConvoluteUsingGpu)
+	ON_UPDATE_COMMAND_UI(ID_CONV_USING_GPU, &CCTdemoView::OnUpdateConvoluteUsingGpu)
+	ON_COMMAND(ID_BKP_USING_GPU, &CCTdemoView::OnBackProjectUsingGpu)
+	ON_UPDATE_COMMAND_UI(ID_BKP_USING_GPU, &CCTdemoView::OnUpdateBackProjectUsingGpu)
 	ON_COMMAND(ID_TOOLBAR_ZOOM_IN, &CCTdemoView::OnToolbarZoomIn)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_ZOOM_IN, &CCTdemoView::OnUpdateToolbarZoomIn)
 	ON_COMMAND(ID_TOOLBAR_ZOOM_OUT, &CCTdemoView::OnToolbarZoomOut)
@@ -85,18 +85,18 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_PAN_RECONSTRUCT, &CCTdemoView::OnUpdatePanReconstruct)
 	ON_COMMAND(ID_FAN_SCAN_SETTINGS, &CCTdemoView::OnFanScanSettings)
 	ON_COMMAND(ID_AMP_PAN_PROJECT, &CCTdemoView::OnGpuPanProject)
-	ON_UPDATE_COMMAND_UI(ID_AMP_PAN_PROJECT, &CCTdemoView::OnUpdateAmpPanProject)
+	ON_UPDATE_COMMAND_UI(ID_AMP_PAN_PROJECT, &CCTdemoView::OnUpdateGpuPanProject)
 	ON_COMMAND(ID_CUDA_PAN_PROJECT, &CCTdemoView::OnCudaPanProject)
 	ON_UPDATE_COMMAND_UI(ID_CUDA_PAN_PROJECT, &CCTdemoView::OnUpdateCudaPanProject)
-	ON_COMMAND(ID_SHOW_ALL_IMAGE, &CCTdemoView::OnShowAllImage)
-	ON_COMMAND(ID_CHANGE_IMAGE_SHOW, &CCTdemoView::OnChangeImageShow)
+	ON_COMMAND(ID_CHANGE_IMAGE_SHOW, &CCTdemoView::OnChangeImageShowNext)
+	ON_COMMAND(ID_CHANGE_IMAGE_SHOW_PREV, &CCTdemoView::OnChangeImageShowPrev)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
 
 CCTdemoView::CCTdemoView()
 {
-	// 根据CPU核心数确定参数
+	// 根据CPU的核心数目确定此参数
 	int nKernels = omp_get_num_procs();
 	switch (nKernels / 6)
 	{
@@ -147,7 +147,7 @@ void CCTdemoView::OnDraw(CDC* pDC)
 	if (!pDoc)
 		return;
 
-	if (m_pCurrent != NULL)
+	if (!CHECK_IMAGE_NULL(m_pCurrent))
 	{
 		m_pCurrent->Draw(pDC->GetSafeHdc(), m_PaintRect, Gdiplus::InterpolationModeBicubic);
 	}
@@ -230,20 +230,24 @@ void CCTdemoView::OnInitialUpdate()
 	CCTdemoDoc* pDoc = GetDocument();
 	int width = 0;
 	int height = 0;
-	if (pDoc->m_pImage != NULL)
+	if (!CHECK_IMAGE_NULL(pDoc->m_pImage))
 	{
 		width = pDoc->m_nWidth;
 		height = pDoc->m_nHeight;
+		m_nCurrent = 0;
 	}
-	else if (pDoc->m_pProject != NULL)
+	else if (!CHECK_IMAGE_NULL(pDoc->m_pProject))
 	{
 		width = pDoc->m_nAnglesNum;
 		height = pDoc->m_nRaysNum;
+		m_nCurrent = 1;
 	}
+	// 设置绘图矩形
 	SetPaintRect(0, 0, width, height);
 }
 
 
+// 仅根据m_PaintRect参数重绘一次
 void CCTdemoView::RePaint()
 {
 	if (m_bRePaint)
@@ -254,6 +258,7 @@ void CCTdemoView::RePaint()
 }
 
 
+// 绘制单个点
 void CCTdemoView::PaintSinglePoint(CDC* pDC, CPoint &point, int nSize)
 {
 	if (m_bMovingImage) return;
@@ -276,12 +281,11 @@ void CCTdemoView::PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBott
 }
 
 
-// 检查是否可以缩放，缩放不会超界，并且设置缩放后的绘图区域
+// 检查是否可以缩放，缩放不会超界，并且设置缩放后的绘图区域.
 bool CCTdemoView::CheckZoomAble(float xRate, float yRate)
 {
-	CyImage *pImage = GetDocument()->m_pImage;
-	int right = m_PaintRect.left + xRate * pImage->GetWidth();
-	int bottom = m_PaintRect.top + xRate * pImage->GetHeight();
+	int right = m_PaintRect.left + xRate * m_pCurrent->GetWidth();
+	int bottom = m_PaintRect.top + xRate * m_pCurrent->GetHeight();
 	if (right < 0 || bottom < 0)
 		return false;
 	m_PaintRect.right = right;
@@ -378,15 +382,14 @@ void CCTdemoView::OnToolbarBpp()
 	}
 	CCTdemoDoc *pDoc = GetDocument();
 	// ### 注意temp的空间是由DLL分配的。 ###
-	pDllFunc(pDoc->m_pImage);
+	pDllFunc(m_pCurrent);
 	Invalidate(TRUE);
 }
 
 
 void CCTdemoView::OnUpdateToolbarBpp(CCmdUI *pCmdUI)
 {
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL && pDoc->m_nBPP >= 8);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 }
 
 // 欲翻译消息
@@ -404,32 +407,28 @@ int CCTdemoView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-// 旋转图片
-void CCTdemoView::OnToolbarTrs()
+// 旋转当前图片
+void CCTdemoView::OnToolbarTransform()
 {
-	// TODO: 在此添加命令处理程序代码
-	CCTdemoDoc *pDoc = GetDocument();
 	CDlgRotateAngle dlg(this);
 	if (dlg.DoModal() == IDOK)
 	{
 		if (dlg.m_fRotateAngle == 0)
 			return;
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
-		float* pSrc = pDoc->m_pImage->Rotate(RAD(dlg.m_fRotateAngle), 0, 0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
-		pDoc->m_pImage->Create(pSrc, NewWidth, NewHeight, NewRowlen);
+		float* pSrc = m_pCurrent->Rotate(RAD(dlg.m_fRotateAngle), 0, 0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+		m_pCurrent->Create(pSrc, NewWidth, NewHeight, NewRowlen);
 		Invalidate();
 	}
 }
 
 
-void CCTdemoView::OnUpdateToolbarTrs(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateToolbarTransform(CCmdUI *pCmdUI)
 {
-	// TODO: 在此添加命令更新用户界面处理程序代码
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL && pDoc->m_nBPP >= 8);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 }
 
-// radon变换：生成投影图像
+// 原始图像radon变换：生成投影图像.
 void CCTdemoView::OnToolbarProject()
 {
 	// TODO: 在此添加命令处理程序代码
@@ -446,20 +445,19 @@ void CCTdemoView::OnToolbarProject()
 		if (Stat == IDNO)
 			pDoc->RadonTransform();
 		else if (Stat == IDYES)
-			pDoc->OnPrjUsingGpu();
+			pDoc->OnProjectUsingGpu();
 	}
 	else pDoc->RadonTransform();
 }
 
 
-void CCTdemoView::OnUpdateToolbarPrj(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateToolbarProject(CCmdUI *pCmdUI)
 {
-	// TODO: 在此添加命令更新用户界面处理程序代码
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL && pDoc->m_nBPP >= 8);
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 }
 
-// 投影设置：角度个数和射线条数。
+// 投影设置：角度个数和射线条数.
 void CCTdemoView::OnProjectSettings()
 {
 	// TODO: 在此添加命令处理程序代码
@@ -486,19 +484,16 @@ void CCTdemoView::OnProjectSettings()
 // 保存投影到图像
 void CCTdemoView::OnSaveProjectImg()
 {
-	// TODO: 在此添加命令处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
 	if (pDoc->m_pProject->Save() != true)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
 }
 
 
-// 另存投影图像
 void CCTdemoView::OnUpdateSaveProjectImg(CCmdUI *pCmdUI)
 {
-	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pProject != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
 extern const char* cudaConvolute(float* h_pDst, float* h_prj, int row, int col, float delta_r, float w0);
@@ -546,6 +541,7 @@ void CCTdemoView::OnToolbarConvolute()
 				break;
 			}
 		}
+		// 拷贝数据，以显示图像
 		pDoc->m_pAfterFilter->MemcpyFloatToByte();
 		pDoc->OnWindowAfterFilter();
 		EndWaitCursor();
@@ -553,11 +549,10 @@ void CCTdemoView::OnToolbarConvolute()
 }
 
 
-void CCTdemoView::OnUpdateToolbarConv(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateToolbarConvolute(CCmdUI *pCmdUI)
 {
-	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pProject != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
 extern const char* cudaBackProject(float* pDst, float* prj, int width, int height, int rays, int angles, float delta_r, float delta_fai);
@@ -569,11 +564,11 @@ void CCTdemoView::OnToolbarBackProject()
 	CCTdemoDoc *pDoc = GetDocument();
 	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
 	BeginWaitCursor();
-	float *pRadon = NULL;
-	if (pDoc->m_pAfterFilter != NULL)
-		pRadon = pDoc->m_pAfterFilter->m_pfFloat;
+	float *pRadonSrc = NULL;
+	if (!CHECK_IMAGE_NULL(pDoc->m_pAfterFilter))
+		pRadonSrc = pDoc->m_pAfterFilter->m_pfFloat;
 	else
-		pRadon = pDoc->m_pProject->m_pfFloat;
+		pRadonSrc = pDoc->m_pProject->m_pfFloat;
 	if (m_bUsingGpu == false && (pDoc->m_nWidth > m_nCpuMaxImageSize || pDoc->m_nHeight > m_nCpuMaxImageSize))
 	{
 		if(MessageBox(_T("采样比较密集，用CPU处理比较费时，是否加速？\n请用CUDA加速，方法：菜单->编辑->加速重建。"), 
@@ -582,7 +577,7 @@ void CCTdemoView::OnToolbarBackProject()
 	}
 	if (m_bUsingGpu)
 	{
-		const char* result = cudaBackProject(pDoc->m_pReconstruct->m_pfFloat, pRadon, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation);
+		const char* result = cudaBackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation);
 		if (result != NULL)
 		{
 			CString str(result);
@@ -599,10 +594,10 @@ void CCTdemoView::OnToolbarBackProject()
 		switch(pDoc->m_nProjectionType)
 		{
 		case PROJECT_TYPE_PAR:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadon, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation);
 			break;
 		case PROJECT_TYPE_PAN:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadon, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 			break;
 		default:
 			break;
@@ -616,15 +611,13 @@ void CCTdemoView::OnToolbarBackProject()
 
 void CCTdemoView::OnUpdateToolbarBackProject(CCmdUI *pCmdUI)
 {
-	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pProject != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
 
 void CCTdemoView::OnSaveBackProjectImg()
 {
-	// TODO: 在此添加命令处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
 	if(pDoc->m_pReconstruct->Save() != true)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
@@ -633,15 +626,13 @@ void CCTdemoView::OnSaveBackProjectImg()
 
 void CCTdemoView::OnUpdateSaveBackProjectImg(CCmdUI *pCmdUI)
 {
-	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pReconstruct != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pReconstruct));
 }
 
 
 void CCTdemoView::OnSaveAfterFilterImg()
 {
-	// TODO: 在此添加命令处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
 	if (pDoc->m_pAfterFilter->Save() != true)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
@@ -650,16 +641,15 @@ void CCTdemoView::OnSaveAfterFilterImg()
 
 void CCTdemoView::OnUpdateSaveAfterFilterImg(CCmdUI *pCmdUI)
 {
-	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pAfterFilter != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pAfterFilter));
 }
 
 
 void CCTdemoView::OnToolbarPopupImage()
 {
 	CCTdemoDoc *pDoc = GetDocument();
-	pDoc->Popup(pDoc->m_pImage);
+	pDoc->Popup(m_pCurrent);
 }
 
 
@@ -667,20 +657,30 @@ void CCTdemoView::OnUpdateToolbarPopupImage(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 }
 
 
 // 用以做些定时计划
 void CCTdemoView::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-
+	switch (nIDEvent)
+	{
+	case VIEWS_SYNCHRONIZE:
+		if (m_bRePaint)
+		{
+			// do something
+			m_bRePaint = false;
+		}
+		break;
+	default:
+		break;
+	}
 	CScrollView::OnTimer(nIDEvent);
 }
 
 
-void CCTdemoView::OnConvUsingGpu()
+void CCTdemoView::OnConvoluteUsingGpu()
 {
 	// TODO: 在此添加命令处理程序代码
 	m_bUsingGpu = true;
@@ -688,15 +688,15 @@ void CCTdemoView::OnConvUsingGpu()
 }
 
 
-void CCTdemoView::OnUpdateConvUsingGpu(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateConvoluteUsingGpu(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pProject != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
 
-void CCTdemoView::OnBkpUsingGpu()
+void CCTdemoView::OnBackProjectUsingGpu()
 {
 	// TODO: 在此添加命令处理程序代码
 	m_bUsingGpu = true;
@@ -704,56 +704,18 @@ void CCTdemoView::OnBkpUsingGpu()
 }
 
 
-void CCTdemoView::OnUpdateBkpUsingGpu(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateBackProjectUsingGpu(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
 	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pProject != NULL && pDoc->m_pAfterFilter != NULL);
-}
-
-
-BYTE* CCTdemoView::GetImageHeadAddress()
-{
-	CyImage *pImage = GetDocument()->m_pImage;
-	if (pImage == NULL)
-		return NULL;
-	return (BYTE *)pImage->GetBits() + pImage->GetPitch() * ( pImage->GetHeight() - 1 );
-}
-
-
-BYTE* CCTdemoView::GetImageLineAddress(int LineID)
-{
-	BYTE *temp = GetImageHeadAddress();
-	if ( temp == NULL )
-		return NULL;
-	CyImage *pImage = GetDocument()->m_pImage;
-	return temp + LineID * abs( pImage->GetPitch() );
-}
-
-
-// 获取图像的基本信息
-/*
-int &width		宽度
-int &height		高度
-int &rowlen		每行字节数
-int &bpp		位深度
-int &channel	通道个数
-*/
-void CCTdemoView::GetImageInfomation(int &width, int &height, int &rowlen, int &bpp, int &channel)
-{
-	CyImage *pImage = GetDocument()->m_pImage;
-	width = pImage->GetWidth();
-	height = pImage->GetHeight();
-	rowlen = abs( pImage->GetPitch() );
-	bpp = pImage->GetBPP();
-	channel = bpp / 8;
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
 
 void CCTdemoView::OnToolbarZoomIn()
 {
-	CyImage *pImage = GetDocument()->m_pImage;
-	CHECK_NULL(pImage);
+	if (CHECK_IMAGE_NULL(m_pCurrent))
+		return;
 	m_fZoomRate *= 2.f;
 	if (m_fZoomRate > 128.f)
 		m_fZoomRate = 128.f;
@@ -764,16 +726,15 @@ void CCTdemoView::OnToolbarZoomIn()
 
 void CCTdemoView::OnUpdateToolbarZoomIn(CCmdUI *pCmdUI)
 {
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 	pCmdUI->SetCheck(m_fZoomRate > 1.f);
 }
 
 
 void CCTdemoView::OnToolbarZoomOut()
 {
-	CyImage *pImage = GetDocument()->m_pImage;
-	CHECK_NULL(pImage);
+	if (CHECK_IMAGE_NULL(m_pCurrent))
+		return;
 	m_fZoomRate /= 2.f;
 	if (m_fZoomRate < 1 / 128.f)
 		m_fZoomRate = 1 / 128.f;
@@ -784,16 +745,15 @@ void CCTdemoView::OnToolbarZoomOut()
 
 void CCTdemoView::OnUpdateToolbarZoomOut(CCmdUI *pCmdUI)
 {
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 	pCmdUI->SetCheck(m_fZoomRate < 1.f);
 }
 
 
 void CCTdemoView::OnToolbarZoomDefault()
 {
-	CyImage *pImage = GetDocument()->m_pImage;
-	CHECK_NULL(pImage);
+	if (CHECK_IMAGE_NULL(m_pCurrent))
+		return;
 	m_fZoomRate = 1.f;
 	ZoomPaintRect(m_fZoomRate, m_fZoomRate);
 }
@@ -801,20 +761,19 @@ void CCTdemoView::OnToolbarZoomDefault()
 
 void CCTdemoView::OnUpdateToolbarZoomDefault(CCmdUI *pCmdUI)
 {
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 	pCmdUI->SetCheck(m_fZoomRate == 1.f);
 }
 
 
 void CCTdemoView::OnToolbarFlipH()
 {
-	CyImage *pImage = GetDocument()->m_pImage;
-	CHECK_NULL(pImage);
+	if (CHECK_IMAGE_NULL(m_pCurrent))
+		return;
 	int width, height, rowlen, bpp, channel;
-	GetImageInfomation(width, height, rowlen, bpp, channel);
+	m_pCurrent->GetInfomation(width, height, rowlen, bpp, channel);
 	BYTE* temp = new BYTE[height * rowlen];
-	BYTE* head = GetImageHeadAddress();
+	BYTE* head = m_pCurrent->GetHeadAddress();
 	memcpy(temp, head, height * rowlen);
 
 #pragma omp parallel for
@@ -832,19 +791,18 @@ void CCTdemoView::OnToolbarFlipH()
 
 void CCTdemoView::OnUpdateToolbarFlipH(CCmdUI *pCmdUI)
 {
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 }
 
 
 void CCTdemoView::OnToolbarFlipV()
 {
-	CyImage *pImage = GetDocument()->m_pImage;
-	CHECK_NULL(pImage);
+	if (CHECK_IMAGE_NULL(m_pCurrent))
+		return;
 	int width, height, rowlen, bpp, channel;
-	GetImageInfomation(width, height, rowlen, bpp, channel);
+	m_pCurrent->GetInfomation(width, height, rowlen, bpp, channel);
 	BYTE* temp = new BYTE[height * rowlen];
-	BYTE* head = GetImageHeadAddress();
+	BYTE* head = m_pCurrent->GetHeadAddress();
 	memcpy(temp, head, height * rowlen);
 
 #pragma omp parallel for
@@ -859,14 +817,7 @@ void CCTdemoView::OnToolbarFlipV()
 
 void CCTdemoView::OnUpdateToolbarFlipV(CCmdUI *pCmdUI)
 {
-	CCTdemoDoc *pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
-}
-
-
-bool CCTdemoView::CheckImageNull()
-{
-	return (GetDocument()->m_pImage == NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 }
 
 
@@ -883,7 +834,7 @@ void CCTdemoView::OnLButtonDown(UINT nFlags, CPoint point)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	m_ptLeftButtonDown = point;
 	m_ptMoveOrigin = point;
-	m_bMovingImage = (!CheckImageNull() && CheckPointInRect(m_ptMoveOrigin, m_PaintRect));
+	m_bMovingImage = (!CHECK_IMAGE_NULL(m_pCurrent) && CheckPointInRect(m_ptMoveOrigin, m_PaintRect));
 	CScrollView::OnLButtonDown(nFlags, point);
 }
 
@@ -979,76 +930,21 @@ void CCTdemoView::OnPanProject()
 void CCTdemoView::OnUpdatePanProject(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 }
 
 
 void CCTdemoView::OnPanReconstruct()
 {
-	CCTdemoDoc *pDoc = GetDocument();
-	if (m_bUsingGpu == false && (pDoc->m_nWidth > m_nCpuMaxImageSize || pDoc->m_nHeight > m_nCpuMaxImageSize))
-	{
-		if(MessageBox(_T("采样比较密集，用CPU处理比较费时，是否加速？\n请用CUDA加速，方法：菜单->编辑->加速卷积。"), 
-			_T("提示"), MB_YESNOCANCEL | MB_ICONINFORMATION) == IDYES)
-			m_bUsingGpu = true;
-	}
-	CDlgConvluteW dlg;
-	if (dlg.DoModal() == IDOK)
-	{
-		BeginWaitCursor();
-		pDoc->m_pAfterFilter->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
-		if (m_bUsingGpu)
-		{
-			const char* result = cudaConvolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, dlg.m_fW);
-			if (result != NULL)
-			{
-				CString str(result);
-				AfxMessageBox(_T("程序出现错误。CUDA 错误信息:\n") + str, MB_OK | MB_ICONWARNING);
-				m_bUsingGpu = false;
-				EndWaitCursor();
-				return;
-			}
-			m_bUsingGpu = false;
-		}
-		else 
-		{
-			// 扇形束做卷积需要加权
-			Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
-		}
-		pDoc->m_pAfterFilter->MemcpyFloatToByte();
-	}
-
-	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
-	float *pRadon = pDoc->m_pAfterFilter->m_pfFloat;
-
-	if (m_bUsingGpu)
-	{
-		const char* result = cudaBackProject(pDoc->m_pReconstruct->m_pfFloat, pRadon, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation);
-		if (result != NULL)
-		{
-			CString str(result);
-			AfxMessageBox(_T("程序出现错误。CUDA 错误信息:\n") + str, MB_OK | MB_ICONWARNING);
-			m_bUsingGpu = false;
-			EndWaitCursor();
-			return;
-		}
-		m_bUsingGpu = false;
-	}
-	else
-	{
-		// 扇形束反投影需要加权
-		BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadon, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
-	}
-	pDoc->m_pReconstruct->MemcpyFloatToByte();
-	pDoc->OnWindowBackpro();
-	EndWaitCursor();
+	OnToolbarConvolute();
+	OnToolbarBackProject();
 }
 
 
 void CCTdemoView::OnUpdatePanReconstruct(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pProject != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
 
@@ -1091,15 +987,15 @@ void CCTdemoView::OnFanScanSettings()
 void CCTdemoView::OnGpuPanProject()
 {
 	CCTdemoDoc* pDoc = GetDocument();
+	pDoc->m_bUsingAMP = true;
 	pDoc->PanProject(pDoc->m_fPanSOR, pDoc->m_fPanSOD, pDoc->m_nAnglesNum, pDoc->m_nRaysNum);
 }
 
 
-void CCTdemoView::OnUpdateAmpPanProject(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateGpuPanProject(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
-	pDoc->m_bUsingAMP = true;
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 }
 
 
@@ -1114,13 +1010,7 @@ void CCTdemoView::OnCudaPanProject()
 void CCTdemoView::OnUpdateCudaPanProject(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
-	pCmdUI->Enable(pDoc->m_pImage != NULL);
-}
-
-
-void CCTdemoView::OnShowAllImage()
-{
-	// TODO: 在此添加命令处理程序代码
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 }
 
 
@@ -1130,7 +1020,8 @@ void CCTdemoView::SetCurrentImage(CyImage* pImage)
 		return;
 	m_pCurrent = pImage;
 	SetCurveWndImage(m_pCurrent);
-	if (m_pCurrent != NULL && !m_pCurrent->IsNull())
+	m_fZoomRate = 1.f;
+	if (!CHECK_IMAGE_NULL(m_pCurrent))
 		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->GetWidth(), m_PaintRect.top + m_pCurrent->GetHeight());
 	else 
 		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left, m_PaintRect.top);
@@ -1147,7 +1038,7 @@ void CCTdemoView::SetCurveWndImage(CImage* pImage)
 }
 
 
-void CCTdemoView::OnChangeImageShow()
+void CCTdemoView::OnChangeImageShowNext()
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	m_nCurrent++;
@@ -1157,6 +1048,23 @@ void CCTdemoView::OnChangeImageShow()
 	case 1 : SetCurrentImage(pDoc->m_pProject);						break;
 	case 2 : SetCurrentImage(pDoc->m_pAfterFilter);					break;
 	case 3 : SetCurrentImage(pDoc->m_pReconstruct);m_nCurrent = -1;	break;
+	default:
+		break;
+	}
+}
+
+void CCTdemoView::OnChangeImageShowPrev()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	m_nCurrent--;
+	if (m_nCurrent == -1)
+		m_nCurrent = 3;
+	switch (m_nCurrent)
+	{
+	case 0 : SetCurrentImage(pDoc->m_pImage);						break;
+	case 1 : SetCurrentImage(pDoc->m_pProject);						break;
+	case 2 : SetCurrentImage(pDoc->m_pAfterFilter);					break;
+	case 3 : SetCurrentImage(pDoc->m_pReconstruct);					break;
 	default:
 		break;
 	}

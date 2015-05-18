@@ -4,14 +4,16 @@
 
 #pragma once
 
+#include "SplitterWndDerived.h"
+
 class CChildFrame : public CMDIChildWndEx
 {
 	DECLARE_DYNCREATE(CChildFrame)
 public:
 	CChildFrame();
 
-	CSplitterWnd		m_ImageView;		// 主视图
-	CSplitterWnd		m_SplitterWnd;		// 分割窗口
+	CSplitterWnd			m_ImageView;		// 主视图
+	CSplitterWndDerived		m_SplitterWnd;		// 分割窗口
 
 // 特性
 public:

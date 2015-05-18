@@ -93,6 +93,12 @@ BYTE* CyImage::GetHeadAddress()
 }
 
 
+BYTE* CyImage::GetLineAddress(int LineID)
+{
+	return GetHeadAddress() + LineID * abs(GetPitch());
+}
+
+
 int CyImage::GetChannel()
 {
 	return m_nyChannel;

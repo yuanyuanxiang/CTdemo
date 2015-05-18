@@ -1,6 +1,10 @@
 #pragma once
 
-// CCurveWnd
+// 
+// CCurveWnd - 实现了类似于PhotoShop中“曲线”功能，在陈德峰师兄指导下完成。
+// 2014年4月， 首都师范大学 袁沅祥。
+// 2015年5月 更新，主要解决了8位色、32位色图像带来的各种BUG。
+// 
 
 #include "resource.h"
 #include "CurveWnd.h"
@@ -11,7 +15,11 @@ using namespace std;
 
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(p) if((p) != NULL){ delete [] (p); (p) = NULL; }	//安全删除指针p
-#endif // !SAFE_DELETE
+#endif
+
+#ifndef CHECK_IMAGE_NULL
+#define CHECK_IMAGE_NULL(p) ( ((p) == NULL) || ((p)->IsNull()) ) //检查图像是空
+#endif
 
 #define IDC_COMBOBOX_RGB				1001
 #define IDB_CHOOSE_CURVE				1002
@@ -63,14 +71,13 @@ public:
 	CCTdemoDoc* GetMainDoc();							  /*获取文档指针*/
 
 	void SetImage(CImage* pImage);						  //设置图像指针
-	void ZeroHistogram();								  //直方图归零
-	BOOL GetHistogram();                                  //通过计算，取得直方图
+	BOOL GetHistogram();                                  //取得直方图
 	void InitPegs();									  //初始化pegs
-	void GetImageInfo();								  //获取图像信息
+	void UpdateImageInfo();								  //更新图像信息
 	BOOL PegIsExist(CPoint& point);                       //看peg是否存在
 	POSITION AddNewPeg(CPoint& point);                    //增加新的peg
 	BOOL RePlacePeg(CPoint& point);                       //改变某个peg
-	BOOL UserWillDrag(CPoint& point);                     //看样子用户想增加一个peg
+	BOOL UserWillDrag(CPoint& point);                     //用户想增加一个peg
 	void SplineFunc();                                    //样条插值函数
 	void PieceWiseFunc();                                 //分段线性函数
 	BOOL CursorIsInPaintRect(CPoint& point);              //光标在绘图区域之内
@@ -88,6 +95,16 @@ public:
 	void ReshapePegs(bool bAllRefresh = false);			  //刷新pegs, true为刷新全部, 否则刷新当前
 	void ReshapeTransform(bool bAllRefresh = false);	  //刷新通道变换, true为刷新全部, 否则刷新当前
 
+	/*** 2015年5月 添加 ***/
+	bool m_bModified;
+	int m_nNewRowlen;
+	int m_nNewChannel;
+	int m_nNewlenData;
+	void ApplyToImage();								  //应用到图像
+	void MallocData();									  //分配缓存数据
+	bool DetectModified();								  //检查图像是否更新
+	bool DetectImageChanged();							  //检查图像是否变换
+
 public:
 	//按钮
 	CComboBox*                         m_pComboBoxRGB;    //RGB通道:4
@@ -104,15 +121,15 @@ public:
 	CEdit*                               m_pYPosition;    //Y坐标
 	CStatic*                                m_pXlabel;    //X标签
 	CStatic*                                m_pYlabel;    //Y标签
-
-	//数据
+	CImage*                                  m_pImage;    //CImage指针
+	CFont*                                 m_pAppFont;    //字体
+	int                                   m_nFontSize;    //字体大小
+	CString                                m_FontName;    //字体名
 	d_type*                          m_pfHistogram[4];    //直方图:4*256
 	TRANSFORM                        m_V4Transform[4];    //灰度变换:4*m_nWidth
 	PEGS                               m_pPegsList[4];    //图像选的点:4*m_nWidth
 	CRect*                             m_pOnPaintRect;    //绘图区域
-	BYTE*                                   m_dataSrc;    //图像源数据
-	BYTE*                                   m_curData;    //当前图像数据
-
+	CRect*                                 m_pWndSize;    //当前Wnd大小
 	int                            m_nChannelSelected;    //当前通道
 	BOOL                              m_bUserWillDrag;    //新增peg
 	int                                  m_nRectWidth;    //绘图区宽度
@@ -123,25 +140,16 @@ public:
 	int                                m_nLinePattern;    //线型
 	BOOL                              m_bInverseImage;    //反转图像
 
-	//图像信息
+	// 图像信息 - 图像可能会变化，因此图像信息不合适作为类成员变量.
 	BYTE*                                     m_pBits;    //图像指针
+	BYTE*                                   m_dataSrc;    //图像源数据
+	BYTE*                                   m_curData;    //当前图像数据
 	long                                m_nImageWidth;    //图像宽度
 	long                               m_nImageHeight;    //图像高度
 	long                             m_nPixelQuantity;    //像素个数
 	long                                m_nbytesWidth;    //图像位宽
 	int                                    m_nChannel;    //图像通道
 	DWORD                                  m_nlenData;    //图像长度
-
-	//OnSize
-	CRect*                                 m_pWndSize;    //当前Wnd大小
-
-	//字体
-	CFont*                                 m_pAppFont;    //字体
-	int                                   m_nFontSize;    //字体大小
-	CString                                m_FontName;    //字体名
-
-	//*** CImage ***//
-	CImage*                                  m_pImage;    //CImage指针
 
 protected:
 	DECLARE_MESSAGE_MAP()

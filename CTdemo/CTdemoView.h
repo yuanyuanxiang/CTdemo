@@ -8,14 +8,14 @@
 class CCTdemoDoc;
 class CyImage;
 
-// 定时器 0
-#define WATCH_FOR_REPAINT 0
+// 视图之间同步
+#define VIEWS_SYNCHRONIZE 0
 
 // CPU处理的最大尺寸
-#define CPU_MAX_IMAGE_SIZE 1024
+#define CPU_COMPUTE_MAX_IMAGE_SIZE 1024
 
-// 检测p为NULL则返回
-#define CHECK_NULL(p) 	if ( (p) == NULL ) return;
+// 检测图像p为空，如果是空，结果为1
+#define CHECK_IMAGE_NULL(p) ( ((p) == NULL) || ((p)->IsNull()) )
 
 class CCTdemoView : public CScrollView
 {
@@ -29,41 +29,37 @@ public:
 
 // 操作
 public:
-	int			m_nCurrent;								// 当前图像标记
+	int			m_nCurrent;								// 当前图像标记号
 	CyImage*	m_pCurrent;								// 当前显示的图像
 	CRect		m_PaintRect;							// 绘图区域
 	CRect		m_ClientRect;							// 客户区域
-	CRect		m_SelectedRect;							// 被选中区域
-	bool		m_bRePaint;								// 是否重绘
-	bool		m_bUsingGpu;							// 是否采用加速
+	CRect		m_SelectedRect;							// 被选中举行区域
+	bool		m_bRePaint;								// 是否重绘图像
+	bool		m_bUsingGpu;							// 是否采用GPU
 	bool		m_bMovingImage;							// 是否移动图像
 	bool		m_bRightButtonDown;						// 右键被按下
-	HINSTANCE	m_hBppEditorDll;						// 动态链接库
-	float		m_fZoomRate;							// 放大倍率
+	HINSTANCE	m_hBppEditorDll;						// BPP动态链接库
+	float		m_fZoomRate;							// 图像放大倍率
 	CPoint		m_ptLeftButtonDown;						// 左键按下的点
-	CPoint		m_ptLeftButtonUp;						// 左键按起的点
+	CPoint		m_ptLeftButtonUp;						// 左键释放的点
 	CPoint		m_ptRightButtonDown;					// 右键按下的点
-	CPoint		m_ptRightButtonUp;						// 右键按起的点
+	CPoint		m_ptRightButtonUp;						// 右键释放的点
 	CPoint		m_ptMoveOrigin;							// 鼠标移动起点
 	CPoint		m_ptMouseMoving;						// 鼠标移动当前点
-	int			m_nPointSize;							// 点的大小
+	int			m_nPointSize;							// 绘制点的大小
 	int			m_nCpuMaxImageSize;						// 用CPU处理的最大尺寸
 
 	void		RePaint();								// 重绘图像
 	void		PaintSinglePoint(CDC* pDC, CPoint &point, int nSize = 3);
 	void		PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBottom);
 	void		ShowRGBValue(CPoint &point);			// 显示选中点的色彩
-	bool		CheckPointInRect(CPoint &point, CRect &rect);
-	bool		CheckImageNull();						// 检查图像是否为空
+	bool		CheckPointInRect(CPoint &point, CRect &rect);//检查点在矩形内
 	bool		CheckZoomAble(float xRate, float yRate);// 检查是否可以缩放
 	void		SetPaintRect(int left, int top, int right, int bottom);
 	bool		ZoomPaintRect(float xRate, float yRate);// 放大绘图区
-	void		MovePaintRect(int dx, int dy, CRect &rect);
-	BYTE*		GetImageHeadAddress();					// 获取图像首地址
-	BYTE*		GetImageLineAddress(int LineID);		// 获取图像某行地址
-	void		GetImageInfomation(int &width, int &height, int &rowlen, int &bpp, int &channel);
-	void		SetCurrentImage(CyImage* pImage);
-	void		SetCurveWndImage(CImage* pImage);
+	void		MovePaintRect(int dx, int dy, CRect &rect);// 移动绘图区域
+	void		SetCurrentImage(CyImage* pImage);		// 设置当前图像
+	void		SetCurveWndImage(CImage* pImage);		// 设置曲线图像
 
 // 重写
 public:
@@ -99,15 +95,15 @@ public:
 	afx_msg void OnUpdateToolbarBpp(CCmdUI *pCmdUI);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnToolbarTrs();
-	afx_msg void OnUpdateToolbarTrs(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarTransform();
+	afx_msg void OnUpdateToolbarTransform(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarProject();
-	afx_msg void OnUpdateToolbarPrj(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateToolbarProject(CCmdUI *pCmdUI);
 	afx_msg void OnProjectSettings();
 	afx_msg void OnSaveProjectImg();
 	afx_msg void OnUpdateSaveProjectImg(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarConvolute();
-	afx_msg void OnUpdateToolbarConv(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateToolbarConvolute(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarBackProject();
 	afx_msg void OnUpdateToolbarBackProject(CCmdUI *pCmdUI);
 	afx_msg void OnSaveBackProjectImg();
@@ -117,10 +113,10 @@ public:
 	afx_msg void OnToolbarPopupImage();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnUpdateToolbarPopupImage(CCmdUI *pCmdUI);
-	afx_msg void OnConvUsingGpu();
-	afx_msg void OnUpdateConvUsingGpu(CCmdUI *pCmdUI);
-	afx_msg void OnBkpUsingGpu();
-	afx_msg void OnUpdateBkpUsingGpu(CCmdUI *pCmdUI);
+	afx_msg void OnConvoluteUsingGpu();
+	afx_msg void OnUpdateConvoluteUsingGpu(CCmdUI *pCmdUI);
+	afx_msg void OnBackProjectUsingGpu();
+	afx_msg void OnUpdateBackProjectUsingGpu(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarZoomIn();
 	afx_msg void OnUpdateToolbarZoomIn(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarZoomOut();
@@ -142,15 +138,14 @@ public:
 	afx_msg void OnUpdatePanReconstruct(CCmdUI *pCmdUI);
 	afx_msg void OnFanScanSettings();
 	afx_msg void OnGpuPanProject();
-	afx_msg void OnUpdateAmpPanProject(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateGpuPanProject(CCmdUI *pCmdUI);
 	afx_msg void OnCudaPanProject();
 	afx_msg void OnUpdateCudaPanProject(CCmdUI *pCmdUI);
-	afx_msg void OnShowAllImage();
-	afx_msg void OnChangeImageShow();
+	afx_msg void OnChangeImageShowNext();
+	afx_msg void OnChangeImageShowPrev();
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本
 inline CCTdemoDoc* CCTdemoView::GetDocument() const
    { return reinterpret_cast<CCTdemoDoc*>(m_pDocument); }
 #endif
-

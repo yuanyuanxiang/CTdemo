@@ -232,7 +232,8 @@ BEGIN
             MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR
         END
         MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
-        MENUITEM "切换图像(&C)",                    ID_CHANGE_IMAGE_SHOW
+        MENUITEM "Next图像(&N)\tCtrl+->",         ID_CHANGE_IMAGE_SHOW
+        MENUITEM "Prev图像(&P)\tCtrl+<-",         ID_CHANGE_IMAGE_SHOW_PREV
     END
     POPUP "窗口(&W)"
     BEGIN
@@ -261,6 +262,7 @@ BEGIN
     VK_F1,          ID_APP_ABOUT,           VIRTKEY, NOINVERT
     "Q",            ID_APP_EXIT,            VIRTKEY, CONTROL, NOINVERT
     "R",            ID_BKP_USING_GPU,       VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_RIGHT,       ID_CHANGE_IMAGE_SHOW,   VIRTKEY, CONTROL, NOINVERT
     "C",            ID_CONV_USING_GPU,      VIRTKEY, SHIFT, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
@@ -294,6 +296,7 @@ BEGIN
     VK_NUMPAD2,     ID_WINDOW_AFTER_FILTER, VIRTKEY, CONTROL, NOINVERT
     VK_NUMPAD3,     ID_WINDOW_BACKPRO,      VIRTKEY, CONTROL, NOINVERT
     VK_NUMPAD1,     ID_WINDOW_PROJECT,      VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT,        ID_CHANGE_IMAGE_SHOW_PREV, VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -736,7 +739,8 @@ STRINGTABLE
 BEGIN
     ID_SHOW_ALL_IMAGE       "显示所有图像"
     ID_TOOLBAR_POPUP        "在弹出对话框查看此图像\n查看图像"
-    ID_CHANGE_IMAGE_SHOW    "切换用以显示的图像\n切换"
+    ID_CHANGE_IMAGE_SHOW    "切换用以显示的图像\n下一张"
+    ID_CHANGE_IMAGE_SHOW_PREV "切换用以显示的图像\n前一张"
 END
 
 #endif    // 中文(简体，中国) resources

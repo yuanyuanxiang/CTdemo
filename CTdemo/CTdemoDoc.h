@@ -116,7 +116,7 @@ public:
 	virtual void OnCloseDocument();
 	afx_msg void OnWindowProject();
 	afx_msg void OnUpdateWindowProject(CCmdUI *pCmdUI);
-	afx_msg void OnPrjUsingGpu();
+	afx_msg void OnProjectUsingGpu();
 	afx_msg void OnWindowBackpro();
 	afx_msg void OnUpdateWindowBackpro(CCmdUI *pCmdUI);
 	afx_msg void OnWindowAfterFilter();

@@ -8,6 +8,7 @@
 #include "ChildFrm.h"
 #include "CTdemoView.h"
 #include "CurveView.h"
+#include "NewView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -81,7 +82,7 @@ BOOL CChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 	// 将FormView1类连接到第二个分栏对象的0行0列
 	m_SplitterWnd.CreateView(0, 0, RUNTIME_CLASS(CCurveView), CSize(right_view_width, 3 * height / 4), pContext);
 	// 将FormView2类连接到第二个分栏对象的1行0列
-	m_SplitterWnd.CreateView(1, 0, RUNTIME_CLASS(CCTdemoView), CSize(right_view_width, height / 4), pContext);
+	m_SplitterWnd.CreateView(1, 0, RUNTIME_CLASS(CNewView), CSize(right_view_width, height / 4), pContext);
 
 	return TRUE; 
 }

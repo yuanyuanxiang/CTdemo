@@ -39,7 +39,7 @@ IMPLEMENT_DYNCREATE(CCTdemoDoc, CDocument)
 BEGIN_MESSAGE_MAP(CCTdemoDoc, CDocument)
 	ON_COMMAND(ID_WINDOW_PROJECT, &CCTdemoDoc::OnWindowProject)
 	ON_UPDATE_COMMAND_UI(ID_WINDOW_PROJECT, &CCTdemoDoc::OnUpdateWindowProject)
-	ON_COMMAND(ID_PRJ_USING_GPU, &CCTdemoDoc::OnPrjUsingGpu)
+	ON_COMMAND(ID_PRJ_USING_GPU, &CCTdemoDoc::OnProjectUsingGpu)
 	ON_COMMAND(ID_WINDOW_BACKPRO, &CCTdemoDoc::OnWindowBackpro)
 	ON_UPDATE_COMMAND_UI(ID_WINDOW_BACKPRO, &CCTdemoDoc::OnUpdateWindowBackpro)
 	ON_COMMAND(ID_WINDOW_AFTER_FILTER, &CCTdemoDoc::OnWindowAfterFilter)
@@ -445,7 +445,7 @@ void CCTdemoDoc::OnUpdateWindowProject(CCmdUI *pCmdUI)
 extern const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen, float fPixelDistance);
 
 // 使用CUDA加速投影
-void CCTdemoDoc::OnPrjUsingGpu()
+void CCTdemoDoc::OnProjectUsingGpu()
 {
 	// TODO: 在此添加命令处理程序代码
 	if (m_nBPP == 0)

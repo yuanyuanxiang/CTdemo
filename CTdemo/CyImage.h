@@ -48,6 +48,7 @@ public:
 
 	// 获取图像信息
 	BYTE* GetHeadAddress();
+	BYTE* GetLineAddress(int LineID);
 	int GetChannel();
 	int GetRowlen();
 	int GetDiagLength();

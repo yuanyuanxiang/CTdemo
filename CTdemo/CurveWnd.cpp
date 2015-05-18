@@ -59,6 +59,11 @@ CCurveWnd::CCurveWnd()
 	//Font
 	m_FontName = L"宋体";
 	m_nFontSize = 100;
+
+	m_bModified = false;
+	m_nNewRowlen = 0;
+	m_nNewChannel = 0;
+	m_nNewlenData = 0;
 }
 
 // 析构
@@ -171,12 +176,14 @@ int CCurveWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pBnChooseCurve->Create(L"曲线", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(nButtonPosX1, int(Space), nButtonPosX2, int(Space+BUTTON_HEIGHT)), this, IDB_CHOOSE_CURVE);
 	m_pBnChooseCurve->SetFont(m_pAppFont, TRUE);
 	m_pBnChooseCurve->SetTooltip(L"三次样条插值");
+	m_pBnChooseCurve->EnableWindow(FALSE);
 
 	//选择直线
 	m_pBnChooseLine = new CMFCButton;
 	m_pBnChooseLine->Create(L"直线", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(nButtonPosX1, int(2*Space), nButtonPosX2, int(2*Space+BUTTON_HEIGHT)), this, IDB_CHOOSE_LINE);
 	m_pBnChooseLine->SetFont(m_pAppFont, TRUE);
 	m_pBnChooseLine->SetTooltip(L"分段线性插值");
+	m_pBnChooseLine->EnableWindow(TRUE);
 
 	//重置
 	m_pBnReset = new CMFCButton;
@@ -235,6 +242,7 @@ int CCurveWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pBnCancel->SetTooltip(L"取消修改");
 
 	//*** m_pImage ***//
+	UpdateImageInfo();
 
 	//初始化pegs
 	InitPegs();
@@ -252,7 +260,7 @@ int CCurveWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-//获取主文档
+//获取父文档
 CCurveDlg* CCurveWnd::GetDocument()
 {
 	return (CCurveDlg *)GetParent();
@@ -285,39 +293,16 @@ void CCurveWnd::SetImage(CImage* pImage)
 	OnCmdCurveCancel();
 	m_pImage = pImage;
 	InitPegs();
-	if (!m_pImage->IsNull())
-		GetHistogram();
-	else
-		ZeroHistogram();
+	UpdateImageInfo();
+	GetHistogram();
 	ShowGrayTransform();
 	Invalidate(TRUE);
-}
-
-//更换图像，清零直方图
-void CCurveWnd::ZeroHistogram()
-{
-	m_nImageWidth = 0;
-	m_nImageHeight = 0;
-	m_nPixelQuantity = 0;
-	m_nChannel = 0;
-	m_nbytesWidth = 0;
-	m_nlenData = 0;
-	SAFE_DELETE(m_dataSrc);
-	SAFE_DELETE(m_curData);
-
-	//初始化直方图
-	for (int i = 0; i<4; i++)
-	{
-		ZeroMemory(m_pfHistogram[i], 256 * sizeof(d_type));
-	}
 }
 
 //获取直方图
 BOOL CCurveWnd::GetHistogram()
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return FALSE;
-
-	GetImageInfo();
+	if (m_dataSrc == NULL) return FALSE;
 
 	//计算直方图
 	BYTE *Pixel;
@@ -325,7 +310,7 @@ BOOL CCurveWnd::GetHistogram()
 	{
 		for (int j = 0; j<m_nImageWidth; j++)
 		{//RGB24各分量的排列顺序为：BGR, RGB32各分量的排列顺序为：BGRA
-			Pixel = m_dataSrc + i * m_nbytesWidth + j * m_nChannel;
+			Pixel = m_dataSrc + i * m_nNewRowlen + j * m_nNewChannel;
 			m_pfHistogram[3][int(*Pixel)]++;                                              //Blue
 			m_pfHistogram[2][int(*(Pixel+1))]++;                                          //Green
 			m_pfHistogram[1][int(*(Pixel+2))]++;                                          //Red
@@ -355,7 +340,7 @@ BOOL CCurveWnd::GetHistogram()
 // 初始化pegs
 void CCurveWnd::InitPegs()
 {
-	for (int i = 0; i<4; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		POSITION pos = m_pPegsList[i].GetHeadPosition();
 		while (pos != NULL)
@@ -379,23 +364,39 @@ void CCurveWnd::InitPegs()
 	}
 }
 
-// 获取图像信息
-void CCurveWnd::GetImageInfo()
+//更新图像信息
+void CCurveWnd::UpdateImageInfo()
 {
+	if (CHECK_IMAGE_NULL(m_pImage))
+		return;
+
+	int nImageWidth = m_pImage->GetWidth();
+	int nImageHeight = m_pImage->GetHeight();
+	int nChannel = m_pImage->GetBPP() / 8;
+	//if (m_nImageWidth == nImageWidth && m_nImageHeight == nImageHeight && m_nChannel == nChannel)
+		//return;
+	if (!DetectImageChanged())
+		return;
+
 	m_nImageWidth = m_pImage->GetWidth();
 	m_nImageHeight = m_pImage->GetHeight();
-	m_nPixelQuantity = m_nImageWidth*m_nImageHeight;
-	m_nChannel = m_pImage->GetBPP()/8;
+	m_nChannel = m_pImage->GetBPP() / 8;
+	m_nPixelQuantity = m_nImageWidth * m_nImageHeight;
 	m_nbytesWidth = abs(m_pImage->GetPitch());
-	m_nlenData = m_nbytesWidth*m_nImageHeight;
-	//将图像源数据储存起来
-	if (m_dataSrc == NULL)
-		m_dataSrc = new BYTE[m_nlenData];
-	if (m_curData == NULL)
-		m_curData = new BYTE[m_nlenData];
-	m_pBits = (BYTE *)m_pImage->GetBits()+(m_pImage->GetPitch()*(m_nImageHeight-1));//获得图像数据首地址
-	memcpy(m_dataSrc, m_pBits, m_nlenData);
-	memcpy(m_curData, m_pBits, m_nlenData);
+	m_nlenData = m_nbytesWidth * m_nImageHeight;
+	// 辅助信息
+	m_nNewRowlen = m_nbytesWidth;
+	m_nNewChannel = m_nChannel;
+	m_nNewlenData = m_nlenData;
+	//如果图像的位深度不满足8、24、32
+	if (m_nChannel != 1 && m_nChannel != 3 && m_nChannel != 4)
+	{
+		m_pImage = NULL;
+		return;
+	}
+	//获得图像数据首地址
+	m_pBits = (BYTE *)m_pImage->GetBits()+(m_pImage->GetPitch()*(m_nImageHeight-1));
+	MallocData();
 }
 
 //看是否已存在,若存在则要替换
@@ -570,18 +571,19 @@ BOOL CCurveWnd::GrayTransform()
 {
 	//每次灰度变换时，需要重新载入图像源数据
 	//防止每次灰度变换的效果叠加产生不良效果
-	memcpy(m_curData, m_dataSrc, m_nlenData);
+	memcpy(m_curData, m_dataSrc, m_nNewlenData);
 	//直方图预操作，使用后必须释放TempCell的内存
 	d_type* TempCell = PreTransform();
 	BYTE* Pixel;
+	int it_k = min(3, m_nNewChannel);
 	if (m_nChannelSelected == CHANNEL_RGB)
 	{//RGB通道
 		for (int i = 0; i<m_nImageHeight; i++)
 		{
 			for (int j = 0; j<m_nImageWidth; j++)
 			{
-				Pixel = m_curData + i * m_nbytesWidth + j * m_nChannel;
-				for (int k = 0; k<m_nChannel; k++)
+				Pixel = m_curData + i * m_nNewRowlen + j * m_nNewChannel;
+				for (int k = 0; k < it_k; k++)
 				{//解决内存溢出错误,2014.4.17
 					*(Pixel+k) = TempCell[int(*(Pixel+k))];
 				}
@@ -594,7 +596,7 @@ BOOL CCurveWnd::GrayTransform()
 		{
 			for (int j = 0; j<m_nImageWidth; j++)
 			{
-				Pixel = m_curData + i * m_nbytesWidth + j * m_nChannel;
+				Pixel = m_curData + i * m_nNewRowlen + j * m_nNewChannel;
 				*(Pixel+3-m_nChannelSelected) = TempCell[int(*(Pixel+3-m_nChannelSelected))];
 			}
 		}
@@ -663,9 +665,11 @@ void CCurveWnd::InverseTransform()
 // 所有通道变换结果叠加,立即刷新图像
 void CCurveWnd::ImshowImmediately()
 {
+	// 更新图像信息
+	UpdateImageInfo();
 	// 将原始数据备份
-	BYTE* temp_src = new BYTE[m_nlenData];
-	memcpy(temp_src, m_dataSrc, m_nlenData);
+	BYTE* temp_src = new BYTE[m_nNewlenData];
+	memcpy(temp_src, m_dataSrc, m_nNewlenData);
 	// 变换并刷新视图
 	int Swap = m_nChannelSelected;
 	for (m_nChannelSelected = 1; m_nChannelSelected < 4; m_nChannelSelected++)
@@ -674,7 +678,7 @@ void CCurveWnd::ImshowImmediately()
 		ReshapeTransform();
 		ShowGrayTransform();
 		GrayTransform();
-		memcpy(m_dataSrc, m_curData, m_nlenData);
+		memcpy(m_dataSrc, m_curData, m_nNewlenData);
 	}
 	// 对RGB通道最后变换
 	m_nChannelSelected = 0;
@@ -684,12 +688,12 @@ void CCurveWnd::ImshowImmediately()
 	GrayTransform();
 	// 应用到图像
 	m_nChannelSelected = Swap;
-	memcpy(m_pBits, m_curData, m_nlenData);
+	ApplyToImage();
 	// 刷新图像显示
 	CCTdemoView* pView = GetView();
 	pView->Invalidate();
 	// 恢复原始数据
-	memcpy(m_dataSrc, temp_src, m_nlenData);
+	memcpy(m_dataSrc, temp_src, m_nNewlenData);
 	if (temp_src != NULL)
 		delete [] temp_src;
 }
@@ -753,7 +757,7 @@ void CCurveWnd::OnPaint()
 		newPen.DeleteObject();
 	}
 
-	if (m_pImage != NULL && !m_pImage->IsNull())
+	if (!CHECK_IMAGE_NULL(m_pImage))
 	{
 		//直方图
 		LineColor = ColorSetting(m_nChannelSelected, 128);
@@ -838,7 +842,7 @@ void CCurveWnd::OnPaint()
 // 曲线：使用三次样条函数插值
 void CCurveWnd::OnChooseCurve()
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	m_nLinePattern = LINE_PATTERN_SPLINE;
 	SplineFunc();
 	ImshowImmediately();
@@ -853,7 +857,7 @@ void CCurveWnd::OnChooseCurve()
 // 直线：使用分段线性函数插值
 void CCurveWnd::OnChooseLine()
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	m_nLinePattern = LINE_PATTERN_LINEAR;
 	PieceWiseFunc();
 	ImshowImmediately();
@@ -875,47 +879,32 @@ void CCurveWnd::OnComboboxRgb()
 	CRect rect = CRect(m_pOnPaintRect->left - 10, m_pOnPaintRect->top, m_pOnPaintRect->right, m_pOnPaintRect->bottom + 10);
 	InvalidateRect(rect);
 	//（1）下面解决导入曲线后切换通道不画变换函数的问题,2014.4.14
-	ImshowImmediately();
+	if (!CHECK_IMAGE_NULL(m_pImage))
+		ImshowImmediately();
 	//GrayTransform();//（2）导致直方图出现“断裂带”.2014.6.11
 	//摒弃该方案，尝试新的方案解决问题（1）
 }
 
-// 重置对当前通道的更改
+// 重置对当前图像的更改
 void CCurveWnd::OnCmdCurveWndReset()
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
-	// TODO: 在此添加命令处理程序代码
-	// 重置pegs
-	for (int i = 0; i<4; i++)
-	{
-		POSITION pos = m_pPegsList[i].GetHeadPosition();
-		while (pos != NULL)
-		{
-			CPoint* pt = m_pPegsList[i].GetNext(pos).m_pt;
-			delete pt;
-		}
-		m_pPegsList[i].RemoveAll();
-		peg pBegin;
-		pBegin.m_pt = new CPoint(m_pOnPaintRect->left, m_pOnPaintRect->bottom);
-		pBegin.m_dRatioX = 0;
-		pBegin.m_dRatioY = 1;
-		peg pEnd;
-		pEnd.m_pt = new CPoint(m_pOnPaintRect->right, m_pOnPaintRect->top);
-		pEnd.m_dRatioX = 1;
-		pEnd.m_dRatioY = 0;
-		m_pPegsList[i].AddTail(pBegin);
-		m_pPegsList[i].AddTail(pEnd);
-	}
-	//一些变量重置
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	m_bInverseImage = FALSE;
+	InitPegs();
+	GetHistogram();
+	ShowGrayTransform();
+	Invalidate(TRUE);
 	//更新视图
-	ImshowImmediately();//解决重置失效问题,2014.4.15
+	memcpy(m_pBits, m_dataSrc, m_nNewlenData);
+	CCTdemoView* pView = GetView();
+	pView->Invalidate(TRUE);
+	//ImshowImmediately();//解决重置失效问题,2014.4.15
 }
 
 // 反转图像
 void CCurveWnd::OnCmdCurveWndInverse()
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	// TODO: 在此添加命令处理程序代码
 	m_bInverseImage = !m_bInverseImage;
 	InverseTransform();
@@ -925,12 +914,12 @@ void CCurveWnd::OnCmdCurveWndInverse()
 // 导入曲线
 void CCurveWnd::OnCmdImportCurve()
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	CString FilePath = L"";
 	CFileDialog hFileDlg(TRUE, NULL, NULL, OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_READONLY, TEXT("curve(*.cv)|*.cv||"), NULL);
 	hFileDlg.m_ofn.hwndOwner = m_hWnd;
 	hFileDlg.m_ofn.lStructSize = sizeof(OPENFILENAME);
-	hFileDlg.m_ofn.lpstrTitle = TEXT("打开曲线文件...\0");
+	hFileDlg.m_ofn.lpstrTitle = TEXT("导入曲线\0");
 	hFileDlg.m_ofn.nMaxFile = MAX_PATH;
 	if(hFileDlg.DoModal() == IDOK)
 	{
@@ -941,7 +930,8 @@ void CCurveWnd::OnCmdImportCurve()
 	CFile file;
 	if(!file.Open(FilePath, CFile::modeRead))
 	{
-		MessageBox(L"打开文件" + FilePath + L"失败!", L"出现错误", MB_OK | MB_ICONERROR);
+		MessageBox(L"打开文件\"" + FilePath + L"\"" + L"失败!", L"出现错误", MB_OK | MB_ICONERROR);
+		file.Close();
 		return ;
 	}
 	CArchive ar(&file, CArchive::load);
@@ -959,10 +949,25 @@ void CCurveWnd::OnCmdImportCurve()
 		for(int j = 0; j<PegsQuantity; j++)
 		{
 			peg Temp;
-			Temp.m_pt = new CPoint;
-			ar>>*(Temp.m_pt);
-			ar>>Temp.m_dRatioX;
-			ar>>Temp.m_dRatioY;
+			Temp.m_pt = new CPoint();
+			Temp.m_dRatioX = Temp.m_dRatioY = -1;
+			try
+			{
+				ar>>*(Temp.m_pt);
+				ar>>Temp.m_dRatioX;
+				ar>>Temp.m_dRatioY;
+			}
+			catch (CMemoryException* e)	{}
+			catch (CFileException* e)	{}
+			catch (CException* e)		{}
+			if (Temp.m_dRatioX <= 0 || Temp.m_dRatioY <= 0)
+			{
+				MessageBox(L"\"" + FilePath + L"\"" + L"不是有效的曲线文件!", L"出现错误", MB_OK | MB_ICONERROR);
+				ar.Close();
+				file.Close();
+				InitPegs();
+				return;
+			}
 			m_pPegsList[i].AddTail(Temp);
 		}
 	}
@@ -974,7 +979,7 @@ void CCurveWnd::OnCmdImportCurve()
 // 导出曲线
 void CCurveWnd::OnCmdExportCurve()
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	SYSTEMTIME sys;
 	GetLocalTime(&sys);
 	CString CurTime;
@@ -984,7 +989,7 @@ void CCurveWnd::OnCmdExportCurve()
 	CFileDialog dlg(FALSE, NULL, CurTime, NULL, TEXT("curve(*.cv)|*.cv||"), NULL);
 	dlg.m_ofn.hwndOwner = m_hWnd;
 	dlg.m_ofn.lStructSize = sizeof(OPENFILENAME);
-	dlg.m_ofn.lpstrTitle = TEXT("保存曲线...\0");
+	dlg.m_ofn.lpstrTitle = TEXT("保存曲线\0");
 	dlg.m_ofn.nMaxFile = MAX_PATH;
 
 	if ( dlg.DoModal() != IDOK)
@@ -1022,7 +1027,7 @@ void CCurveWnd::OnCmdExportCurve()
 void CCurveWnd::OnCmdCurveOk()
 {
 	CCTdemoView* pView = GetView();
-	memcpy(m_dataSrc, m_curData, m_nlenData);
+	memcpy(m_dataSrc, m_curData, m_nNewlenData);
 	InitPegs();
 	GetHistogram();
 	ImshowImmediately();
@@ -1032,17 +1037,18 @@ void CCurveWnd::OnCmdCurveOk()
 void CCurveWnd::OnCmdCurveCancel()
 {
 	//恢复图像并退出
-	if (m_pImage != NULL && !m_pImage->IsNull())
+	if (!CHECK_IMAGE_NULL(m_pImage))
 	{
 		CCTdemoView* pView = GetView();
-		memcpy(m_pBits, m_dataSrc, m_nlenData);
+		//8位色图像不能直接调用memcpy
+		ApplyToImage();
 		pView->Invalidate();
 	}
 }
 
 void CCurveWnd::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	//按下鼠标左键，判断用户行为
 	if (CursorIsInPaintRect(point))
 	{
@@ -1054,7 +1060,7 @@ void CCurveWnd::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CCurveWnd::OnLButtonUp(UINT nFlags, CPoint point)
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	if (CursorIsInPaintRect(point) && m_bUserWillDrag)
 	{//鼠标拖放结束，且终点不在pegs里面
 		if (PegIsExist(point) == FALSE)
@@ -1072,7 +1078,7 @@ void CCurveWnd::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CCurveWnd::OnMouseMove(UINT nFlags, CPoint point)
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	if (CursorIsInPaintRect(point))
 	{
 		//显示当前灰度变换：输入/输出
@@ -1382,7 +1388,7 @@ COLORREF CCurveWnd::ColorSetting(int Channel, int Strength, int WhereUse)
 
 void CCurveWnd::OnRButtonUp(UINT nFlags, CPoint point)
 {
-	if (m_pImage == NULL || m_pImage->IsNull()) return;
+	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	if (CursorIsInPaintRect(point))
 	{
 		if (PegIsExist(point) == TRUE)
@@ -1478,7 +1484,7 @@ void CCurveWnd::OnSize(UINT nType, int cx, int cy)
 
 	ReshapeTransform();
 
-	if (m_pImage != NULL)
+	if (!CHECK_IMAGE_NULL(m_pImage))
 	{
 		ShowGrayTransform();
 	}
@@ -1553,4 +1559,108 @@ BOOL CCurveWnd::OnEraseBkgnd(CDC* pDC)
 {
 	//使其不要重绘背景
 	return TRUE;
+}
+
+//将图像源数据储存起来
+void CCurveWnd::MallocData()
+{
+	SAFE_DELETE(m_dataSrc);
+	SAFE_DELETE(m_curData);
+	// 3、4通道图像可以直接调用memcpy
+	if (m_nChannel > 1)
+	{
+		m_dataSrc = new BYTE[m_nlenData];
+		m_curData = new BYTE[m_nlenData];
+		memcpy(m_dataSrc, m_pBits, m_nlenData);
+		memcpy(m_curData, m_pBits, m_nlenData);
+		return;
+	}
+	m_nNewChannel = 3;
+	m_nNewRowlen = m_nImageWidth * m_nNewChannel;
+	m_nNewlenData = m_nImageHeight * m_nNewRowlen;
+	m_dataSrc = new BYTE[m_nNewlenData];
+	m_curData = new BYTE[m_nNewlenData];
+	for (int i = 0; i < m_nImageHeight; ++i)
+	{
+		for (int j = 0; j < m_nImageWidth; ++j)
+		{
+			m_dataSrc  [    i * m_nNewChannel + j * m_nNewRowlen] 
+			= m_dataSrc[1 + i * m_nNewChannel + j * m_nNewRowlen] 
+			= m_dataSrc[2 + i * m_nNewChannel + j * m_nNewRowlen] 
+			= m_pBits[i * m_nChannel + j * m_nbytesWidth];
+		}
+	}
+	memcpy(m_curData, m_dataSrc, m_nNewlenData);
+}
+
+void CCurveWnd::ApplyToImage()
+{
+	// 未检测到修改则返回
+	if (!DetectModified())
+		return;
+	// 3、4通道图像可以直接调用memcpy
+	if (m_nChannel > 1)
+	{
+		memcpy(m_pBits, m_curData, m_nlenData);
+		return;
+	}
+	// 转换公式参考：http://www.cnblogs.com/carekee/articles/3629964.html
+	for (int i = 0; i < m_nImageHeight; ++i)
+	{
+		for (int j = 0; j < m_nImageWidth; ++j)
+		{
+			m_pBits[i * m_nChannel + j * m_nbytesWidth] = 
+				(299 * m_curData[ i * m_nNewChannel + j * m_nNewRowlen]
+			+ 587 * m_curData[1 + i * m_nNewChannel + j * m_nNewRowlen] 
+			+ 114 * m_curData[2 + i * m_nNewChannel + j * m_nNewRowlen]+ 500 ) / 1000;
+		}
+	}
+}
+
+// 检查图像是否需要被更新,根据peg列表
+bool CCurveWnd::DetectModified()
+{
+	// 查看通道直方图变换是否被修改
+	for (int i = 0; i < 4; i++)
+	{
+		int pegNum = m_pPegsList[i].GetSize();
+		if (pegNum > 2)
+			return true;
+		// peg个数等于2，检查端点
+		POSITION pos = m_pPegsList[i].GetHeadPosition();
+		CPoint *Left = m_pPegsList[i].GetNext(pos).m_pt;
+		CPoint *Right = m_pPegsList[i].GetNext(pos).m_pt;
+		if (Left->x != m_pOnPaintRect->left || Left->y != m_pOnPaintRect->bottom
+			|| Right->x != m_pOnPaintRect->right || Right->y != m_pOnPaintRect->top)
+			return true;
+	}
+	return false;
+}
+
+// 检查图像是否变化了
+bool CCurveWnd::DetectImageChanged()
+{
+	int nImageWidth = m_pImage->GetWidth();
+	int nImageHeight = m_pImage->GetHeight();
+	int nChannel = m_pImage->GetBPP() / 8;
+	BYTE* pBits = (BYTE *)m_pImage->GetBits()+(m_pImage->GetPitch()*(m_nImageHeight-1));
+	if (m_nImageWidth != nImageWidth 
+		|| m_nImageHeight != nImageHeight 
+		|| m_nChannel != nChannel 
+		|| m_pBits != pBits)
+		return true;
+
+	int it_k = min(3, m_nChannel);
+	for (int i = 0; i < m_nImageHeight; ++i)
+	{
+		for (int j = 0; j < m_nImageWidth; ++j)
+		{
+			for (int k = 0; k < it_k; ++k)
+			{
+				if (m_pBits[k + j * m_nChannel + i * m_nbytesWidth] != pBits[k + j * m_nChannel + i * m_nbytesWidth])
+					return true;
+			}
+		}
+	}
+	return false;
 }
