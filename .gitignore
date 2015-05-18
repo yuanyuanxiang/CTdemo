@@ -26,3 +26,22 @@
 *.exe
 *.out
 *.app
+
+# This files are produced by Visual Studio 2012
+*.sdf
+*.ipch
+*.pdb
+*.ilk
+*.vsp
+*.idb
+*.cache
+*.deps
+*.lastbuildstate
+*.log
+*.tlog
+*.psess
+
+# ignored dirs
+Debug/*
+Release/*
+ipch/*

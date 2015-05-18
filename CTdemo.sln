@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CTdemo", "CTdemo\CTdemo.vcxproj", "{7A74E4C8-4FD1-4DA0-8FBD-49256FE792FC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImageBppEditor", "ImageBppEditor\ImageBppEditor.vcxproj", "{607C37F0-DABA-4F4B-9145-7B66D1119386}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImageViewer", "ImageViewer\ImageViewer.vcxproj", "{E046914A-3684-487C-82BC-384C77656278}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A74E4C8-4FD1-4DA0-8FBD-49256FE792FC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7A74E4C8-4FD1-4DA0-8FBD-49256FE792FC}.Debug|Win32.Build.0 = Debug|Win32
+		{7A74E4C8-4FD1-4DA0-8FBD-49256FE792FC}.Release|Win32.ActiveCfg = Release|Win32
+		{7A74E4C8-4FD1-4DA0-8FBD-49256FE792FC}.Release|Win32.Build.0 = Release|Win32
+		{607C37F0-DABA-4F4B-9145-7B66D1119386}.Debug|Win32.ActiveCfg = Debug|Win32
+		{607C37F0-DABA-4F4B-9145-7B66D1119386}.Debug|Win32.Build.0 = Debug|Win32
+		{607C37F0-DABA-4F4B-9145-7B66D1119386}.Release|Win32.ActiveCfg = Release|Win32
+		{607C37F0-DABA-4F4B-9145-7B66D1119386}.Release|Win32.Build.0 = Release|Win32
+		{E046914A-3684-487C-82BC-384C77656278}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E046914A-3684-487C-82BC-384C77656278}.Debug|Win32.Build.0 = Debug|Win32
+		{E046914A-3684-487C-82BC-384C77656278}.Release|Win32.ActiveCfg = Release|Win32
+		{E046914A-3684-487C-82BC-384C77656278}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+EndGlobal

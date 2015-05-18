@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ImageViewer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgImageViewer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageScrollView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DllExport.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgQuickViewer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgImageInfomation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgHistogram.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ImageViewer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgImageViewer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageScrollView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DllExport.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgQuickViewer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgImageInfomation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgHistogram.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ImageViewer.def">
+      <Filter>源文件</Filter>
+    </None>
+    <None Include="res\ImageViewer.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ImageViewer.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\ImageViewer.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Transpose.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\FlipH.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\FlipV.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ZoomDefault.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ZoomIn.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ZoomOut.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Redo.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Undo.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\About.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Qiut.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Copy.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Save.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Histogram.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ImageInfo.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\icon1.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Copy.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Save.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

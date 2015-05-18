@@ -1,0 +1,768 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+#include "verrsrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "#include ""verrsrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#include ""res\\CTdemo.rc2""               // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""l.CHS\\afxres.rc""      // Standard components\r\n"
+    "#include ""l.CHS\\afxprint.rc""    // printing/print preview resources\r\n"
+    "#if !defined(_AFXDLL)\r\n"
+    "#include ""l.CHS\\afxribbon.rc""   // \r\n"
+    "#endif\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\CTdemo.ico"
+IDR_CTdemoTYPE          ICON                    "res\\CTdemoDoc.ico"
+IDI_FLIP_H              ICON                    "res\\FlipH.ico"
+IDI_FLIP_V              ICON                    "res\\FlipV.ico"
+IDI_QUIT                ICON                    "res\\Qiut.ico"
+IDI_ZOOM_DEFAULT        ICON                    "res\\ZoomDefault.ico"
+IDI_ZOOM_IN             ICON                    "res\\ZoomIn.ico"
+IDI_ZOOM_OUT            ICON                    "res\\ZoomOut.ico"
+IDI_ABOUT               ICON                    "res\\About.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+IDR_MAINFRAME_256       BITMAP                  "res\\Toolbar256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    BUTTON      ID_APP_ABOUT
+END
+
+IDR_MAINFRAME_256 TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    BUTTON      ID_APP_ABOUT
+    SEPARATOR
+    BUTTON      ID_TOOLBAR_BPP
+    BUTTON      ID_TOOLBAR_TRS
+    BUTTON      ID_TOOLBAR_POPUP
+    SEPARATOR
+    BUTTON      ID_TOOLBAR_PRJ
+    BUTTON      ID_TOOLBAR_CONV
+    BUTTON      ID_TOOLBAR_BKP
+    SEPARATOR
+    BUTTON      ID_TOOLBAR_ZOOM_IN
+    BUTTON      ID_TOOLBAR_ZOOM_OUT
+    BUTTON      ID_TOOLBAR_ZOOM_DEFAULT
+    SEPARATOR
+    BUTTON      ID_TOOLBAR_FLIP_H
+    BUTTON      ID_TOOLBAR_FLIP_V
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENUEX
+BEGIN
+    POPUP "文件(&F)",                         65535,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "新建(&N)\tCtrl+N",              ID_FILE_NEW,MFT_STRING | MFT_RIGHTJUSTIFY,MFS_ENABLED
+        MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN,MFT_STRING,MFS_ENABLED
+        MENUITEM "投影(&P)...",                   ID_RECONSTRUCT_FROM_PROJECT,MFT_STRING,MFS_ENABLED
+        MENUITEM "关闭(&W)\tCtrl+W",              ID_FILE_CLOSE,MFT_STRING,MFS_ENABLED
+        MENUITEM MFT_SEPARATOR
+        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP,MFT_STRING,MFS_ENABLED
+        MENUITEM MFT_SEPARATOR
+        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1,MFT_STRING,MFS_GRAYED
+        MENUITEM MFT_SEPARATOR
+        MENUITEM "退出(&Q)\tCtrl+Q",              ID_APP_EXIT,MFT_STRING,MFS_ENABLED
+    END
+    POPUP "视图(&V)",                         65535,MFT_STRING,MFS_ENABLED
+    BEGIN
+        POPUP "工具栏和停靠窗口(&T)",                   65535,MFT_STRING,MFS_ENABLED
+        BEGIN
+            MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR,MFT_STRING,MFS_ENABLED
+        END
+        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR,MFT_STRING,MFS_ENABLED
+    END
+    POPUP "帮助(&H)",                         65535,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "关于 CTdemo(&F1)...",           ID_APP_ABOUT,MFT_STRING,MFS_ENABLED
+    END
+END
+
+IDR_CTdemoTYPE MENU
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建(&N)\tCtrl+N",              ID_FILE_NEW
+        MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN
+        MENUITEM "投影(&P)...\tCtrl+Shift+O",     ID_RECONSTRUCT_FROM_PROJECT
+        MENUITEM "关闭(&W)\tCtrl+W",              ID_FILE_CLOSE
+        MENUITEM "保存(&S)\tCtrl+S",              ID_FILE_SAVE
+        MENUITEM "另存为(&A)...\tCtrl+Shift+S",    ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&P)...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "打印预览(&V)",                    ID_FILE_PRINT_PREVIEW
+        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&Q)\tCtrl+Q",              ID_APP_EXIT
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "撤消(&U)\tCtrl+Z",              ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)\tCtrl+X",              ID_EDIT_CUT
+        MENUITEM "复制(&C)\tCtrl+C",              ID_EDIT_COPY
+        MENUITEM "粘贴(&P)\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "加速投影(&1)\tCtrl+Shift+P",      ID_PRJ_USING_GPU
+        MENUITEM "加速卷积(&2)\tCtrl+Shift+C",      ID_CONV_USING_GPU
+        MENUITEM "加速重建(&3)\tCtrl+Shift+R",      ID_BKP_USING_GPU
+        MENUITEM SEPARATOR
+        MENUITEM "保存投影图像",                      ID_SAVE_PROJECT
+        MENUITEM "保存滤波图像",                      ID_SAVE_AFTER_FILTER_IMG
+        MENUITEM "保存重建图像",                      ID_SAVE_BACK_PROJECT_IMG
+        MENUITEM SEPARATOR
+        MENUITEM "扇束投影(&S)",                    ID_PAN_PROJECT
+        MENUITEM "扇束重建(&R)",                    ID_PAN_RECONSTRUCT
+        MENUITEM SEPARATOR
+    END
+    POPUP "加速(&A)"
+    BEGIN
+        POPUP "加速扇束扫描"
+        BEGIN
+            MENUITEM "AMP方法(&a)",                   ID_AMP_PAN_PROJECT
+            MENUITEM "CUDA方法(&c)",                  ID_CUDA_PAN_PROJECT
+        END
+    END
+    POPUP "设置(&S)"
+    BEGIN
+        MENUITEM "平行束扫描设置(&2)\tF2",             ID_PROJECT_SETTINGS
+        MENUITEM "扇形束扫描设置(&3)\tF3",             ID_FAN_SCAN_SETTINGS
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        POPUP "工具栏和停靠窗口(&T)"
+        BEGIN
+            MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR
+        END
+        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
+        MENUITEM "切换图像(&C)",                    ID_CHANGE_IMAGE_SHOW
+    END
+    POPUP "窗口(&W)"
+    BEGIN
+        MENUITEM "新建窗口(&N)",                    ID_WINDOW_NEW
+        MENUITEM "拆分窗口(&S)",                    ID_WINDOW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "查看投影(&1)\tCtrl+1",            ID_WINDOW_PROJECT
+        MENUITEM "滤波结果(&2)\tCtrl+2",            ID_WINDOW_AFTER_FILTER
+        MENUITEM "查看重建(&3)\tCtrl+3",            ID_WINDOW_BACKPRO
+        MENUITEM SEPARATOR
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 CTdemo(&F1)...",           ID_APP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    VK_F1,          ID_APP_ABOUT,           VIRTKEY, NOINVERT
+    "Q",            ID_APP_EXIT,            VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_BKP_USING_GPU,       VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "C",            ID_CONV_USING_GPU,      VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_F3,          ID_FAN_SCAN_SETTINGS,   VIRTKEY, NOINVERT
+    "W",            ID_FILE_CLOSE,          VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    "P",            ID_PRJ_USING_GPU,       VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F2,          ID_PROJECT_SETTINGS,    VIRTKEY, NOINVERT
+    "O",            ID_RECONSTRUCT_FROM_PROJECT, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "R",            ID_TOOLBAR_BKP,         VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_TOOLBAR_BPP,         VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_TOOLBAR_CONV,        VIRTKEY, ALT, NOINVERT
+    VK_LEFT,        ID_TOOLBAR_FLIP_H,      VIRTKEY, NOINVERT
+    VK_RIGHT,       ID_TOOLBAR_FLIP_H,      VIRTKEY, NOINVERT
+    VK_DOWN,        ID_TOOLBAR_FLIP_V,      VIRTKEY, NOINVERT
+    VK_UP,          ID_TOOLBAR_FLIP_V,      VIRTKEY, NOINVERT
+    "P",            ID_TOOLBAR_PRJ,         VIRTKEY, ALT, NOINVERT
+    "F",            ID_TOOLBAR_SPACE_FILTER, VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_TOOLBAR_TRS,         VIRTKEY, CONTROL, NOINVERT
+    VK_HOME,        ID_TOOLBAR_ZOOM_DEFAULT, VIRTKEY, NOINVERT
+    VK_ADD,         ID_TOOLBAR_ZOOM_IN,     VIRTKEY, NOINVERT
+    VK_SUBTRACT,    ID_TOOLBAR_ZOOM_OUT,    VIRTKEY, NOINVERT
+    VK_NUMPAD2,     ID_WINDOW_AFTER_FILTER, VIRTKEY, CONTROL, NOINVERT
+    VK_NUMPAD3,     ID_WINDOW_BACKPRO,      VIRTKEY, CONTROL, NOINVERT
+    VK_NUMPAD1,     ID_WINDOW_PROJECT,      VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 CTdemo"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
+    LTEXT           "CTdemo，1.0 版",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2015",IDC_STATIC,42,26,114,8
+    DEFPUSHBUTTON   "确定",IDOK,113,41,50,14,WS_GROUP
+END
+
+IDD_ROTATE_ANGLE DIALOGEX 0, 0, 169, 73
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "旋转"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_ROTATE_ANGLE,95,17,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,27,45,50,14
+    PUSHBUTTON      "取消",IDCANCEL,95,44,50,14
+    LTEXT           "旋转角度:",IDC_STATIC,31,21,36,8
+    LTEXT           "度",IDC_STATIC,138,20,9,8
+END
+
+IDD_PROJECT_SETTINGS DIALOGEX 0, 0, 239, 100
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "平行束扫描设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_RAYSNUM,171,17,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ANGLESNUM,171,42,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ANGLE_RANGE,58,17,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SUB_PIXEL,59,41,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,28,71,50,14
+    PUSHBUTTON      "取消",IDCANCEL,162,71,50,14
+    LTEXT           "射线采样:",IDC_STATIC,133,20,36,8
+    LTEXT           "采样角度:",IDC_STATIC,134,44,36,8
+    LTEXT           "条",IDC_STATIC,216,20,9,8
+    LTEXT           "个",IDC_STATIC,216,45,9,8
+    LTEXT           "采样范围:",IDC_STATIC,20,20,36,8
+    LTEXT           "射线间距:",IDC_STATIC,20,45,36,8
+    LTEXT           "rad",IDC_STATIC,103,20,12,8
+    LTEXT           "∈(0, 1]",IDC_STATIC,100,44,27,8
+END
+
+IDD_CONVOLUTE_W DIALOGEX 0, 0, 103, 65
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "截止频率"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT1,41,14,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,15,39,33,14
+    PUSHBUTTON      "取消",IDCANCEL,56,38,32,14
+    LTEXT           "w = ",IDC_STATIC,23,17,13,9
+END
+
+IDD_PAN_SCAN_SETTINGS DIALOGEX 0, 0, 249, 124
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "扇形束扫描设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_RAYSNUM,171,17,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ANGLESNUM,171,42,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ANGLE_RANGE,58,17,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SUB_PIXEL,59,41,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,28,91,50,14
+    PUSHBUTTON      "取消",IDCANCEL,162,91,50,14
+    LTEXT           "射线采样:",IDC_STATIC,133,20,36,8
+    LTEXT           "采样角度:",IDC_STATIC,134,44,36,8
+    LTEXT           "条",IDC_STATIC,216,20,9,8
+    LTEXT           "个",IDC_STATIC,216,45,9,8
+    LTEXT           "采样范围:",IDC_STATIC,20,20,36,8
+    LTEXT           "亚像素级:",IDC_STATIC,20,45,36,8
+    LTEXT           "rad",IDC_STATIC,103,20,12,8
+    LTEXT           "∈(0, 1]",IDC_STATIC,100,44,27,8
+    EDITTEXT        IDC_PAN_SOD,171,66,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PAN_SOR,59,66,40,14,ES_AUTOHSCROLL
+    LTEXT           "SO' (D):",IDC_STATIC,134,68,26,8
+    LTEXT           "pixel",IDC_STATIC,216,68,16,8
+    LTEXT           "SO (R):",IDC_STATIC,21,69,25,8
+    LTEXT           "pixel",IDC_STATIC,104,68,16,8
+END
+
+IDD_RECONSTRUCT_SETTINGS DIALOGEX 0, 0, 243, 103
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "重建参数"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_ANGLE_RANGE,65,19,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CONVOLUTE_W,66,44,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_WIDTH,174,19,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_HEIGHT,174,44,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,28,70,44,14
+    PUSHBUTTON      "取消",IDCANCEL,173,68,44,14
+    LTEXT           "采样范围:",IDC_STATIC,28,22,36,8
+    LTEXT           "截止频率:",IDC_STATIC,28,48,36,8
+    LTEXT           "图像宽度:",IDC_STATIC,136,22,36,8
+    LTEXT           "图像高度:",IDC_STATIC,136,48,36,8
+    LTEXT           "rad",IDC_STATIC,111,22,12,8
+END
+
+IDD_DLG_CURVE DIALOGEX 0, 0, 312, 178
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "Capital Normal University"
+            VALUE "FileDescription", "CTdemo"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "CTdemo.exe"
+            VALUE "LegalCopyright", "Copyright (C) YuanYuanxiang"
+            VALUE "OriginalFilename", "CTdemo.exe"
+            VALUE "ProductName", "CTdome应用程序"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 163
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_ROTATE_ANGLE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 66
+    END
+
+    IDD_PROJECT_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 93
+    END
+
+    IDD_CONVOLUTE_W, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 96
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 58
+    END
+
+    IDD_PAN_SCAN_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 242
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 117
+    END
+
+    IDD_RECONSTRUCT_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 96
+    END
+
+    IDD_DLG_CURVE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 305
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 171
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDP_OLE_INIT_FAILED     "OLE 初始化失败。请确保 OLE 库是正确的版本。"
+    ID_INDICATOR_CLOCK      "00:00:00"
+    ID_COPYRIGHT_STRING     "CTdemo"
+END
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "CTdemo"
+    IDR_CTdemoTYPE          "\nCTdemo\nCTdemo\n\n\nCTdemo.Document\nCTdemo.Document"
+    ID_WINDOW_MANAGER       "窗口(&W)..."
+    ID_TOOLBAR_PRJ          "生成正投影图像\n正投影"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "CTdemo"
+    AFX_IDS_IDLEMESSAGE     "就绪"
+END
+
+STRINGTABLE
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_NEW             "创建新文档\n新建"
+    ID_FILE_OPEN            "打开现有文档\n打开"
+    ID_FILE_CLOSE           "关闭活动文档\n关闭"
+    ID_FILE_SAVE            "保存活动文档\n保存"
+    ID_FILE_SAVE_AS         "用新名称保存活动文档\n另存为"
+    ID_FILE_PAGE_SETUP      "更改打印选项\n页面设置"
+    ID_FILE_PRINT_SETUP     "更改打印机选项和打印选项\n打印设置"
+    ID_FILE_PRINT           "打印活动文档\n打印"
+    ID_FILE_PRINT_DIRECT    "使用当前选项打印活动文档\n快速打印"
+    ID_FILE_PRINT_PREVIEW   "显示整页\n打印预览"
+END
+
+STRINGTABLE
+BEGIN
+    ID_APP_ABOUT            "显示程序信息、版本号和版权信息\n关于"
+    ID_APP_EXIT             "退出应用程序；提示保存文档\n退出"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_MRU_FILE1       "打开此文档"
+    ID_FILE_MRU_FILE2       "打开此文档"
+    ID_FILE_MRU_FILE3       "打开此文档"
+    ID_FILE_MRU_FILE4       "打开此文档"
+    ID_FILE_MRU_FILE5       "打开此文档"
+    ID_FILE_MRU_FILE6       "打开此文档"
+    ID_FILE_MRU_FILE7       "打开此文档"
+    ID_FILE_MRU_FILE8       "打开此文档"
+    ID_FILE_MRU_FILE9       "打开此文档"
+    ID_FILE_MRU_FILE10      "打开此文档"
+    ID_FILE_MRU_FILE11      "打开此文档"
+    ID_FILE_MRU_FILE12      "打开此文档"
+    ID_FILE_MRU_FILE13      "打开此文档"
+    ID_FILE_MRU_FILE14      "打开此文档"
+    ID_FILE_MRU_FILE15      "打开此文档"
+    ID_FILE_MRU_FILE16      "打开此文档"
+END
+
+STRINGTABLE
+BEGIN
+    ID_NEXT_PANE            "切换到下一个窗格\n下一窗格"
+    ID_PREV_PANE            "切换回上一个窗格\n上一窗格"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_NEW           "为活动文档打开另一个窗口\n新建窗口"
+    ID_WINDOW_ARRANGE       "在窗口底部排列图标\n排列图标"
+    ID_WINDOW_CASCADE       "以重叠方式排列窗口\n层叠窗口"
+    ID_WINDOW_TILE_HORZ     "以不重叠的平铺方式排列窗口\n平铺窗口"
+    ID_WINDOW_TILE_VERT     "以不重叠的平铺方式排列窗口\n平铺窗口"
+    ID_WINDOW_SPLIT         "将活动窗口拆分为多个窗格\n拆分"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_CLEAR           "清除所选内容\n清除"
+    ID_EDIT_CLEAR_ALL       "清除全部内容\n全部清除"
+    ID_EDIT_COPY            "复制所选内容，将其放入剪贴板\n复制"
+    ID_EDIT_CUT             "剪切所选内容，将其放入剪贴板\n剪切"
+    ID_EDIT_FIND            "查找指定的文本\n查找"
+    ID_EDIT_PASTE           "插入剪贴板内容\n粘贴"
+    ID_EDIT_REPEAT          "重复上一操作\n重复"
+    ID_EDIT_REPLACE         "用其他文本替换特定的文本\n替换"
+    ID_EDIT_SELECT_ALL      "选定整个文档\n全选"
+    ID_EDIT_UNDO            "撤消上一操作\n撤消"
+    ID_EDIT_REDO            "重做上次撤消的操作\n重做"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_STATUS_BAR      "显示或隐藏状态栏\n切换状态栏"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCSIZE          "更改窗口大小"
+    AFX_IDS_SCMOVE          "更改窗口位置"
+    AFX_IDS_SCMINIMIZE      "将窗口缩小成图标"
+    AFX_IDS_SCMAXIMIZE      "将窗口放大到最大尺寸"
+    AFX_IDS_SCNEXTWINDOW    "切换到下一个文档窗口"
+    AFX_IDS_SCPREVWINDOW    "切换到上一个文档窗口"
+    AFX_IDS_SCCLOSE         "关闭活动窗口并提示保存文档"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCRESTORE       "将窗口恢复到正常大小"
+    AFX_IDS_SCTASKLIST      "激活任务列表"
+    AFX_IDS_MDICHILD        "激活此窗口"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "关闭打印预览模式\n取消预览"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_PANE1        "窗格 1"
+    IDS_STATUS_PANE2        "窗格 2"
+    IDS_TOOLBAR_STANDARD    "标准"
+    IDS_TOOLBAR_CUSTOMIZE   "自定义..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FILE_VIEW           "文件视图"
+    IDS_CLASS_VIEW          "类视图"
+    IDS_OUTPUT_WND          "输出"
+    IDS_PROPERTIES_WND      "属性"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EXPLORER            "资源管理器"
+    IDS_EDIT_MENU           "编辑"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BUILD_TAB           "生成"
+    IDS_DEBUG_TAB           "调试"
+    IDS_FIND_TAB            "查找"
+END
+
+STRINGTABLE
+BEGIN
+    ID_TOOLBAR_BPP          "修改图像的位深度\n位深度"
+    ID_TOOLBAR_TRS          "对图像顺时针旋转一个角度\n旋转"
+    ID_WINDOW_PROJECT       "查看投影图像\n投影图像"
+    ID_PRJ_USING_GPU        "使用GPU加速做投影\n正投影"
+    ID_PROJECT_SETTINGS     "设置平行束扫描参数\n设置"
+    ID_SAVE_PROJECT         "将投影数据保存到图像\n保存投影"
+END
+
+STRINGTABLE
+BEGIN
+    ID_TOOLBAR_CONV         "对正投影图像作卷积\n卷积"
+    ID_TOOLBAR_BKP          "重建图像\n反投影"
+    ID_WINDOW_BACKPRO       "查看反投影图像\n重建图像"
+    ID_SAVE_PROJECT_TXT     "将投影数据保存到文本文档\n保存投影"
+    ID_SAVE_BACK_PROJECT_IMG "保存重建图像\n保存"
+    ID_SAVE_BACK_PROJECT_TXT "保存重建图像到文本文档\n保存"
+    ID_WINDOW_AFTER_FILTER  "查看滤波结果\n滤波结果"
+END
+
+STRINGTABLE
+BEGIN
+    ID_SAVE_AFTER_FILTER_IMG "将滤波数据保存到图像\n保存"
+    ID_SAVE_AFTER_FILTER_TXT "将滤波数据保存到文本文档\n保存"
+    ID_TOOLBAR_SPACE_FILTER "选取图像进行空间滤波\n 空间滤波"
+    ID_CONV_USING_GPU       "使用GPU加速做卷积\n加速卷积"
+    ID_BKP_USING_GPU        "用GPU加速重建图像\n加速重建"
+END
+
+STRINGTABLE
+BEGIN
+    ID_TOOLBAR_ZOOM_IN      "放大图像显示\n放大"
+    ID_TOOLBAR_ZOOM_OUT     "缩小图像显示\n缩小"
+    ID_TOOLBAR_ZOOM_DEFAULT "图像的原始大小\n原图"
+    ID_TOOLBAR_FLIP_H       "水平翻转图像\n水平翻转"
+END
+
+STRINGTABLE
+BEGIN
+    ID_TOOLBAR_FLIP_V       "垂直翻转图像\n垂直翻转"
+    ID_FAN_SCAN_SETTINGS    "设置扇形束扫描参数\n设置"
+    ID_PAN_PROJECT          "模拟生成扇形束投影\n扇束投影"
+    ID_PAN_RECONSTRUCT      "对扇束投影进行重建\n重建图像"
+    ID_AMP_PAN_PROJECT      "利用AMP加速扇形束扫描\n加速扫描"
+END
+
+STRINGTABLE
+BEGIN
+    ID_CUDA_PAN_PROJECT     "利用CUDA加速扇形束扫描\n加速扫描"
+    ID_RECONSTRUCT_FROM_PROJECT "从本地导入投影数据\n导入数据"
+END
+
+STRINGTABLE
+BEGIN
+    ID_SHOW_ALL_IMAGE       "显示所有图像"
+    ID_TOOLBAR_POPUP        "在弹出对话框查看此图像\n查看图像"
+    ID_CHANGE_IMAGE_SHOW    "切换用以显示的图像\n切换"
+END
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#include "res\CTdemo.rc2"               // non-Microsoft Visual C++ edited resources
+#include "l.CHS\afxres.rc"      // Standard components
+#include "l.CHS\afxprint.rc"    // printing/print preview resources
+#if !defined(_AFXDLL)
+#include "l.CHS\afxribbon.rc"   // 
+#endif
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

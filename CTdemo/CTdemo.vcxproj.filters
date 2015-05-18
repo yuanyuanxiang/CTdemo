@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="CUDA">
+      <UniqueIdentifier>{1414ed53-a55b-4645-acb0-3e91e6d77f62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AMP">
+      <UniqueIdentifier>{e3da6214-99e7-43ca-baf9-79e7bd32bba8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CTdemo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MainFrm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ChildFrm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CTdemoDoc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CTdemoView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgRotateAngle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgProjectSettings.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgConvluteW.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CUDA\BackProject.h">
+      <Filter>CUDA</Filter>
+    </ClInclude>
+    <ClInclude Include="CUDA\Filter.h">
+      <Filter>CUDA</Filter>
+    </ClInclude>
+    <ClInclude Include="CUDA\Radon.h">
+      <Filter>CUDA</Filter>
+    </ClInclude>
+    <ClInclude Include="IntSection.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageViewerDllAPIs.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgPanParameter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AMP\AmpRadon.h">
+      <Filter>AMP</Filter>
+    </ClInclude>
+    <ClInclude Include="CUDA\PanRadon.h">
+      <Filter>CUDA</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgReconstructSettings.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CurveDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CurveWnd.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CurveView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CyImage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Functions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CTdemo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MainFrm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ChildFrm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CTdemoDoc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CTdemoView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgRotateAngle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgProjectSettings.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgConvluteW.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="IntSection.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgPanParameter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AMP\AmpRadon.cpp">
+      <Filter>AMP</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgReconstructSettings.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CurveDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CurveWnd.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CurveView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CyImage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Functions.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CTdemo.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\CTdemoDoc.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\CTdemo.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Toolbar.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Toolbar256.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\FlipH.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\FlipV.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Qiut.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ZoomDefault.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ZoomIn.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ZoomOut.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\About.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\CTdemo.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="CUDA\BackProjcet.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA\Filter.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA\Radon.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA\PanRadon.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>
