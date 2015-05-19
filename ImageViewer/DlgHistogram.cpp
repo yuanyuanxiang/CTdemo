@@ -235,7 +235,7 @@ void CDlgHistogram::OnPaint()
 	newPen.CreatePen(PS_SOLID, 1, LineColor);
 	pOldPen = dc.SelectObject(&newPen);
 	double rate = m_nWidth * m_nHeight * 0.2 / m_fWidthRatio;
-	for (int i = 0; i < m_nWidth; i++)
+	for (int i = 0; i <= m_nWidth; i++)
 	{
 		int height = m_ClientRect.bottom - 30 - m_pfHistogram[m_nChannelSelected][int(i / m_fWidthRatio)] * rate;
 		if (height < 30) height = 30;
@@ -254,8 +254,8 @@ void CDlgHistogram::OnSize(UINT nType, int cx, int cy)
 	m_nHeight = m_ClientRect.Height() - 60;
 	m_PaintRect.right = 10 + m_nWidth;
 	m_PaintRect.bottom = m_ClientRect.bottom - 30;
-	m_fWidthRatio = m_nWidth / 256.0;
-	m_fHeightRatio = m_nHeight / 256.0;
+	m_fWidthRatio = m_nWidth / 255.0;
+	m_fHeightRatio = m_nHeight / 255.0;
 	Invalidate(TRUE);
 	CDialogEx::OnSize(nType, cx, cy);
 }

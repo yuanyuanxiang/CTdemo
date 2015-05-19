@@ -610,7 +610,10 @@ void CCTdemoView::OnToolbarBackProject()
 			break;
 		}
 	}
-	pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
+	if (CHECK_IMAGE_NULL(pDoc->m_pImage))
+		pDoc->m_pReconstruct->MemcpyFloatToByte();
+	else
+		pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
 	pDoc->OnWindowBackpro();
 	EndWaitCursor();
 }
