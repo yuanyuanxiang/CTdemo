@@ -91,8 +91,8 @@ public:
 	virtual void OnInitialUpdate();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg void OnToolbarBpp();
-	afx_msg void OnUpdateToolbarBpp(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarChangeBpp();
+	afx_msg void OnUpdateToolbarChangeBpp(CCmdUI *pCmdUI);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnToolbarTransform();
@@ -143,6 +143,8 @@ public:
 	afx_msg void OnUpdateCudaPanProject(CCmdUI *pCmdUI);
 	afx_msg void OnChangeImageShowNext();
 	afx_msg void OnChangeImageShowPrev();
+	afx_msg void OnReconstructImageSize();
+	afx_msg void OnUpdateReconstructImageSize(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

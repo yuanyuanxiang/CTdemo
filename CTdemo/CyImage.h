@@ -2,9 +2,14 @@
 
 #include "atlimage.h"
 #include "Functions.h"
+
 //
 // ********** CyImage：继承自CImage ********** //
 //
+
+#ifndef CHECK_IMAGE_NULL
+#define CHECK_IMAGE_NULL(p) ( ((p) == NULL) || ((p)->IsNull()) ) //检查图像是空
+#endif
 
 class CyImage : public CImage
 {
@@ -15,6 +20,7 @@ public:
 	float						m_fMinimum;				//浮点数据的最小值
 
 	// 父类的图像信息无法直接访问，故出此下策
+	BYTE*						m_pyBits;				//图像首地址
 	int							m_nyWidth;				//图像宽度
 	int							m_nyHeight;				//图像高度
 	int							m_nyRowlen;				//图像每行字节数
@@ -27,7 +33,7 @@ public:
 	~CyImage();
 
 	// 对派生类成员变量的操作
-	void UpdateImageInfomation();											//更新图像信息
+	void UpdateInfomation();												//更新图像信息
 	float* GetFloatData();													//获取浮点数据
 	bool SetFloatData(float* pSrc, int nRowlen, int nHeight);				//设置浮点数据
 	float GetMaximum();														//获取最大值
@@ -45,8 +51,10 @@ public:
 	// 数据拷贝
 	void MemcpyByteToFloat();
 	void MemcpyFloatToByte();
+	void MemcpyFloatToByteBounded(float lower, float upper);
 
 	// 获取图像信息
+	bool BitMapModified();
 	BYTE* GetHeadAddress();
 	BYTE* GetLineAddress(int LineID);
 	int GetChannel();

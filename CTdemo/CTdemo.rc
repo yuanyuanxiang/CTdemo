@@ -208,22 +208,17 @@ BEGIN
         MENUITEM "保存滤波图像",                      ID_SAVE_AFTER_FILTER_IMG
         MENUITEM "保存重建图像",                      ID_SAVE_BACK_PROJECT_IMG
         MENUITEM SEPARATOR
-        MENUITEM "扇束投影(&S)",                    ID_PAN_PROJECT
+        MENUITEM "扇束投影(1)",                     ID_PAN_PROJECT
+        MENUITEM "扇束投影(2)",                     ID_AMP_PAN_PROJECT
+        MENUITEM "扇束投影(3)",                     ID_CUDA_PAN_PROJECT
         MENUITEM "扇束重建(&R)",                    ID_PAN_RECONSTRUCT
         MENUITEM SEPARATOR
-    END
-    POPUP "加速(&A)"
-    BEGIN
-        POPUP "加速扇束扫描"
-        BEGIN
-            MENUITEM "AMP方法(&a)",                   ID_AMP_PAN_PROJECT
-            MENUITEM "CUDA方法(&c)",                  ID_CUDA_PAN_PROJECT
-        END
     END
     POPUP "设置(&S)"
     BEGIN
         MENUITEM "平行束扫描设置(&2)\tF2",             ID_PROJECT_SETTINGS
         MENUITEM "扇形束扫描设置(&3)\tF3",             ID_FAN_SCAN_SETTINGS
+        MENUITEM "重建图像大小设置",                    ID_RECONSTRUCT_IMAGE_SIZE
     END
     POPUP "视图(&V)"
     BEGIN
@@ -741,6 +736,7 @@ BEGIN
     ID_TOOLBAR_POPUP        "在弹出对话框查看此图像\n查看图像"
     ID_CHANGE_IMAGE_SHOW    "切换用以显示的图像\n下一张"
     ID_CHANGE_IMAGE_SHOW_PREV "切换用以显示的图像\n前一张"
+    ID_RECONSTRUCT_IMAGE_SIZE "设置重建图像的大小\n设置图像大小"
 END
 
 #endif    // 中文(简体，中国) resources

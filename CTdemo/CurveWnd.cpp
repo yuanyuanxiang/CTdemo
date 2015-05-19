@@ -764,11 +764,33 @@ void CCurveWnd::OnPaint()
 		newPen.CreatePen(PS_SOLID, 1, LineColor);
 		pOldPen = MemDC.SelectObject(&newPen);
 		d_type rate = 0.20*m_nRectHeight*m_nRectWidth/m_fWidthRatio;//使直方图尽量布满坐标系并且便于观察
-		for (int i = 0, nTemp; i<m_nRectWidth; i++)
+		// 应该遍历完直方图，而不是遍历完绘图区域
+		if (m_fWidthRatio <= 1)
 		{
-			nTemp = m_pOnPaintRect->left+i;
-			MemDC.MoveTo(nTemp, m_pOnPaintRect->bottom);
-			MemDC.LineTo(nTemp, int(m_pOnPaintRect->bottom - m_pfHistogram[m_nChannelSelected][int(i/m_fWidthRatio)]*rate));
+			for (int i = 0, nTemp; i < 256; i++)
+			{
+				nTemp = m_pOnPaintRect->left + i * m_fWidthRatio - 1;
+				MemDC.MoveTo(nTemp, m_pOnPaintRect->bottom);
+				MemDC.LineTo(nTemp, int(m_pOnPaintRect->bottom - m_pfHistogram[m_nChannelSelected][i]*rate));
+			}
+		}
+		else
+		{
+			int nTemp;
+			for (int i = 0; i <= m_nRectWidth; i++)
+			{
+				nTemp = m_pOnPaintRect->left + i - 1;
+				MemDC.MoveTo(nTemp, m_pOnPaintRect->bottom);
+				MemDC.LineTo(nTemp, int(m_pOnPaintRect->bottom - m_pfHistogram[m_nChannelSelected][int(i/m_fWidthRatio)]*rate));
+			}
+			// 对于灰度值集中在255的图像务必需要下述代码
+			nTemp = m_pOnPaintRect->right - m_fWidthRatio;
+			for (int i = 0; i <= m_fWidthRatio; i++)
+			{
+				nTemp++;
+				MemDC.MoveTo(nTemp, m_pOnPaintRect->bottom);
+				MemDC.LineTo(nTemp, int(m_pOnPaintRect->bottom - m_pfHistogram[m_nChannelSelected][255] * rate));
+			}
 		}
 		newPen.DeleteObject();
 

@@ -224,6 +224,7 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 		return FALSE;
 	}
 	UpdateImageInfomation();
+	InitScanningParameters();
 	m_strFilePath = lpszPathName;
 	CString temp = GetFileNameFromPath(m_strFilePath);
 	int num = temp.ReverseFind('.');
@@ -247,19 +248,36 @@ BOOL CCTdemoDoc::OpenProjectionFile(LPCTSTR lpszPathName)
 		SAFE_DELETE(m_pProject);
 		return FALSE;
 	}
-
+	if (m_pProject->m_nyBpp != 8)
+	{
+		CString file = lpszPathName;
+		AfxMessageBox(file + _T("\n不是有效的投影文件。") , MB_OK | MB_ICONERROR);
+		SAFE_DELETE(m_pProject);
+		return FALSE;
+	}
 	m_strFilePath = lpszPathName;
 	CString temp = GetFileNameFromPath(m_strFilePath);
 	int num = temp.ReverseFind('.');
 	m_strFileName = temp.Left(num);
 	m_strFilePostfix = temp.Right(temp.GetLength() - num);
-	SetPathName(m_strFilePath);
+	SetPathName(m_strFilePath, FALSE);
 	SetModifiedFlag(FALSE);
 
 	m_nAnglesNum = m_pProject->GetWidth();
 	m_nRaysNum = m_pProject->GetHeight();
 	int rowlen = abs(m_pProject->GetPitch());
 
+	SetReconstructImageSize();
+
+	CCTdemoView* pView = GetMainView();
+	pView->SetCurrentImage(m_pProject);
+
+	return TRUE;
+}
+
+
+void CCTdemoDoc::SetReconstructImageSize()
+{
 	CDlgReconstructSettings dlg;
 	if (dlg.DoModal() == IDOK)
 	{
@@ -271,14 +289,9 @@ BOOL CCTdemoDoc::OpenProjectionFile(LPCTSTR lpszPathName)
 		m_ptOrigin.y = (m_nHeight + 1) / 2;
 		m_Ox = m_nWidth / 2.f;
 		m_Oy = m_nHeight / 2.f;
-		m_fRaysSeparation = 1.f;								//射线间距
-		m_nDetectorCenter = (m_nRaysNum + 1) / 2;				//探测器中心
+		m_fRaysSeparation = 1.f * ComputeRaysNum(m_nWidth, m_nHeight) / m_nRaysNum;	//射线间距
+		m_nDetectorCenter = (m_nRaysNum + 1) / 2;									//探测器中心
 	}
-
-	CCTdemoView* pView = GetMainView();
-	pView->SetCurrentImage(m_pImage);
-
-	return TRUE;
 }
 
 
@@ -347,7 +360,7 @@ void CCTdemoDoc::Popup(CyImage* pImage)
 // 更新图像信息：首地址、宽、高、每行字节数、通道。
 void CCTdemoDoc::UpdateImageInfomation()
 {
-	if(m_pImage == NULL)
+	if(CHECK_IMAGE_NULL(m_pImage))
 		return;
 	m_pHead = m_pImage->GetHeadAddress();		//首地址
 	m_nWidth = m_pImage->GetWidth();			//图像宽度
@@ -360,17 +373,12 @@ void CCTdemoDoc::UpdateImageInfomation()
 	m_ptOrigin.y = (m_nHeight + 1) / 2;
 	m_Ox = m_nWidth / 2.f;
 	m_Oy = m_nHeight / 2.f;
-	InitScanningParameters();
 }
 
 
 void CCTdemoDoc::InitScanningParameters()
 {
-	// 参考MATLAB
-	int temp1 = m_nWidth - (int)floor((m_nWidth - 1) / 2.f) - 1;
-	int temp2 = m_nHeight - (int)floor((m_nHeight - 1) / 2.f) - 1;
-	int temp = 2 * (int)ceil(sqrt(1.f * temp1 * temp1 + temp2 * temp2)) + 3;
-	m_nRaysNum = temp;										//射线条数
+	m_nRaysNum = ComputeRaysNum(m_nWidth, m_nHeight);		//射线条数
 	m_fRaysSeparation = 0.5f;								//射线间距
 	m_nDetectorCenter = (m_nRaysNum + 1) / 2;				//探测器中心
 	m_fPanSOR = m_nImageDiag * 3;
@@ -442,7 +450,7 @@ void CCTdemoDoc::OnUpdateWindowProject(CCmdUI *pCmdUI)
 	pCmdUI->Enable(m_pProject != NULL);
 }
 
-extern const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen, float fPixelDistance);
+extern const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float rays_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen, float fPixelDistance);
 
 // 使用CUDA加速投影
 void CCTdemoDoc::OnProjectUsingGpu()
@@ -458,7 +466,7 @@ void CCTdemoDoc::OnProjectUsingGpu()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	BeginWaitCursor();
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	const char *result = Radon(m_pProject->m_pfFloat, m_nRaysNum, m_nAnglesNum, 1.f, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen, m_fRaysSeparation);
+	const char *result = cudaRadon(m_pProject->m_pfFloat, m_nRaysNum, m_nAnglesNum, 1.f, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen, m_fRaysSeparation);
 	if (result != NULL)
 	{
 		CString str(result);
@@ -599,7 +607,7 @@ void CCTdemoDoc::Rand_Pan2(float R, float D, int angles, int rays)
 	PopImageViewerDlg(m_pProject->m_pfFloat, angles, rays, angles);
 }
 
-extern void PanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
+extern void cudaPanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
 extern void AmpRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
 
 void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
@@ -631,7 +639,7 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	}
 	else
 	{
-		PanRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
+		cudaPanRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
 	}
 	EndWaitCursor();
 
@@ -673,7 +681,7 @@ void CCTdemoDoc::ReconstructImage(CString path)
 		float w0 = dlg.m_fConvoluteW;
 		m_pAfterFilter->Create(angles, rays, 8);
 		m_pReconstruct->Create(rec_width, rec_height, 8);
-		Convolute(m_pAfterFilter->m_pfFloat, m_pProject->m_pfFloat, angles, rays, 1.f, w0);
-		BackProject(m_pReconstruct->m_pfFloat, m_pAfterFilter->m_pfFloat, rec_width, rec_height, angles, rays, 1.f, delta_fai);
+		Convolute(m_pAfterFilter->m_pfFloat, m_pProject->m_pfFloat, angles, rays, m_fRaysSeparation, w0);
+		BackProject(m_pReconstruct->m_pfFloat, m_pAfterFilter->m_pfFloat, rec_width, rec_height, angles, rays, m_fRaysSeparation, delta_fai);
 	}
 }

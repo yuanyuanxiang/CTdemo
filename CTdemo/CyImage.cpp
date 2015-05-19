@@ -13,7 +13,8 @@ CyImage::CyImage()
 	CImage::CImage();
 	m_pfFloat = NULL;
 	m_fMaximum = 0;
-	m_fMinimum = -1;
+	m_fMinimum = 0;
+	m_pyBits = NULL;
 	m_nyWidth = 0;
 	m_nyHeight = 0;
 	m_nyRowlen = 0;
@@ -30,10 +31,16 @@ CyImage::~CyImage()
 }
 
 
-void CyImage::UpdateImageInfomation()
+void CyImage::UpdateInfomation()
 {
+	if (CHECK_IMAGE_NULL(this))
+		return;
+	if (!BitMapModified())
+		return;
 	GetInfomation(m_nyWidth, m_nyHeight, m_nyRowlen, m_nyBpp, m_nyChannel);
 	m_nyRowlen2 = m_nyChannel * m_nyWidth;
+	m_pyBits = GetHeadAddress();
+	InitFloatData();
 }
 
 
@@ -141,6 +148,14 @@ void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP)
 }
 
 
+bool CyImage::BitMapModified()
+{
+	if (m_nyWidth != GetWidth() || m_nyHeight != GetHeight() || m_nyBpp != GetBPP() || m_pyBits != GetHeadAddress())
+		return true;
+	return false;
+}
+
+
 void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP, int &nChannel)
 {
 	nWidth = GetWidth();
@@ -175,8 +190,7 @@ BOOL CyImage::Create(int nWidth, int nHeight, int nBPP, DWORD dwFlags) throw()
 		return result;
 	if (nBPP == 8)
 		SetColorTabFor8BitImage(this);
-	UpdateImageInfomation();
-	InitFloatData();
+	UpdateInfomation();
 	if (dwFlags != 0)
 	{
 		MemcpyByteToFloat();
@@ -194,9 +208,8 @@ BOOL CyImage::Create(float* pSrc, int nWidth, int nHeight, int nRowlen, DWORD dw
 		return result;
 	if (nBPP == 8)
 		SetColorTabFor8BitImage(this);
-	UpdateImageInfomation();
-	m_pfFloat = pSrc;
-	pSrc = NULL;
+	UpdateInfomation();
+	memcpy(m_pfFloat, pSrc, m_nyHeight * m_nyRowlen2 * sizeof(float));
 	MemcpyFloatToByte();
 	return result;
 }
@@ -207,8 +220,7 @@ HRESULT CyImage::Load(LPCTSTR pszFileName) throw()
 	HRESULT hr = FAILED(CImage::Load(pszFileName));
 	if (hr != S_OK)
 		return hr;
-	UpdateImageInfomation();
-	InitFloatData();
+	UpdateInfomation();
 	MemcpyByteToFloat();
 	return hr;
 }
@@ -248,6 +260,29 @@ void CyImage::MemcpyFloatToByte()
 		{
 			for (int k = 0; k < m_nyChannel; ++k)
 				head[k + i * m_nyChannel + j * m_nyRowlen] = 255.f * (m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2] - m_fMinimum) / (m_fMaximum - m_fMinimum);
+		}
+	}
+}
+
+
+void CyImage::MemcpyFloatToByteBounded(float lower, float upper)
+{
+	BYTE* head = GetHeadAddress();
+
+#pragma omp parallel for
+	for (int i = 0; i < m_nyWidth; ++i)
+	{
+		for (int j = 0; j < m_nyHeight; ++j)
+		{
+			for (int k = 0; k < m_nyChannel; ++k)
+			{
+				if (m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2] < lower)
+					head[k + i * m_nyChannel + j * m_nyRowlen] = lower;
+				else if (m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2] > upper)
+					head[k + i * m_nyChannel + j * m_nyRowlen] = upper;
+				else
+					head[k + i * m_nyChannel + j * m_nyRowlen] = m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2];
+			}
 		}
 	}
 }
@@ -388,7 +423,7 @@ void CyImage::Radon(float* pDst, float angles_separation, int nAnglesNum, float 
 // 沿单个方向线积分，单个方向的radon变换
 void CyImage::DirIntegrate(float* pDst, int nLength, float angle, float sub_pixel, int nCurChannel)
 {
-	ImageIntegrate(pDst, nLength, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angle, sub_pixel);
+	ImageIntegrate(pDst, nLength, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angle);
 }
 
 

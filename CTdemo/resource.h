@@ -135,14 +135,15 @@
 #define ID_CHANGE_IMAGE_SHOW            32869
 #define ID_32872                        32872
 #define ID_CHANGE_IMAGE_SHOW_PREV       32873
-#define ID_ACCELERATOR32874             32874
+#define ID_32876                        32876
+#define ID_RECONSTRUCT_IMAGE_SIZE       32877
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        325
-#define _APS_NEXT_COMMAND_VALUE         32876
+#define _APS_NEXT_COMMAND_VALUE         32878
 #define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

@@ -62,6 +62,7 @@ public:
 	CString				GetExeFilePath();									// 获取当前exe文件路径
 	BOOL				OpenProjectionFile(LPCTSTR lpszPathName);			// 打开投影文件
 	void				ReconstructImage(CString path);						// 对数据进行重建
+	void				SetReconstructImageSize();							// 设置重建图像大小
 
 	// *** 平行束相关 ***
 	void				RadonTransform();									// 计算投影图像

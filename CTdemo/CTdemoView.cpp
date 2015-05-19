@@ -18,6 +18,7 @@
 #include <omp.h>
 #include "DlgPanParameter.h"
 #include "CurveView.h"
+#include "DlgReconstructSettings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,8 +40,8 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_WM_RBUTTONUP()
 	ON_WM_ERASEBKGND()
 	ON_WM_SIZE()
-	ON_COMMAND(ID_TOOLBAR_BPP, &CCTdemoView::OnToolbarBpp)
-	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_BPP, &CCTdemoView::OnUpdateToolbarBpp)
+	ON_COMMAND(ID_TOOLBAR_BPP, &CCTdemoView::OnToolbarChangeBpp)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_BPP, &CCTdemoView::OnUpdateToolbarChangeBpp)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_TOOLBAR_TRS, &CCTdemoView::OnToolbarTransform)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_TRS, &CCTdemoView::OnUpdateToolbarTransform)
@@ -90,6 +91,8 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_CUDA_PAN_PROJECT, &CCTdemoView::OnUpdateCudaPanProject)
 	ON_COMMAND(ID_CHANGE_IMAGE_SHOW, &CCTdemoView::OnChangeImageShowNext)
 	ON_COMMAND(ID_CHANGE_IMAGE_SHOW_PREV, &CCTdemoView::OnChangeImageShowPrev)
+	ON_COMMAND(ID_RECONSTRUCT_IMAGE_SIZE, &CCTdemoView::OnReconstructImageSize)
+	ON_UPDATE_COMMAND_UI(ID_RECONSTRUCT_IMAGE_SIZE, &CCTdemoView::OnUpdateReconstructImageSize)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -360,7 +363,7 @@ void CCTdemoView::OnSize(UINT nType, int cx, int cy)
 }
 
 // 改变图像位深度
-void CCTdemoView::OnToolbarBpp()
+void CCTdemoView::OnToolbarChangeBpp()
 {
 	// TODO: 在此添加命令处理程序代码
 	typedef void (*lpFun)(CyImage*);
@@ -383,11 +386,14 @@ void CCTdemoView::OnToolbarBpp()
 	CCTdemoDoc *pDoc = GetDocument();
 	// ### 注意temp的空间是由DLL分配的。 ###
 	pDllFunc(m_pCurrent);
+	m_pCurrent->UpdateInfomation();
+	if (m_pCurrent->m_nyBpp != pDoc->m_nBPP)
+		pDoc->UpdateImageInfomation();
 	Invalidate(TRUE);
 }
 
 
-void CCTdemoView::OnUpdateToolbarBpp(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateToolbarChangeBpp(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 }
@@ -418,6 +424,7 @@ void CCTdemoView::OnToolbarTransform()
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
 		float* pSrc = m_pCurrent->Rotate(RAD(dlg.m_fRotateAngle), 0, 0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
 		m_pCurrent->Create(pSrc, NewWidth, NewHeight, NewRowlen);
+		SAFE_DELETE(pSrc);
 		Invalidate();
 	}
 }
@@ -532,10 +539,10 @@ void CCTdemoView::OnToolbarConvolute()
 			switch(pDoc->m_nProjectionType)
 			{
 			case PROJECT_TYPE_PAR:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysSeparation, dlg.m_fW);
+				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 1.f, dlg.m_fW);
 				break;
 			case PROJECT_TYPE_PAN:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysSeparation, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 1.f, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 				break;
 			default:
 				break;
@@ -594,16 +601,16 @@ void CCTdemoView::OnToolbarBackProject()
 		switch(pDoc->m_nProjectionType)
 		{
 		case PROJECT_TYPE_PAR:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation);
 			break;
 		case PROJECT_TYPE_PAN:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 			break;
 		default:
 			break;
 		}
 	}
-	pDoc->m_pReconstruct->MemcpyFloatToByte();
+	pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
 	pDoc->OnWindowBackpro();
 	EndWaitCursor();
 }
@@ -1068,4 +1075,17 @@ void CCTdemoView::OnChangeImageShowPrev()
 	default:
 		break;
 	}
+}
+
+
+void CCTdemoView::OnReconstructImageSize()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pDoc->SetReconstructImageSize();
+}
+
+
+void CCTdemoView::OnUpdateReconstructImageSize(CCmdUI *pCmdUI)
+{
+	// TODO: 在此添加命令更新用户界面处理程序代码
 }

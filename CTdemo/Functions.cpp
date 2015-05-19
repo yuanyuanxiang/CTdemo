@@ -52,6 +52,46 @@ void PositionTransform(float &x, float &y, float theta)
 }
 
 
+// 坐标旋转，输入参数为旋转角度的余弦、正弦值
+void PositionTransform(float &x, float &y, float cos_sin[2], float x0, float y0)
+{
+	float delta_x = x - x0;
+	float delta_y = y - y0;
+	PositionTransform(delta_x, delta_y, cos_sin);
+	x = x0 + delta_x;
+	y = y0 + delta_y;
+}
+
+
+// 坐标旋转，输入参数为旋转角度的余弦、正弦值
+void PositionTransform(float &x, float &y, float cos_sin[2])
+{
+	float x_temp = x * cos_sin[0] - y * cos_sin[1];
+	y = x * cos_sin[1] + y * cos_sin[0];
+	x = x_temp;
+}
+
+
+// 坐标旋转，输入参数为旋转角度的余弦、正弦值
+void PositionTransform(float &x, float &y, float cos_theta, float sin_theta, float x0, float y0)
+{
+	float delta_x = x - x0;
+	float delta_y = y - y0;
+	PositionTransform(delta_x, delta_y, cos_theta, sin_theta);
+	x = x0 + delta_x;
+	y = y0 + delta_y;
+}
+
+
+// 坐标旋转，输入参数为旋转角度的余弦、正弦值
+void PositionTransform(float &x, float &y, float cos_theta, float sin_theta)
+{
+	float x_temp = x * cos_theta - y * sin_theta;
+	y = x * sin_theta + y * cos_theta;
+	x = x_temp;
+}
+
+
 float FindMaxBetween4Numbers(float x, float y, float z, float w)
 {
 	float Max1, Max2;
@@ -124,6 +164,18 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 	int med = (nRays + 1) / 2;
 	float sum = 0.f;
 
+	// 2015.5.19 将三角函数放到循环体外面
+	float *cos_fai = new float[nAngles];
+	float *sin_fai = new float[nAngles];
+
+#pragma omp parallel for
+	for (i = 0; i < nAngles; ++i)
+	{
+		float fai = i * delta_fai;
+		cos_fai[i] = cos(fai);
+		sin_fai[i] = sin(fai);
+	}
+
 #pragma omp parallel for private(m, n, i) reduction(+ : sum)
 	for (m = 0; m < nHeight; ++m)
 	{
@@ -133,12 +185,25 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 			for (i = 0; i < nAngles; ++i)
 			{
 				float fai = i * delta_fai;
-				float r = (n - cx) * cos(fai) + (m - cy) * sin(fai);
-				sum += LinearInterp(pPrj, nAngles, nRays, i, med + r);
+				float r = (n - cx) * cos_fai[i] + (m - cy) * sin_fai[i];
+				sum += LinearInterp(pPrj, nAngles, nRays, i, med + r / delta_r);
 			}
 			pDst[n + m * nWidth] = sum * delta_fai;
 		}
 	}
+
+	SAFE_DELETE(cos_fai);
+	SAFE_DELETE(sin_fai);
+}
+
+
+// 线性一维插值:插值出x的值.
+float LinearInterp(float* pPrj, int nWidth, float x)
+{
+	int x1 = floor(x), x2 = x1 + 1;
+	if ( x1 < 0 || x2 >= nWidth)
+		return 0;
+	return pPrj[x1] * (1 - x + x1) + pPrj[x2] * (x - x1);
 }
 
 
@@ -193,6 +258,18 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 	float delta_u = m_fPan_delta_u;
 	delta_r = R / D * delta_u;
 
+	// 2015.5.19 将三角函数放到循环体外面
+	float *cos_fai = new float[nAngles];
+	float *sin_fai = new float[nAngles];
+
+#pragma omp parallel for
+	for (i = 0; i < nAngles; ++i)
+	{
+		float fai = i * delta_fai;
+		cos_fai[i] = cos(fai);
+		sin_fai[i] = sin(fai);
+	}
+
 #pragma omp parallel for private(m, n, i) reduction(+ : sum)
 	for (m = 0; m < nHeight; ++m)
 	{
@@ -204,15 +281,16 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 				float x1 = n - cx;
 				float x2 = m - cy;
 				float fai = i * delta_fai;
-				float cos_fai = cos(fai);
-				float sin_fai = sin(fai);
-				float r = x1 * cos_fai + x2 * sin_fai;
-				float alpha = R * D / ((R - x2 * cos_fai + x1 * sin_fai) * (R - x2 * cos_fai + x1 * sin_fai));
+				float r = x1 * cos_fai[i] + x2 * sin_fai[i];
+				float alpha = R * D / ((R - x2 * cos_fai[i] + x1 * sin_fai[i]) * (R - x2 * cos_fai[i] + x1 * sin_fai[i]));
 				sum += alpha * LinearInterp(pPrj, nAngles, nRays, i, med + r / delta_r);
 			}
 			pDst[n + m * nWidth] = sum * delta_fai;
 		}
 	}
+
+	SAFE_DELETE(cos_fai);
+	SAFE_DELETE(sin_fai);
 }
 
 
@@ -323,7 +401,15 @@ float LineIntegrate(float* pSrc, int &Width, int &Height, int &Rowlen, int &Chan
 }
 
 
-void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum)
+/*
+radon结果：float* pDst
+输入图像信息：loat* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel
+当前通道：int nCurChannel
+角度间距及个数：float angles_separation, int nAnglesNum
+射线间距及个数：float rays_separation, int nRaysNum
+*/
+void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, 
+				float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum)
 {
 	float zoom_rate = 1 / rays_separation;
 	int nNewWidth = zoom_rate * nWidth;
@@ -331,26 +417,23 @@ void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowle
 	int nNewRowlen = nNewWidth * nChannel;
 	float *pSrc2 = ImageZoom(pSrc, nWidth, nHeight, nRowlen, nChannel, nNewWidth, nNewHeight);
 
-	int m_nImageDiag = (int)ceil(sqrt(1.0f * nWidth * nWidth + nHeight * nHeight));
-	int nDetectorCenter = (nRaysNum + 1) / 2;
-	int nHalfRays = (nRaysNum + 1) / 2;
+	int nNewRaysNum = ComputeRaysNum(nNewWidth, nNewHeight);
+	int nDetectorCenter = (nNewRaysNum + 1) / 2;
+	float alpha = 1.f * nNewRaysNum / nRaysNum;
 
 #pragma omp parallel for
 	for (int i = 0; i < nAnglesNum; ++i)
 	{
-		float *temp = new float[nRaysNum];
-		memset(temp, 0, nRaysNum * sizeof(float));
+		float *temp = new float[nNewRaysNum];
+		memset(temp, 0, nNewRaysNum * sizeof(float));
 		float angle = i * angles_separation;
-		ImageIntegrate(temp, nRaysNum, pSrc2, nNewWidth, nNewHeight, nNewRowlen, nChannel, nCurChannel, angle, rays_separation);
+		ImageIntegrate(temp, nNewRaysNum, pSrc2, nNewWidth, nNewHeight, nNewRowlen, nChannel, nCurChannel, angle);
 		
 #pragma omp parallel for
 		for (int j = 0; j < nRaysNum; ++j)
 		{
-			int num = (j - nHalfRays) + nDetectorCenter;
-			if(0 <= num && num < nRaysNum)
-			{
-				pDst[i + j * nAnglesNum] = temp[num];
-			}
+			float x = j * alpha;
+			pDst[i + j * nAnglesNum] = LinearInterp(temp, nNewRaysNum, x) * rays_separation;
 		}
 		SAFE_DELETE(temp);
 	}
@@ -360,14 +443,27 @@ void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowle
 
 
 // 沿单个方向线积分，单个方向的radon变换
-void ImageIntegrate(float* pDst, int nLength, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle, float sub_pixel)
+/*
+float* pDst		积分值
+int &nLength	积分个数
+float* pSrc		图像数据
+int &nWidth		图像宽度
+int &nHeight	图像高度
+int &nRowlen	每行浮点数
+int &nChannel	通道个数
+int nCurChannel	当前通道
+float angle		方向
+*/
+void ImageIntegrate(float* pDst, int &nLength, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle)
 {
-	int NewWidth = 0, NewHeight = 0, NewRowlen;
-	int Xmin, Ymin, Xmax, Ymax;
+	// 图像旋转之后的信息及顶点坐标
+	int NewWidth = 0, NewHeight = 0, NewRowlen = 0;
+	int Xmin = 0, Ymin = 0, Xmax = 0, Ymax = 0;
 	float *pBits = ImageRotate(pSrc, nWidth, nHeight, nRowlen, nChannel, angle, 0, 0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+	// 图像按行累加
 	float* add_width = new float[NewWidth];
 	memset(add_width, 0, NewWidth * sizeof(float));
-
+	// sum为了使OpenMP能正常编译
 	float sum = 0.f;
 	int nNewRowlen = NewWidth * nChannel;
 
@@ -379,24 +475,32 @@ void ImageIntegrate(float* pDst, int nLength, float* pSrc, int &nWidth, int &nHe
 		{
 			sum += pBits[nCurChannel + i * nChannel + j * nNewRowlen];
 		}
-		add_width[i] = sum * sub_pixel;
+		add_width[i] = sum;
 	}
 
+	// 探测器中心和图像宽度的中心
 	int nDetectorCenter = (nLength + 1) / 2;
 	int nHalfWidth = (NewWidth + 1) / 2;
 
 #pragma omp parallel for
 	for (int i = 0; i < nLength; ++i)
 	{
-		int s = (i - nDetectorCenter) / sub_pixel + nHalfWidth;
+		int s = (i - nDetectorCenter) + nHalfWidth;
 		if (s >= 0 && s < NewWidth)
 			pDst[i] = add_width[s];
+		//TRACE("序号 = %d, 值 = %f\n", i, pDst[i]);
 	}
+
 	SAFE_DELETE(add_width);
 	SAFE_DELETE(pBits);
 }
 
 
+/*
+输入图像信息：float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel
+旋转角度：float angle
+输出图像信息：int &NewWidth, int &NewHeight, int &NewRowlen
+*/
 float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, float angle, int &NewWidth, int &NewHeight, int &NewRowlen)
 {
 	// 原始图像四个顶点的坐标
@@ -405,11 +509,14 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 	x2 = float(nWidth - 1);			y2 = 0;
 	x3 = x2;						y3 = float(nHeight - 1);
 	x4 = x1;						y4 = y3;
+	// 2015.5.19 为了减少计算，把三角函数放到循环外面
+	float cos_theta = cos(angle);
+	float sin_theta = sin(angle);
 	// 四个顶点顺时针旋转,绕图像左下角
-	PositionTransform(x1, y1, angle);
-	PositionTransform(x2, y2, angle);
-	PositionTransform(x3, y3, angle);
-	PositionTransform(x4, y4, angle);
+	PositionTransform(x1, y1, cos_theta, sin_theta);
+	PositionTransform(x2, y2, cos_theta, sin_theta);
+	PositionTransform(x3, y3, cos_theta, sin_theta);
+	PositionTransform(x4, y4, cos_theta, sin_theta);
 	int Xmin, Xmax, Ymin, Ymax;
 	Xmax = int(FindMaxBetween4Numbers(x1, x2, x3, x4));
 	Ymax = int(FindMaxBetween4Numbers(y1, y2, y3, y4));
@@ -429,7 +536,7 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 		{
 			float x = float(i + Xmin);
 			float y = float(j + Ymin);
-			PositionTransform(x, y, -angle);
+			PositionTransform(x, y, cos_theta, -sin_theta);
 			for (int nCurChannel = 0; nCurChannel < nChannel; ++nCurChannel)
 				pDst[nCurChannel + i * nChannel + j * NewRowlen] = GetPositionValue(pSrc, nWidth, nHeight, nRowlen, nChannel, nCurChannel, x, y);
 		}
@@ -447,11 +554,14 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 	x2 = float(nWidth - 1);			y2 = 0;
 	x3 = x2;						y3 = float(nHeight - 1);
 	x4 = x1;						y4 = y3;
+	// 2015.5.19 为了减少计算，把三角函数放到循环外面
+	float cos_theta = cos(angle);
+	float sin_theta = sin(angle);
 	// 四个顶点顺时针旋转,绕图像中心
-	PositionTransform(x1, y1, angle, x0, y0);
-	PositionTransform(x2, y2, angle, x0, y0);
-	PositionTransform(x3, y3, angle, x0, y0);
-	PositionTransform(x4, y4, angle, x0, y0);
+	PositionTransform(x1, y1, cos_theta, sin_theta, x0, y0);
+	PositionTransform(x2, y2, cos_theta, sin_theta, x0, y0);
+	PositionTransform(x3, y3, cos_theta, sin_theta, x0, y0);
+	PositionTransform(x4, y4, cos_theta, sin_theta, x0, y0);
 	int Xmin, Xmax, Ymin, Ymax;
 	Xmax = int(FindMaxBetween4Numbers(x1, x2, x3, x4));
 	Ymax = int(FindMaxBetween4Numbers(y1, y2, y3, y4));
@@ -471,7 +581,7 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 		{
 			float x = float(i + Xmin);
 			float y = float(j + Ymin);
-			PositionTransform(x, y, -angle, x0, y0);
+			PositionTransform(x, y, cos_theta, -sin_theta, x0, y0);
 			for (int nCurChannel = 0; nCurChannel < nChannel; ++nCurChannel)
 				pDst[nCurChannel + i * nChannel + j * NewRowlen] = GetPositionValue(pSrc, nWidth, nHeight, nRowlen, nChannel, nCurChannel, x, y);
 		}
@@ -489,11 +599,14 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 	x2 = float(nWidth - 1);			y2 = 0;
 	x3 = x2;						y3 = float(nHeight - 1);
 	x4 = x1;						y4 = y3;
+	// 2015.5.19 为了减少计算，把三角函数放到循环外面
+	float cos_theta = cos(angle);
+	float sin_theta = sin(angle);
 	// 四个顶点顺时针旋转,绕图像中心
-	PositionTransform(x1, y1, angle, x0, y0);
-	PositionTransform(x2, y2, angle, x0, y0);
-	PositionTransform(x3, y3, angle, x0, y0);
-	PositionTransform(x4, y4, angle, x0, y0);
+	PositionTransform(x1, y1, cos_theta, sin_theta, x0, y0);
+	PositionTransform(x2, y2, cos_theta, sin_theta, x0, y0);
+	PositionTransform(x3, y3, cos_theta, sin_theta, x0, y0);
+	PositionTransform(x4, y4, cos_theta, sin_theta, x0, y0);
 	Xmax = int(FindMaxBetween4Numbers(x1, x2, x3, x4));
 	Ymax = int(FindMaxBetween4Numbers(y1, y2, y3, y4));
 	Xmin = int(FindMinBetween4Numbers(x1, x2, x3, x4));
@@ -512,9 +625,12 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 		{
 			float x = float(i + Xmin);
 			float y = float(j + Ymin);
-			PositionTransform(x, y, -angle, x0, y0);
+			PositionTransform(x, y, cos_theta, -sin_theta, x0, y0);
 			for (int nCurChannel = 0; nCurChannel < nChannel; ++nCurChannel)
+			{
 				pDst[nCurChannel + i * nChannel + j * NewRowlen] = GetPositionValue(pSrc, nWidth, nHeight, nRowlen, nChannel, nCurChannel, x, y);
+				//TRACE("列 = %d, 行 = %d, 值 = %f\n", i, j, pDst[nCurChannel + i * nChannel + j * NewRowlen]);
+			}
 		}
 	}
 
@@ -524,7 +640,7 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 
 float* ImageZoom(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int NewWidth, int NewHeight)
 {
-	int NewRowlen = nChannel * NewHeight;
+	int NewRowlen = nChannel * NewWidth;
 	float* pDst = new float[NewRowlen * NewHeight];
 	float wRatio = 1.f * nWidth / NewWidth;
 	float hRatio = 1.f * nHeight / NewHeight;
@@ -540,4 +656,13 @@ float* ImageZoom(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nCha
 	}
 
 	return pDst;
+}
+
+
+int ComputeRaysNum(int nWidth, int nHeight)
+{
+	// 参考MATLAB
+	int temp1 = nWidth - (int)floor((nWidth - 1) / 2.f) - 1;
+	int temp2 = nHeight - (int)floor((nHeight - 1) / 2.f) - 1;
+	return 2 * (int)ceil(sqrt(1.f * temp1 * temp1 + temp2 * temp2)) + 3;
 }

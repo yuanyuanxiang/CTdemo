@@ -55,10 +55,12 @@ vector<float> _AMP_ComputeRotatedValues(array<float, 2> &src_array, int src_widt
 	// 四个顶点顺时针旋转,绕坐标原点
 	float m_Ox = src_width / 2.f;
 	float m_Oy = src_height / 2.f;
-	PositionTransform(x1, y1, angle, m_Ox, m_Oy);
-	PositionTransform(x2, y2, angle, m_Ox, m_Oy);
-	PositionTransform(x3, y3, angle, m_Ox, m_Oy);
-	PositionTransform(x4, y4, angle, m_Ox, m_Oy);
+	float cos_theta = cos(angle);
+	float sin_theta = sin(angle);
+	PositionTransform(x1, y1, cos_theta, sin_theta, m_Ox, m_Oy);
+	PositionTransform(x2, y2, cos_theta, sin_theta, m_Ox, m_Oy);
+	PositionTransform(x3, y3, cos_theta, sin_theta, m_Ox, m_Oy);
+	PositionTransform(x4, y4, cos_theta, sin_theta, m_Ox, m_Oy);
 	Xmax = int(FindMaxBetween4Numbers(x1, x2, x3, x4));
 	Ymax = int(FindMaxBetween4Numbers(y1, y2, y3, y4));
 	Xmin = int(FindMinBetween4Numbers(y1, y2, y3, y4));
@@ -74,7 +76,7 @@ vector<float> _AMP_ComputeRotatedValues(array<float, 2> &src_array, int src_widt
 		int col = t_idx[1];
 		float x = float(col + Xmin);
 		float y = float(row + Ymin);
-		_AMP_PositionTransform(x, y, -angle, m_Ox, m_Oy);
+		_AMP_PositionTransform(x, y, cos_theta, -sin_theta, m_Ox, m_Oy);
 		rotated_array[t_idx] = _AMP_Interpolate(src_array, src_height, src_width, x, y);
 	});
 
@@ -201,21 +203,19 @@ float _AMP_LineIntegrate(vector<float> &pSrc, int &Xmin, int &Ymin, int &Xmax, i
 }
 
 
-void _AMP_PositionTransform(float &x, float &y, float theta) restrict(amp)
+void _AMP_PositionTransform(float &x, float &y, float cos_theta, float sin_theta) restrict(amp)
 {
-	float cos_theta = cos(theta);
-	float sin_theta = sin(theta);
 	float x_temp = x * cos_theta - y * sin_theta;
 	y = x * sin_theta + y * cos_theta;
 	x = x_temp;
 }
 
 
-void _AMP_PositionTransform(float &x, float &y, float theta, float x0, float y0) restrict(amp)
+void _AMP_PositionTransform(float &x, float &y, float cos_theta, float sin_theta, float x0, float y0) restrict(amp)
 {
 	float delta_x = x - x0;
 	float delta_y = y - y0;
-	_AMP_PositionTransform(delta_x, delta_y, theta);
+	_AMP_PositionTransform(delta_x, delta_y, cos_theta, sin_theta);
 	x = x0 + delta_x;
 	y = y0 + delta_y;
 }

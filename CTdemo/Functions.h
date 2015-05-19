@@ -18,6 +18,18 @@ void PositionTransform(float &x, float &y, float theta, float x0, float y0);
 // 对坐标(x, y)旋转angle角度, 绕坐标原点旋转
 void PositionTransform(float &x, float &y, float theta);
 
+// 对坐标(x, y)旋转angle角度,坐标原点由后两个参数给定
+void PositionTransform(float &x, float &y, float cos_sin[2], float x0, float y0);
+
+// 对坐标(x, y)旋转angle角度, 绕坐标原点旋转
+void PositionTransform(float &x, float &y, float cos_sin[2]);
+
+// 对坐标(x, y)旋转angle角度,坐标原点由后两个参数给定
+void PositionTransform(float &x, float &y, float cos_theta, float sin_theta, float x0, float y0);
+
+// 对坐标(x, y)旋转angle角度, 绕坐标原点旋转
+void PositionTransform(float &x, float &y, float cos_theta, float sin_theta);
+
 // 找到四个数中最大的
 float FindMaxBetween4Numbers(float x, float y, float z, float w);
 
@@ -30,7 +42,10 @@ float ConvKernel(float x, float w0);
 // 平行束卷积
 void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0);
 
-// 线性插值
+// 一维线性插值
+float LinearInterp(float* pPrj, int nWidth, float x);
+
+// 二维线性插值
 float LinearInterp(float* pPrj, int nWidth, int nHeight, int x, float y);
 
 // 平行束反投影
@@ -61,7 +76,7 @@ float LineIntegrate(float* pSrc, int &Width, int &Height, int &Rowlen, int &Chan
 void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum);
 
 // 图像沿某个方向线积分
-void ImageIntegrate(float* pDst, int nLength, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle, float sub_pixel);
+void ImageIntegrate(float* pDst, int &nLength, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle);
 
 // 图像旋转(以左下角为原点)
 float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, float angle, int &NewWidth, int &NewHeight, int &NewRowlen);
@@ -74,6 +89,9 @@ float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nC
 
 // 图像缩放
 float* ImageZoom(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int NewWidth, int NewHeight);
+
+// 根据图像的宽度与高度计算出最佳的射线采样条数，参考自MATLAB
+int ComputeRaysNum(int nWidth, int nHeight);
 
 
 #endif

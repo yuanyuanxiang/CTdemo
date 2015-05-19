@@ -27,10 +27,10 @@ float _AMP_LineGetYValue(float &k, float &c, float x);
 float _AMP_LineIntegrate(vector<float> &pSrc, int &Xmin, int &Ymin, int &Xmax, int &Ymax, int &Width, int &Height, float &k, float &c);
 
 /* AMP：坐标绕原点旋转变换.*/
-void _AMP_PositionTransform(float &x, float &y, float theta) restrict(amp);
+void _AMP_PositionTransform(float &x, float &y, float cos_theta, float sin_theta) restrict(amp);
 
 /* 坐标绕固定点旋转变换.*/
-void _AMP_PositionTransform(float &x, float &y, float theta, float x0, float y0) restrict(amp);
+void _AMP_PositionTransform(float &x, float &y, float cos_theta, float sin_theta, float x0, float y0) restrict(amp);
 
 /* AMP：图像双线性插值.*/
 float _AMP_Interpolate(array<float, 2> &_ptrT, int row, int col, float x, float y) restrict(amp);
