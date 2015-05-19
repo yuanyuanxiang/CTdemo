@@ -10,13 +10,15 @@
 
 #define CHECK_ERRORS(err, str) if(err != cudaSuccess) { str = cudaGetErrorString(err); cudaDeviceReset(); return str; }
 
+#define CHECK_CUBLAS_ERRORS(err, str) if (err != CUBLAS_STATUS_SUCCESS) { str = "CUBLAS 遇到错误。"; cudaDeviceReset(); return str; }
+
 /* 初始化向量vec = [val, val, val, ...]
 float*	vec:向量指针
 int		len:向量长度
 float	val:被赋的值
 注意：请声明一维的block
 */
-__global__ void VectorAssigned(float* vec, int len, float val)
+__global__ void cudaVectorAssigned(float* vec, int len, float val)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i < len)
@@ -37,7 +39,7 @@ int HalfDiag		向量长度一半
 float Separation	射线间距
 注意：请声明一维的block
 */
-__global__ void CopyColumnData(float *d_pDst, int RaysNum, int AnglesNum, float *d_pVec, int ImageDiag, int column, int HalfRays, int HalfDiag, float Separation)
+__global__ void cudaCopyColumnData(float *d_pDst, int RaysNum, int AnglesNum, float *d_pVec, int ImageDiag, int column, int HalfRays, int HalfDiag, float Separation)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int num = HalfDiag + (i - HalfRays) * Separation;
@@ -49,7 +51,7 @@ __global__ void CopyColumnData(float *d_pDst, int RaysNum, int AnglesNum, float 
 
 
 // 拷贝数据：d_pDst[int ((i - nHalfDiag) / fPixelDistance + nHalfWidth)] = d_pSrc[temp];
-__global__ void CopyTempData(float *d_pDst, float *d_pSrc, int Width, int nImageDiag, int nHalfDiag, int nHalfWidth, float fPixelDistance)
+__global__ void cudaCopyTempData(float *d_pDst, float *d_pSrc, int Width, int nImageDiag, int nHalfDiag, int nHalfWidth, float fPixelDistance)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if( i < nImageDiag )
@@ -62,7 +64,7 @@ __global__ void CopyTempData(float *d_pDst, float *d_pSrc, int Width, int nImage
 
 
 // radon变换的核函数
-__global__ void RotateKernel(float* d_pDst, float* d_pSrc, int Width, int Height, int Rowlen, int NewWidth, int NewHeight, int Xmin, int Ymin, float angle)
+__global__ void cudaRotateKernel(float* d_pDst, float* d_pSrc, int Width, int Height, int Rowlen, int NewWidth, int NewHeight, int Xmin, int Ymin, float cos_theta, float sin_theta)
 {
 	/* 把下述两层for循环改写成CUDA内核语言。
 	for (int i = 0; i < Width; ++i)
@@ -82,8 +84,8 @@ __global__ void RotateKernel(float* d_pDst, float* d_pSrc, int Width, int Height
 	{
 		float x = float(j + Xmin);
 		float y = float(i + Ymin);
-		devicePositonTransform(x, y, -angle);
-		*(d_pDst + j + i * NewWidth) = deviceGetPositionValue(x, y, d_pSrc, Width, Height);
+		cudaPositonTransform(x, y, cos_theta, -sin_theta);
+		*(d_pDst + j + i * NewWidth) = cudaGetPositionValue(x, y, d_pSrc, Width, Height);
 	}
 }
 
@@ -101,7 +103,7 @@ int Width					原图宽度
 int Height					原图高度
 int Rowlen					原图行字节数
 */
-__host__ const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen, float fSubPixel)
+__host__ const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float rays_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen, float fSubPixel)
 {
 	// cuda 错误
 	cudaError_t error;
@@ -145,14 +147,16 @@ __host__ const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays
 	float fAlpha = 1.0f, fBeta  = 0.0f;
 	cublasHandle_t cubHandle;
 	cublasStatus_t cubStatus;
-	cublasInit();
+	cubStatus = cublasInit();
+	CHECK_CUBLAS_ERRORS(cubStatus, errstr);
 	cubStatus = cublasCreate(&cubHandle);
+	CHECK_CUBLAS_ERRORS(cubStatus, errstr);
 	cublasOperation_t cubTrans = CUBLAS_OP_N;
 	// 先放大图像
 	float *d_pZoom = NULL;
 	// 放大倍率
 	float ZoomRate = 1.f / fSubPixel;
-	d_pZoom = ImageZoom(d_pZoom, d_pSrc, ZoomRate * Width, ZoomRate * Height, Width, Height, Rowlen);
+	d_pZoom = cudaImageZoom(d_pZoom, d_pSrc, ZoomRate * Width, ZoomRate * Height, Width, Height, Rowlen);
 	Width *= ZoomRate;
 	Height *= ZoomRate;
 	Rowlen = Width;
@@ -167,10 +171,13 @@ __host__ const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays
 		x4 = x1;						y4 = y3;
 		// 四个顶点顺时针旋转
 		float angle = index * angle_separation;
-		PositionTransform(x1, y1, angle);
-		PositionTransform(x2, y2, angle);
-		PositionTransform(x3, y3, angle);
-		PositionTransform(x4, y4, angle);
+		// 2015.5.19 为了减少计算，把三角函数放到循环外面
+		float cos_theta = cos(angle);
+		float sin_theta = sin(angle);
+		PositionTransform(x1, y1, cos_theta, sin_theta);
+		PositionTransform(x2, y2, cos_theta, sin_theta);
+		PositionTransform(x3, y3, cos_theta, sin_theta);
+		PositionTransform(x4, y4, cos_theta, sin_theta);
 		int Xmin, Xmax, Ymin, Ymax;
 		Xmin = (int)floor(FindMinBetween4Numbers(x1, x2, x3, x4));
 		Xmax = (int)floor(FindMaxBetween4Numbers(x1, x2, x3, x4));
@@ -189,7 +196,7 @@ __host__ const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays
 		// ********** Kernel **********
 		dim3 dimBlock(16, 16);
 		dim3 dimGrid((NewHeight + dimBlock.x - 1) / dimBlock.x, (NewWidth + dimBlock.y - 1) / dimBlock.y);
-		RotateKernel<<<dimGrid, dimBlock>>>(d_pRotatedBits, d_pZoom, Width, Height, Rowlen, NewWidth, NewHeight, Xmin, Ymin, angle);
+		cudaRotateKernel<<<dimGrid, dimBlock>>>(d_pRotatedBits, d_pZoom, Width, Height, Rowlen, NewWidth, NewHeight, Xmin, Ymin, cos_theta, sin_theta);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
 
@@ -200,43 +207,26 @@ __host__ const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays
 		CHECK_ERRORS(error, errstr);
 		//核函数中<<<1, N>>>线程受限，只能处理512大小.现在设计每个block使用ThreadsNum个线程，并计算grid
 		int ThreadsNum = 256;
-		VectorAssigned<<<(NewHeight + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pOnes, NewHeight, 1.f);
+		cudaVectorAssigned<<<(NewHeight + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pOnes, NewHeight, 1.f);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
-		VectorAssigned<<<(ImageDiag + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp, ImageDiag, 0.f);
+		cudaVectorAssigned<<<(ImageDiag + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp, ImageDiag, 0.f);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
-		VectorAssigned<<<(NewWidth + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp2, NewWidth, 0.f);
+		cudaVectorAssigned<<<(NewWidth + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp2, NewWidth, 0.f);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
 		cubStatus = cublasSgemv(cubHandle, cubTrans, NewWidth, NewHeight, &fAlpha, d_pRotatedBits, NewWidth, d_pOnes, 1, &fBeta, d_pTemp2, 1);
+		CHECK_CUBLAS_ERRORS(cubStatus, errstr);
 		int HalfRays = (RaysNum + 1) / 2, HalfDiag = (ImageDiag + 1) / 2, HalfWidth = (NewWidth + 1) / 2;
-		CopyTempData<<<(NewWidth + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp, d_pTemp2, NewWidth, ImageDiag, HalfDiag, HalfWidth, fSubPixel);
+		cudaCopyTempData<<<(NewWidth + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp, d_pTemp2, NewWidth, ImageDiag, HalfDiag, HalfWidth, fSubPixel);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
 		cudaFree(d_pOnes);
 		cudaFree(d_pTemp2);
 		cudaFree(d_pRotatedBits);
 
-		/* 下述代码已被优化(2015年4月4日)
-		int HalfRays = RaysNum / 2;
-		int HalfDiag = ImageDiag / 2;
-		for (int i = 0; i < HalfRays; ++i)
-		{
-			int s = HalfDiag - i * Separation;
-			int t = HalfDiag + i * Separation;
-			int left = HalfRays - i - 1;
-			int right = HalfRays + i;
-			if(s >= 0)
-			{
-				h_pDst[index + left * AnglesNum] = h_pTemp[s];
-			}
-			if(t < ImageDiag)
-			{
-				h_pDst[index + right * AnglesNum] = h_pTemp[t];
-			}
-		}*/
-		CopyColumnData<<<(RaysNum + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pDst, RaysNum, AnglesNum, d_pTemp, ImageDiag, index, HalfRays, HalfDiag, rays_separation);
+		cudaCopyColumnData<<<(RaysNum + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pDst, RaysNum, AnglesNum, d_pTemp, ImageDiag, index, HalfRays, HalfDiag, rays_separation);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
 	}
@@ -253,12 +243,12 @@ __host__ const char* Radon(float* h_pDst, int RaysNum, int AnglesNum, float rays
 
 
 // 图相放大的核函数
-__global__ void ZoomKernel(float* d_pDst, BYTE* d_pSrc, float wRatio, float hRatio, int NewWidth, int NewHeight, int Width, int Height, int Rowlen)
+__global__ void cudaZoomKernel(float* d_pDst, BYTE* d_pSrc, float wRatio, float hRatio, int NewWidth, int NewHeight, int Width, int Height, int Rowlen)
 {
 	int j = blockIdx.x * blockDim.x + threadIdx.x; //j行
 	int i = blockIdx.y * blockDim.y + threadIdx.y; //i列
 	if ( i < NewWidth && j < NewHeight)
-		d_pDst[i + j * NewWidth] = GetPositionPixel(i * wRatio, j * wRatio, d_pSrc, Width, Height, Rowlen);
+		d_pDst[i + j * NewWidth] = cudaGetPositionPixel(i * wRatio, j * wRatio, d_pSrc, Width, Height, Rowlen);
 }
 
 
@@ -273,7 +263,7 @@ int Height		原图高度
 int Rowlen		原图每行字节数
  ** 注意 ** 必须将d_pDst作为结果返回。
 */
-__host__ float* ImageZoom(float* d_pDst, BYTE* d_pSrc, int NewWidth, int NewHeight, int Width, int Height, int Rowlen)
+__host__ float* cudaImageZoom(float* d_pDst, BYTE* d_pSrc, int NewWidth, int NewHeight, int Width, int Height, int Rowlen)
 {
 	// 如果目标非空，返回空。
 	if (d_pDst != NULL)
@@ -287,7 +277,7 @@ __host__ float* ImageZoom(float* d_pDst, BYTE* d_pSrc, int NewWidth, int NewHeig
 	// 调用核函数
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((NewHeight + dimBlock.x - 1) / dimBlock.x, (NewWidth + dimBlock.y - 1) / dimBlock.y);
-	ZoomKernel<<<dimGrid, dimBlock>>>(d_pDst, d_pSrc, wRatio, hRatio, NewWidth, NewHeight, Width, Height, Rowlen);
+	cudaZoomKernel<<<dimGrid, dimBlock>>>(d_pDst, d_pSrc, wRatio, hRatio, NewWidth, NewHeight, Width, Height, Rowlen);
 	cudaError_t error = cudaGetLastError();
 
 	return d_pDst;
@@ -295,7 +285,7 @@ __host__ float* ImageZoom(float* d_pDst, BYTE* d_pSrc, int NewWidth, int NewHeig
 
 
 // 获取图像矩阵x列，y行的像素值。
-__device__ float GetImagePixel(int x, int y, BYTE* pSrc, int Width, int Height, int Rowlen)
+__device__ float cudaGetImagePixel(int x, int y, BYTE* pSrc, int Width, int Height, int Rowlen)
 {
 	if (x < 0 || x >= Width || y < 0 || y >= Height)
 		return 0;
@@ -304,7 +294,7 @@ __device__ float GetImagePixel(int x, int y, BYTE* pSrc, int Width, int Height, 
 
 
 // 获取坐标(x, y)处的像素值，采用双线性插值。
-__device__ float GetPositionPixel(float x, float y, BYTE* pSrc, int Width, int Height, int Rowlen)
+__device__ float cudaGetPositionPixel(float x, float y, BYTE* pSrc, int Width, int Height, int Rowlen)
 {
 	int x1, x2, x3, x4, y1, y2, y3, y4;
 	float Ans1, Ans2;
@@ -312,16 +302,16 @@ __device__ float GetPositionPixel(float x, float y, BYTE* pSrc, int Width, int H
 	x2 = x1 + 1;	y2 = y1;
 	x3 = x2;		y3 = y1 + 1;
 	x4 = x1;		y4 = y3;
-	Ans1 = GetImagePixel(x1, y1, pSrc, Width, Height, Rowlen) * (1 - x + x1) 
-		+ GetImagePixel(x2, y2, pSrc, Width, Height, Rowlen) * (x - x1);
-	Ans2 = GetImagePixel(x4, y4, pSrc, Width, Height, Rowlen) * (1 - x + x4) 
-		+ GetImagePixel(x3, y3, pSrc, Width, Height, Rowlen) * (x - x4);
+	Ans1 = cudaGetImagePixel(x1, y1, pSrc, Width, Height, Rowlen) * (1 - x + x1) 
+		+ cudaGetImagePixel(x2, y2, pSrc, Width, Height, Rowlen) * (x - x1);
+	Ans2 = cudaGetImagePixel(x4, y4, pSrc, Width, Height, Rowlen) * (1 - x + x4) 
+		+ cudaGetImagePixel(x3, y3, pSrc, Width, Height, Rowlen) * (x - x4);
 	return (Ans1 * (1 - y + y1) + Ans2 * (y - y1));
 }
 
 
 // 获取矩阵x列，y行的像素值。
-__device__ float GetIndexValue(int x, int y, float* pSrc, int Width, int Height)
+__device__ float cudaGetIndexValue(int x, int y, float* pSrc, int Width, int Height)
 {
 	if (x < 0 || x >= Width || y < 0 || y >= Height)
 		return 0;
@@ -330,7 +320,7 @@ __device__ float GetIndexValue(int x, int y, float* pSrc, int Width, int Height)
 
 
 // 获取坐标(x, y)处的像素值，采用双线性插值。
-__device__ float deviceGetPositionValue(float x, float y, float* pSrc, int Width, int Height)
+__device__ float cudaGetPositionValue(float x, float y, float* pSrc, int Width, int Height)
 {
 	int x1, x2, x3, x4, y1, y2, y3, y4;
 	float Ans1, Ans2;
@@ -338,17 +328,26 @@ __device__ float deviceGetPositionValue(float x, float y, float* pSrc, int Width
 	x2 = x1 + 1;	y2 = y1;
 	x3 = x2;		y3 = y1 + 1;
 	x4 = x1;		y4 = y3;
-	Ans1 = GetIndexValue(x1, y1, pSrc, Width, Height) * (1 - x + x1) + GetIndexValue(x2, y2, pSrc, Width, Height) * (x - x1);
-	Ans2 = GetIndexValue(x4, y4, pSrc, Width, Height) * (1 - x + x4) + GetIndexValue(x3, y3, pSrc, Width, Height) * (x - x4);
+	Ans1 = cudaGetIndexValue(x1, y1, pSrc, Width, Height) * (1 - x + x1) + cudaGetIndexValue(x2, y2, pSrc, Width, Height) * (x - x1);
+	Ans2 = cudaGetIndexValue(x4, y4, pSrc, Width, Height) * (1 - x + x4) + cudaGetIndexValue(x3, y3, pSrc, Width, Height) * (x - x4);
 	return (Ans1 * (1 - y + y1) + Ans2 * (y - y1));
 }
 
 
 // 设备端：对坐标(x, y)旋转angle角度。
-__device__ void devicePositonTransform(float &x, float &y, float theta)
+__device__ void cudaPositonTransform(float &x, float &y, float theta)
 {
 	float cos_theta = cos(theta);
 	float sin_theta = sin(theta);
+	float x_temp = x * cos_theta - y * sin_theta;
+	y = x * sin_theta + y * cos_theta;
+	x = x_temp;
+}
+
+
+// 设备端：参数修改为角度的余弦和正弦。
+__device__ void cudaPositonTransform(float &x, float &y, float cos_theta, float sin_theta)
+{
 	float x_temp = x * cos_theta - y * sin_theta;
 	y = x * sin_theta + y * cos_theta;
 	x = x_temp;

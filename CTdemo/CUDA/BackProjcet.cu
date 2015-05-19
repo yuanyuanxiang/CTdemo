@@ -10,6 +10,20 @@
 
 #define CHECK_ERRORS(err, str) if(err != cudaSuccess) { str = cudaGetErrorString(err); cudaDeviceReset(); return str; }
 
+
+// 对三角函数值进行初始化
+__global__ void cudaInitCosSin(float *cos_theta, float *sin_theta, float delta_fai, int angles)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i < angles)
+	{
+		float theta = i * delta_fai;
+		cos_theta[i] = cos(theta);
+		sin_theta[i] = sin(theta);
+	}
+}
+
+
 // 反投影的核函数(当核函数中for循环次数比较高的时候，显卡会死掉，原因不明)
 /*
 前8个参数和BackProject的参数一样。
@@ -17,17 +31,17 @@ int cx		图像中心坐标，相对左下角
 int cy		图像中心坐标，相对左下角
 int med		射线的中心坐标，固定的角度
 */
-__global__ void cudaBackProjectKernel(float* d_pDst, float* d_prj, int width, int height, int rays, int angles, float delta_r, float delta_fai, 
+__global__ void cudaBackProjectKernel(float* d_pDst, float* d_prj, int width, int height, int rays, int angles, float *cos_fai, float *sin_fai, float delta_r, float delta_fai, 
 								  int cx, int cy, int med)
 {
 	int m = blockIdx.x * blockDim.x + threadIdx.x; //i行
 	int n = blockIdx.y * blockDim.y + threadIdx.y; //j列
+
 	if(m < height && n < width)
 	{
 		for (int i = 0; i < angles; ++i)
 		{
-			float fai = i * delta_fai;
-			float r = (n - cx) * cos(fai) + (m - cy) * sin(fai);
+			float r = (n - cx) * cos_fai[i] + (m - cy) * sin_fai[i];
 			d_pDst[n + m * width] += cudaLinearInterp(med + r / delta_r, i, d_prj, angles, rays);
 		}
 		d_pDst[n + m * width] *= delta_fai;
@@ -79,36 +93,34 @@ __host__ const char* cudaBackProject(float* h_pDst, float* h_prj, int width, int
 	int cy = (height + 1) / 2;
 	int med = (rays + 1) / 2;
 
-	dim3 dimBlock(16, 16);
-	dim3 dimGrid((height + dimBlock.x - 1) / dimBlock.x, (width + dimBlock.y - 1) / dimBlock.y);
-	cudaBackProjectKernel<<<dimGrid, dimBlock>>>(d_pDst, d_prj, width, height, rays, angles, delta_r, delta_fai, cx, cy, med);
+	// 2015.5.19 将三角函数放到循环体外面
+	float *cos_fai = NULL;
+	float *sin_fai = NULL;
+	error = cudaMalloc((void **)&cos_fai, angles * sizeof(float));
+	CHECK_ERRORS(error, errstr);
+	error = cudaMalloc((void **)&sin_fai, angles * sizeof(float));
+	CHECK_ERRORS(error, errstr);
+
+	int ThreadsNum = 256;
+	cudaInitCosSin<<<(angles + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(cos_fai, sin_fai, delta_fai, angles);
 	error = cudaGetLastError();
 	CHECK_ERRORS(error, errstr);
+
+	dim3 dimBlock(16, 16);
+	dim3 dimGrid((height + dimBlock.x - 1) / dimBlock.x, (width + dimBlock.y - 1) / dimBlock.y);
+	cudaBackProjectKernel<<<dimGrid, dimBlock>>>(d_pDst, d_prj, width, height, rays, angles, cos_fai, sin_fai, delta_r, delta_fai, cx, cy, med);
+	error = cudaGetLastError();
+	CHECK_ERRORS(error, errstr);
+
 	error = cudaMemcpy(h_pDst, d_pDst, width * height * sizeof(float), cudaMemcpyDeviceToHost);
 	CHECK_ERRORS(error, errstr);
 
+	cudaFree(cos_fai);
+	cudaFree(sin_fai);
 	cudaFree(d_pDst);
 	cudaFree(d_prj);
 	cudaDeviceReset();
 	return errstr;
-	/*
-	for (int m = 0; m < height; ++m)
-	{
-		for (int n = 0; n < width; ++n)
-		{
-			x1 = n - cx;
-			y1 = m - cy;
-			for (int i = 0; i < angles; ++i)
-			{
-				fai = i * delta_fai;
-				r = x1 * cos(fai) + y1 * sin(fai);
-				r_id = r / delta_r;
-				h_pDst[n + m * width] += LinearInterp(med + r_id, i, h_prj, angles, rays);
-			}
-			h_pDst[n + m * width] *= delta_fai;
-		}
-	}
-	*/
 }
 
 

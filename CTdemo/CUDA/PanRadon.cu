@@ -13,7 +13,7 @@ float scan_range		//采样范围
 float R					//SO
 float D					//SO'
 */
-void PanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D)
+void cudaPanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D)
 {
 	float diagonal = sqrt(1.f * src_width * src_width + src_height * src_height);
 	float theta_0 = acos(diagonal / 2.f / R);
@@ -25,20 +25,20 @@ void PanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_a
 	{
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight;
 		float rad = i * angles_separation;
-		float *pCur = ComputeRotatedValues(pSrc, src_width, src_height, rad, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight);
+		float *pCur = cudaComputeRotatedValues(pSrc, src_width, src_height, rad, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight);
 		for (int j = 0; j < pan_rays; ++j)
 		{
 			float u = -pan_u0 + j * pan_delta_u;
 			float k = -u / D;
 			float c = -R * k + center_y;
-			pDst[i + j * pan_angles] = LineIntegrate(pCur, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, k, c);
+			pDst[i + j * pan_angles] = cudaLineIntegrate(pCur, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, k, c);
 		}
 		SAFE_DELETE(pCur);
 	}
 }
 
 
-float* ComputeRotatedValues(float *_ptrT, int Width, int Height, float angle, int &Xmin, int &Ymin, int &Xmax, int &Ymax, int &NewWidth, int &NewHeight) 
+float* cudaComputeRotatedValues(float *_ptrT, int Width, int Height, float angle, int &Xmin, int &Ymin, int &Xmax, int &Ymax, int &NewWidth, int &NewHeight) 
 {
 	// 原始图像四个顶点的坐标
 	float x1, x2, x3, x4, y1, y2, y3, y4;
@@ -70,7 +70,7 @@ float* ComputeRotatedValues(float *_ptrT, int Width, int Height, float angle, in
 			float x = float(i + Xmin);
 			float y = float(j + Ymin);
 			PositionTransform(x, y, -angle, m_Ox, m_Oy);
-			*(pDst + i + j * NewWidth) = biLinearInterp(_ptrT, Height, Width, x, y);
+			*(pDst + i + j * NewWidth) = cudaBiLinearInterp(_ptrT, Height, Width, x, y);
 		}
 	}
 	
@@ -78,7 +78,7 @@ float* ComputeRotatedValues(float *_ptrT, int Width, int Height, float angle, in
 }
 
 
-float GetPositionValue(float *_ptrT, int row, int col, int x, int y)
+float cudaGetPositionValue(float *_ptrT, int row, int col, int x, int y)
 {
 	if (x < 0 || x >= col || y < 0 || y >= row)
 		return 0;
@@ -86,7 +86,7 @@ float GetPositionValue(float *_ptrT, int row, int col, int x, int y)
 }
 
 
-float biLinearInterp(float *_ptrT, int row, int col, float x, float y)
+float cudaBiLinearInterp(float *_ptrT, int row, int col, float x, float y)
 {
 	int x1, x2, x3, x4, y1, y2, y3, y4;
 	float Ans1, Ans2;
@@ -94,8 +94,8 @@ float biLinearInterp(float *_ptrT, int row, int col, float x, float y)
 	x2 = x1 + 1;	y2 = y1;
 	x3 = x2;		y3 = y1 + 1;
 	x4 = x1;		y4 = y3;
-	Ans1 = GetPositionValue(_ptrT, row, col, x1, y1) * (1 - x + x1) + GetPositionValue(_ptrT, row, col, x2, y2) * (x - x1);
-	Ans2 = GetPositionValue(_ptrT, row, col, x4, y4) * (1 - x + x4) + GetPositionValue(_ptrT, row, col, x3, y3) * (x - x4);
+	Ans1 = cudaGetPositionValue(_ptrT, row, col, x1, y1) * (1 - x + x1) + cudaGetPositionValue(_ptrT, row, col, x2, y2) * (x - x1);
+	Ans2 = cudaGetPositionValue(_ptrT, row, col, x4, y4) * (1 - x + x4) + cudaGetPositionValue(_ptrT, row, col, x3, y3) * (x - x4);
 	return (Ans1 * (1 - y + y1) + Ans2 * (y - y1));
 }
 
@@ -123,7 +123,7 @@ int Height		图像高度
 float &k		直线斜率
 float &c		直接与y轴截距
 */
-float LineIntegrate(float* pSrc, int Xmin, int Ymin, int Xmax, int Ymax, int Width, int Height, float &k, float &c) 
+float cudaLineIntegrate(float* pSrc, int Xmin, int Ymin, int Xmax, int Ymax, int Width, int Height, float &k, float &c) 
 {
 	vector <CIntSection> Sections;
 
