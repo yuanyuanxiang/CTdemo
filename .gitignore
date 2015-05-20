@@ -41,6 +41,7 @@
 *.tlog
 *.psess
 *.opensdf
+*.vsps
 
 # ignored dirs
 Debug/*
