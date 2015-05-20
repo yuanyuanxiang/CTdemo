@@ -4,8 +4,9 @@
 #include "Functions.h"
 
 //
-// ********** CyImage：继承自CImage ********** //
-//
+// ********** CyImage：继承自CImage *********** //
+// ***** 首都师范大学，袁沅祥，2015年5月. ***** //
+// 
 
 #ifndef CHECK_IMAGE_NULL
 #define CHECK_IMAGE_NULL(p) ( ((p) == NULL) || ((p)->IsNull()) ) //检查图像是空
@@ -40,27 +41,37 @@ public:
 	float GetMinimum();														//获取最小值
 	float GetAt(float x, float y, int nCurChannel = 0);						//访问浮点数据
 	float GetAt(int x, int y, int nCurChannel = 0);							//访问浮点数据
+
+	// 图像几何变换
+	void FlipH();															//水平翻转图像
+	void FlipV();															//垂直翻转图像
+	/* 对图像旋转，返回新图像的数据，宽度、高度和每行浮点数 */
 	float* Rotate(float angle, int &NewWidth, int &NewHeight, int &NewRowlen);
 	float* Rotate(float angle, float x0, float y0, int &NewWidth, int &NewHeight, int &NewRowlen);
 	float* Rotate(float angle, float x0, float y0, int &Xmin, int &Ymin, int &Xmax, int &Ymax, int &NewWidth, int &NewHeight, int &NewRowlen);
+	/* 根据参数放大图像，返回浮点数据 */
 	float* Zoom(int NewWidth, int NewHeight);
+	/* 图像沿直线作线积分 */
 	float Integrate(float &k, float &c, int nCurChannel = 0);
-	void DirIntegrate(float* pDst, int nLength, float angle, float sub_pixel, int nCurChannel = 0);
-	void Radon(float* pDst, float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum, int nCurChannel = 0);
+	/* 图像在某个方向所有线积分 */
+	float* DirIntegrate(float angle, int nCurChannel = 0);
+	/* 图像radon变换 */
+	float* Radon(float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum, int nCurChannel = 0);
 
-	// 数据拷贝
-	void MemcpyByteToFloat();
-	void MemcpyFloatToByte();
-	void MemcpyFloatToByteBounded(float lower, float upper);
+	// 字符串数据和浮点数据之间拷贝，同步数据时候需调用
+	void MemcpyByteToFloat();												//字符数据拷贝到浮点数据
+	void MemcpyFloatToByte();												//浮点数据拷贝到字符数据
+	void MemcpyFloatToByteBounded(float lower, float upper);				//根据上下限拷贝数据
 
 	// 获取图像信息
-	bool BitMapModified();
-	BYTE* GetHeadAddress();
-	BYTE* GetLineAddress(int LineID);
-	int GetChannel();
-	int GetRowlen();
-	int GetDiagLength();
-	bool InitFloatData();
+	bool BitMapModified();													//检查关联位图是否更新
+	BYTE* GetHeadAddress();													//获取图像首地址
+	BYTE* GetLineAddress(int LineID);										//获取某行的地址
+	int GetChannel();														//获取通道个数
+	int GetRowlen();														//获取每行字节数
+	int GetDiagLength();													//获取图像对角线长
+	bool InitFloatData();													//初始化浮点数据
+	/* 获取图像的信息 */
 	void GetInfomation(int &nWidth, int &nHeight);
 	void GetInfomation(int &nWidth, int &nHeight, int &nRowlen);
 	void GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP);

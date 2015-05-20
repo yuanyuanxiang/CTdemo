@@ -430,10 +430,12 @@ void CCTdemoDoc::RadonTransform()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
 	BeginWaitCursor();
-	m_pImage->Radon(m_pProject->m_pfFloat, m_fAnglesSeparation, m_nAnglesNum, m_fRaysSeparation, m_nRaysNum);
-	m_pProject->MemcpyFloatToByte();
-	OnWindowProject();
+	float *pDst = m_pImage->Radon(m_fAnglesSeparation, m_nAnglesNum, m_fRaysSeparation, m_nRaysNum);
 	EndWaitCursor();
+	m_pProject->SetFloatData(pDst, m_nAnglesNum, m_nRaysNum);
+	m_pProject->MemcpyFloatToByte();
+	SAFE_DELETE(pDst);
+	OnWindowProject();
 }
 
 

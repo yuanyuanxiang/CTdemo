@@ -427,7 +427,7 @@ void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowle
 		float *temp = new float[nNewRaysNum];
 		memset(temp, 0, nNewRaysNum * sizeof(float));
 		float angle = i * angles_separation;
-		ImageIntegrate(temp, nNewRaysNum, pSrc2, nNewWidth, nNewHeight, nNewRowlen, nChannel, nCurChannel, angle);
+		ImageIntegrate(temp, pSrc2, nNewWidth, nNewHeight, nNewRowlen, nChannel, nCurChannel, angle, nNewRaysNum);
 		
 #pragma omp parallel for
 		for (int j = 0; j < nRaysNum; ++j)
@@ -445,7 +445,6 @@ void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowle
 // 沿单个方向线积分，单个方向的radon变换
 /*
 float* pDst		积分值
-int &nLength	积分个数
 float* pSrc		图像数据
 int &nWidth		图像宽度
 int &nHeight	图像高度
@@ -453,8 +452,9 @@ int &nRowlen	每行浮点数
 int &nChannel	通道个数
 int nCurChannel	当前通道
 float angle		方向
+int &nLength	积分个数
 */
-void ImageIntegrate(float* pDst, int &nLength, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle)
+void ImageIntegrate(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle, int &nLength)
 {
 	// 图像旋转之后的信息及顶点坐标
 	int NewWidth = 0, NewHeight = 0, NewRowlen = 0;

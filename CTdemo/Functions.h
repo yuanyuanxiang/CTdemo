@@ -76,7 +76,7 @@ float LineIntegrate(float* pSrc, int &Width, int &Height, int &Rowlen, int &Chan
 void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum);
 
 // 图像沿某个方向线积分
-void ImageIntegrate(float* pDst, int &nLength, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle);
+void ImageIntegrate(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle, int &nLength);
 
 // 图像旋转(以左下角为原点)
 float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, float angle, int &NewWidth, int &NewHeight, int &NewRowlen);

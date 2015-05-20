@@ -780,21 +780,7 @@ void CCTdemoView::OnToolbarFlipH()
 {
 	if (CHECK_IMAGE_NULL(m_pCurrent))
 		return;
-	int width, height, rowlen, bpp, channel;
-	m_pCurrent->GetInfomation(width, height, rowlen, bpp, channel);
-	BYTE* temp = new BYTE[height * rowlen];
-	BYTE* head = m_pCurrent->GetHeadAddress();
-	memcpy(temp, head, height * rowlen);
-
-#pragma omp parallel for
-	for (int r = 0; r < height; ++r)
-	{
-		for (int c = 0; c < width; ++c)
-		{
-			memcpy(head + c * channel + r * rowlen, temp + ( width - 1 - c ) * channel + r * rowlen, channel);
-		}
-	}
-	SAFE_DELETE(temp);
+	m_pCurrent->FlipH();
 	Invalidate(TRUE);
 }
 
@@ -809,18 +795,7 @@ void CCTdemoView::OnToolbarFlipV()
 {
 	if (CHECK_IMAGE_NULL(m_pCurrent))
 		return;
-	int width, height, rowlen, bpp, channel;
-	m_pCurrent->GetInfomation(width, height, rowlen, bpp, channel);
-	BYTE* temp = new BYTE[height * rowlen];
-	BYTE* head = m_pCurrent->GetHeadAddress();
-	memcpy(temp, head, height * rowlen);
-
-#pragma omp parallel for
-	for (int r = 0; r < height; ++r)
-	{
-		memcpy(head + r * rowlen, temp + (height - 1 - r) * rowlen, rowlen);
-	}
-	SAFE_DELETE(temp);
+	m_pCurrent->FlipV();
 	Invalidate(TRUE);
 }
 

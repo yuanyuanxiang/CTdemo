@@ -55,11 +55,8 @@ bool CyImage::SetFloatData(float* pSrc, int nRowlen, int nHeight)
 	if (m_pfFloat == NULL || nRowlen != m_nyRowlen2 || nHeight != m_nyHeight)
 		return false;
 
-	for (int i = 0; i < nHeight; ++i)
-	{
-		memcpy(m_pfFloat, pSrc, nRowlen);
-	}
-	ComputeMinMax();
+	memcpy(m_pfFloat, pSrc, nRowlen * nHeight * sizeof(float));
+
 	return true;
 }
 
@@ -150,7 +147,10 @@ void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP)
 
 bool CyImage::BitMapModified()
 {
-	if (m_nyWidth != GetWidth() || m_nyHeight != GetHeight() || m_nyBpp != GetBPP() || m_pyBits != GetHeadAddress())
+	BYTE* pBits = GetHeadAddress();
+	if (m_nyWidth != GetWidth() || m_nyHeight != GetHeight() || m_nyBpp != GetBPP() || m_pyBits != pBits)
+		return true;
+	if (strcmp((const char*)m_pyBits, (const char*)pBits) != 0)
 		return true;
 	return false;
 }
@@ -414,16 +414,22 @@ float CyImage::Integrate(float &k, float &c, int nCurChannel)
 
 
 // 沿着各个方向投影，即计算投影图像
-void CyImage::Radon(float* pDst, float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum, int nCurChannel)
+float* CyImage::Radon(float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum, int nCurChannel)
 {
+	float* pDst = new float[nAnglesNum * nRaysNum];
 	ImageRadon(pDst, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angles_separation, nAnglesNum, rays_separation, nRaysNum);
+	return pDst;
 }
 
 
 // 沿单个方向线积分，单个方向的radon变换
-void CyImage::DirIntegrate(float* pDst, int nLength, float angle, float sub_pixel, int nCurChannel)
+float* CyImage::DirIntegrate(float angle, int nCurChannel)
 {
-	ImageIntegrate(pDst, nLength, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angle);
+	int nLength = ComputeRaysNum(m_nyWidth, m_nyHeight);
+	float* pDst = new float[nLength];
+	ZeroMemory(pDst, nLength * sizeof(float));
+	ImageIntegrate(pDst, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angle, nLength);
+	return pDst;
 }
 
 
@@ -434,4 +440,35 @@ void CyImage::Destroy() throw()
 	{
 		CImage::Destroy();
 	}
+}
+
+
+void CyImage::FlipH()
+{
+	BYTE* temp = new BYTE[m_nyHeight * m_nyRowlen];
+	memcpy(temp, m_pyBits, m_nyHeight * m_nyRowlen * sizeof(BYTE));
+
+#pragma omp parallel for
+	for (int r = 0; r < m_nyHeight; ++r)
+	{
+		for (int c = 0; c < m_nyWidth; ++c)
+		{
+			memcpy(m_pyBits + c * m_nyChannel + r * m_nyRowlen, temp + ( m_nyWidth - 1 - c ) * m_nyChannel + r * m_nyRowlen, m_nyChannel * sizeof(BYTE));
+		}
+	}
+	SAFE_DELETE(temp);
+}
+
+
+void CyImage::FlipV()
+{
+	BYTE* temp = new BYTE[m_nyRowlen * m_nyRowlen];
+	memcpy(temp, m_pyBits, m_nyRowlen * m_nyRowlen);
+
+#pragma omp parallel for
+	for (int r = 0; r < m_nyRowlen; ++r)
+	{
+		memcpy(m_pyBits + r * m_nyRowlen, temp + (m_nyRowlen - 1 - r) * m_nyRowlen, m_nyRowlen * sizeof(BYTE));
+	}
+	SAFE_DELETE(temp);
 }

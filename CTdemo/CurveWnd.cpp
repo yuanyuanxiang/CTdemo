@@ -42,8 +42,12 @@ CCurveWnd::CCurveWnd()
 	m_bUserWillDrag = FALSE;
 	m_posCurrentPeg = NULL;
 	m_nLinePattern = LINE_PATTERN_SPLINE;
-	m_bInverseImage = FALSE;
+	for (int i = 0; i < 4; ++i)
+	{
+		m_bInverseImage[i] = FALSE;
+	}
 	//图像信息
+	m_pBits = NULL;
 	m_dataSrc = NULL;
 	m_curData = NULL;
 	m_nImageWidth = 0;
@@ -52,14 +56,12 @@ CCurveWnd::CCurveWnd()
 	m_nbytesWidth = 0;
 	m_nChannel = 0;
 	m_nlenData = 0;
-
-	//OnSize
+	//窗口
 	m_pWndSize = NULL;
-
-	//Font
+	//字体
 	m_FontName = L"宋体";
 	m_nFontSize = 100;
-
+	//其他
 	m_bModified = false;
 	m_nNewRowlen = 0;
 	m_nNewChannel = 0;
@@ -240,6 +242,7 @@ int CCurveWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pBnCancel->Create(L"取消", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(m_pWndSize->right-70-BUTTON_WIDTH, m_pWndSize->bottom-40, m_pWndSize->right-70, m_pWndSize->bottom-40+BUTTON_HEIGHT), this, IDB_CURVE_CANCEL);
 	m_pBnCancel->SetFont(m_pAppFont, TRUE);
 	m_pBnCancel->SetTooltip(L"取消修改");
+	m_pBnCancel->EnableWindow(FALSE);
 
 	//*** m_pImage ***//
 	UpdateImageInfo();
@@ -293,7 +296,10 @@ void CCurveWnd::SetImage(CImage* pImage)
 	OnCmdCurveCancel();
 	m_pImage = pImage;
 	InitPegs();
-	UpdateImageInfo();
+	if (UpdateImageInfo() != true)
+	{
+		DetectDataChanged();
+	}
 	GetHistogram();
 	ShowGrayTransform();
 	Invalidate(TRUE);
@@ -326,9 +332,10 @@ BOOL CCurveWnd::GetHistogram()
 	}
 
 	//归一化
-	for (int i = 0, j; i<4; i++)
+//#pragma omp parallel for
+	for (int i = 0; i<4; i++)
 	{
-		for (j = 0; j<256; j++)
+		for (int j = 0; j<256; j++)
 		{
 			m_pfHistogram[i][j] = m_pfHistogram[i][j]/m_nPixelQuantity;
 		}
@@ -365,38 +372,15 @@ void CCurveWnd::InitPegs()
 }
 
 //更新图像信息
-void CCurveWnd::UpdateImageInfo()
+void CCurveWnd::UpdateExtraInfo()
 {
-	if (CHECK_IMAGE_NULL(m_pImage))
-		return;
-
-	int nImageWidth = m_pImage->GetWidth();
-	int nImageHeight = m_pImage->GetHeight();
-	int nChannel = m_pImage->GetBPP() / 8;
-	//if (m_nImageWidth == nImageWidth && m_nImageHeight == nImageHeight && m_nChannel == nChannel)
-		//return;
-	if (!DetectImageChanged())
-		return;
-
-	m_nImageWidth = m_pImage->GetWidth();
-	m_nImageHeight = m_pImage->GetHeight();
-	m_nChannel = m_pImage->GetBPP() / 8;
+	// 辅助信息
 	m_nPixelQuantity = m_nImageWidth * m_nImageHeight;
 	m_nbytesWidth = abs(m_pImage->GetPitch());
 	m_nlenData = m_nbytesWidth * m_nImageHeight;
-	// 辅助信息
 	m_nNewRowlen = m_nbytesWidth;
 	m_nNewChannel = m_nChannel;
 	m_nNewlenData = m_nlenData;
-	//如果图像的位深度不满足8、24、32
-	if (m_nChannel != 1 && m_nChannel != 3 && m_nChannel != 4)
-	{
-		m_pImage = NULL;
-		return;
-	}
-	//获得图像数据首地址
-	m_pBits = (BYTE *)m_pImage->GetBits()+(m_pImage->GetPitch()*(m_nImageHeight-1));
-	MallocData();
 }
 
 //看是否已存在,若存在则要替换
@@ -404,7 +388,7 @@ BOOL CCurveWnd::PegIsExist(CPoint& point)
 {
 	//看是否已存在
 	POSITION prev, pos = m_pPegsList[m_nChannelSelected].GetHeadPosition();
-	d_type errorX = max(m_nRectWidth/100, 3.0), errorY = max(m_nRectHeight/100, 3.0);
+	d_type errorX = max(m_nRectWidth/100.0, 5.0), errorY = max(m_nRectHeight/100.0, 5.0);
 	while (pos != NULL)
 	{
 		prev = pos;
@@ -578,6 +562,7 @@ BOOL CCurveWnd::GrayTransform()
 	int it_k = min(3, m_nNewChannel);
 	if (m_nChannelSelected == CHANNEL_RGB)
 	{//RGB通道
+//#pragma omp parallel for
 		for (int i = 0; i<m_nImageHeight; i++)
 		{
 			for (int j = 0; j<m_nImageWidth; j++)
@@ -592,6 +577,7 @@ BOOL CCurveWnd::GrayTransform()
 	}
 	else
 	{//其他通道
+//#pragma omp parallel for
 		for (int i = 0; i<m_nImageHeight; i++)
 		{
 			for (int j = 0; j<m_nImageWidth; j++)
@@ -609,6 +595,7 @@ BOOL CCurveWnd::GrayTransform()
 //对超出Rect的变换值进行处理
 void CCurveWnd::Threshold()
 {
+//#pragma omp parallel for
 	for (int i = 0; i<m_nRectWidth+1; i++)
 	{
 		if(m_V4Transform[m_nChannelSelected][i] < m_pOnPaintRect->top)
@@ -640,6 +627,7 @@ d_type CCurveWnd::GetCurrentGrayTransform(d_type gray)
 d_type* CCurveWnd::PreTransform()
 {
 	d_type *Result = new d_type[256];
+//#pragma omp parallel for
 	for (int j = 0; j < 256; j++)
 	{
 		// 2015.5.16 此处可能应该采用插值的办法
@@ -652,10 +640,14 @@ d_type* CCurveWnd::PreTransform()
 //图像反转
 void CCurveWnd::InverseTransform()
 {
+	if (m_bInverseImage[m_nChannelSelected] == FALSE)
+		return;
+
 	POSITION pos = m_pPegsList[m_nChannelSelected].GetHeadPosition();
 	while (pos != NULL)
 	{
 		peg& Temp = m_pPegsList[m_nChannelSelected].GetNext(pos);
+		
 		int gray = m_pOnPaintRect->bottom - Temp.m_pt->y;
 		Temp.m_pt->y = m_pOnPaintRect->top + gray;
 		Temp.m_dRatioY = 1.0*gray/m_nRectHeight;
@@ -670,20 +662,18 @@ void CCurveWnd::ImshowImmediately()
 	// 将原始数据备份
 	BYTE* temp_src = new BYTE[m_nNewlenData];
 	memcpy(temp_src, m_dataSrc, m_nNewlenData);
+	// Reshape放在这里是有必要的
+	ReshapePegs(true);
 	// 变换并刷新视图
 	int Swap = m_nChannelSelected;
 	for (m_nChannelSelected = 1; m_nChannelSelected < 4; m_nChannelSelected++)
 	{
-		ReshapePegs();
-		ReshapeTransform();
 		ShowGrayTransform();
 		GrayTransform();
 		memcpy(m_dataSrc, m_curData, m_nNewlenData);
 	}
 	// 对RGB通道最后变换
 	m_nChannelSelected = 0;
-	ReshapePegs();
-	ReshapeTransform();
 	ShowGrayTransform();
 	GrayTransform();
 	// 应用到图像
@@ -733,8 +723,10 @@ void CCurveWnd::OnPaint()
 	CPen *pOldPen, newPen;
 	COLORREF LineColor;
 
+	/* //#pragma omp parallel for 不能在此处随便用*/
 	//水平方向颜色条
-	for (int i = m_pOnPaintRect->left, k = 0; i<m_pOnPaintRect->right; i++, k++)
+	int k = 0;
+	for (int i = m_pOnPaintRect->left; i<m_pOnPaintRect->right; i++)
 	{
 		LineColor = ColorSetting(m_nChannelSelected, int(k/m_fWidthRatio), 1);
 		newPen.CreatePen(PS_SOLID, 1, LineColor);
@@ -743,9 +735,11 @@ void CCurveWnd::OnPaint()
 		MemDC.LineTo(i, m_pOnPaintRect->bottom + 10);
 		MemDC.SelectObject(pOldPen);
 		newPen.DeleteObject();
+		k++;
 	}
 	//垂直方向颜色条
-	for (int j = m_pOnPaintRect->top, k = 0; j<m_pOnPaintRect->bottom; j++, k++)
+	k = 0;
+	for (int j = m_pOnPaintRect->top; j<m_pOnPaintRect->bottom; j++)
 	{
 
 		LineColor = ColorSetting(m_nChannelSelected, int(k/m_fHeightRatio), 1);
@@ -755,6 +749,7 @@ void CCurveWnd::OnPaint()
 		MemDC.LineTo(m_pOnPaintRect->left - 5, m_pOnPaintRect->bottom-j);
 		MemDC.SelectObject(pOldPen);
 		newPen.DeleteObject();
+		k++;
 	}
 
 	if (!CHECK_IMAGE_NULL(m_pImage))
@@ -765,9 +760,10 @@ void CCurveWnd::OnPaint()
 		pOldPen = MemDC.SelectObject(&newPen);
 		d_type rate = 0.20*m_nRectHeight*m_nRectWidth/m_fWidthRatio;//使直方图尽量布满坐标系并且便于观察
 		// 应该遍历完直方图，而不是遍历完绘图区域
+		int nTemp;
 		if (m_fWidthRatio <= 1)
 		{
-			for (int i = 0, nTemp; i < 256; i++)
+			for (int i = 0; i < 256; i++)
 			{
 				nTemp = m_pOnPaintRect->left + i * m_fWidthRatio - 1;
 				MemDC.MoveTo(nTemp, m_pOnPaintRect->bottom);
@@ -776,7 +772,6 @@ void CCurveWnd::OnPaint()
 		}
 		else
 		{
-			int nTemp;
 			for (int i = 0; i <= m_nRectWidth; i++)
 			{
 				nTemp = m_pOnPaintRect->left + i - 1;
@@ -839,7 +834,7 @@ void CCurveWnd::OnPaint()
 	//对角线,应该画在直方图后面，以免被覆盖
 	newPen.CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
 	pOldPen = MemDC.SelectObject(&newPen);
-	if (m_bInverseImage)
+	if (m_bInverseImage[m_nChannelSelected])
 	{//图像已反转,对角线要变化,2014.4.15
 		MemDC.MoveTo(m_pOnPaintRect->left, m_pOnPaintRect->top);
 		MemDC.LineTo(m_pOnPaintRect->right, m_pOnPaintRect->bottom);
@@ -852,8 +847,24 @@ void CCurveWnd::OnPaint()
 	MemDC.SelectObject(pOldPen);
 	newPen.DeleteObject();
 
-	//拷贝
-	dc.BitBlt(m_pOnPaintRect->left, m_pOnPaintRect->top, m_nRectWidth, m_nRectHeight, &MemDC, m_pOnPaintRect->left, m_pOnPaintRect->top, SRCCOPY);
+	//绘制直方图外围矩形
+	newPen.CreatePen(PS_SOLID, 1, RGB(64, 64, 64));
+	pOldPen = MemDC.SelectObject(&newPen);
+	{
+		MemDC.MoveTo(m_pOnPaintRect->left, m_pOnPaintRect->top - 1);
+		MemDC.LineTo(m_pOnPaintRect->left, m_pOnPaintRect->bottom);
+		MemDC.MoveTo(m_pOnPaintRect->left, m_pOnPaintRect->bottom);
+		MemDC.LineTo(m_pOnPaintRect->right, m_pOnPaintRect->bottom);
+		MemDC.MoveTo(m_pOnPaintRect->right, m_pOnPaintRect->bottom);
+		MemDC.LineTo(m_pOnPaintRect->right, m_pOnPaintRect->top - 1);
+		MemDC.MoveTo(m_pOnPaintRect->right, m_pOnPaintRect->top - 1);
+		MemDC.LineTo(m_pOnPaintRect->left, m_pOnPaintRect->top - 1);
+	}
+	MemDC.SelectObject(pOldPen);
+	newPen.DeleteObject();
+
+	//拷贝,宽度、高度为矩形宽度高度加1是为了显示矩形边框
+	dc.BitBlt(m_pOnPaintRect->left, m_pOnPaintRect->top - 1, m_nRectWidth+1, m_nRectHeight+1, &MemDC, m_pOnPaintRect->left, m_pOnPaintRect->top - 1, SRCCOPY);
 	dc.BitBlt(m_pOnPaintRect->left - 10, m_pOnPaintRect->top, 5, m_nRectHeight, &MemDC, m_pOnPaintRect->left - 10, m_pOnPaintRect->top, SRCCOPY);    //垂直 color bar
 	dc.BitBlt(m_pOnPaintRect->left, m_pOnPaintRect->bottom + 5, m_nRectWidth, 5, &MemDC, m_pOnPaintRect->left, m_pOnPaintRect->bottom + 5, SRCCOPY); //水平 color bar
 	MemDC.SelectObject(pOldBmp);
@@ -911,15 +922,20 @@ void CCurveWnd::OnComboboxRgb()
 void CCurveWnd::OnCmdCurveWndReset()
 {
 	if (CHECK_IMAGE_NULL(m_pImage)) return;
-	m_bInverseImage = FALSE;
+	for (int i = 0; i < 4; ++i)
+	{
+		m_bInverseImage[i] = FALSE;
+	}
+	//更新视图
+	memcpy(m_curData, m_dataSrc, m_nNewlenData);
+	ApplyToImage();
+	CCTdemoView* pView = GetView();
+	pView->Invalidate(TRUE);
+	//更新直方图
 	InitPegs();
 	GetHistogram();
 	ShowGrayTransform();
 	Invalidate(TRUE);
-	//更新视图
-	memcpy(m_pBits, m_dataSrc, m_nNewlenData);
-	CCTdemoView* pView = GetView();
-	pView->Invalidate(TRUE);
 	//ImshowImmediately();//解决重置失效问题,2014.4.15
 }
 
@@ -928,8 +944,7 @@ void CCurveWnd::OnCmdCurveWndInverse()
 {
 	if (CHECK_IMAGE_NULL(m_pImage)) return;
 	// TODO: 在此添加命令处理程序代码
-	m_bInverseImage = !m_bInverseImage;
-	InverseTransform();
+	m_bInverseImage[m_nChannelSelected] = !m_bInverseImage[m_nChannelSelected];
 	ImshowImmediately();//解决翻转失效问题,2014.4.15
 }
 
@@ -982,7 +997,7 @@ void CCurveWnd::OnCmdImportCurve()
 			catch (CMemoryException* e)	{}
 			catch (CFileException* e)	{}
 			catch (CException* e)		{}
-			if (Temp.m_dRatioX <= 0 || Temp.m_dRatioY <= 0)
+			if (Temp.m_dRatioX < 0 || Temp.m_dRatioY < 0)
 			{
 				MessageBox(L"\"" + FilePath + L"\"" + L"不是有效的曲线文件!", L"出现错误", MB_OK | MB_ICONERROR);
 				ar.Close();
@@ -1502,10 +1517,11 @@ void CCurveWnd::OnSize(UINT nType, int cx, int cy)
 		hWnd->MoveWindow(m_pWndSize->right-70-BUTTON_WIDTH, m_pWndSize->bottom-40, BUTTON_WIDTH, BUTTON_HEIGHT);
 	}
 
-	ReshapePegs();
+	ReshapePegs(true);
 
-	ReshapeTransform();
+	ReshapeTransform(true);
 
+	// 下述语句必须存在
 	if (!CHECK_IMAGE_NULL(m_pImage))
 	{
 		ShowGrayTransform();
@@ -1531,24 +1547,56 @@ void CCurveWnd::ReshapePegs(bool bAllRefresh)
 		for (int i = 0; i < 4; ++i)
 		{
 			POSITION pos = m_pPegsList[i].GetHeadPosition();
-			while (pos != NULL)
+			if (m_bInverseImage[i])
 			{
-				peg& Temp = m_pPegsList[i].GetNext(pos);
-				//相对于Rect左上角位置
-				Temp.m_pt->x = LONG(m_pOnPaintRect->left+Temp.m_dRatioX*m_nRectWidth);
-				Temp.m_pt->y = LONG(m_pOnPaintRect->top+Temp.m_dRatioY*m_nRectHeight);
+				while (pos != NULL)
+				{
+					peg& Temp = m_pPegsList[i].GetNext(pos);
+					Temp.m_pt->x = LONG(m_pOnPaintRect->left+Temp.m_dRatioX*m_nRectWidth);
+					Temp.m_pt->y = LONG(m_pOnPaintRect->top+Temp.m_dRatioY*m_nRectHeight);
+					int gray = m_pOnPaintRect->bottom - Temp.m_pt->y;
+					Temp.m_pt->y = m_pOnPaintRect->top + gray;
+					Temp.m_dRatioY = 1.0*gray/m_nRectHeight;
+				}
+				m_bInverseImage[i] = false;
+			}
+			else
+			{
+				while (pos != NULL)
+				{
+					peg& Temp = m_pPegsList[i].GetNext(pos);
+					//相对于Rect左上角位置
+					Temp.m_pt->x = LONG(m_pOnPaintRect->left+Temp.m_dRatioX*m_nRectWidth);
+					Temp.m_pt->y = LONG(m_pOnPaintRect->top+Temp.m_dRatioY*m_nRectHeight);
+				}
 			}
 		}
 	}
 	else
 	{
 		POSITION pos = m_pPegsList[m_nChannelSelected].GetHeadPosition();
-		while (pos != NULL)
+		if (m_bInverseImage[m_nChannelSelected])
 		{
-			peg& Temp = m_pPegsList[m_nChannelSelected].GetNext(pos);
-			//相对于Rect左上角位置
-			Temp.m_pt->x = LONG(m_pOnPaintRect->left+Temp.m_dRatioX*m_nRectWidth);
-			Temp.m_pt->y = LONG(m_pOnPaintRect->top+Temp.m_dRatioY*m_nRectHeight);
+			while (pos != NULL)
+			{
+				peg& Temp = m_pPegsList[m_nChannelSelected].GetNext(pos);
+				Temp.m_pt->x = LONG(m_pOnPaintRect->left+Temp.m_dRatioX*m_nRectWidth);
+				Temp.m_pt->y = LONG(m_pOnPaintRect->top+Temp.m_dRatioY*m_nRectHeight);
+				int gray = m_pOnPaintRect->bottom - Temp.m_pt->y;
+				Temp.m_pt->y = m_pOnPaintRect->top + gray;
+				Temp.m_dRatioY = 1.0*gray/m_nRectHeight;
+			}
+			m_bInverseImage[m_nChannelSelected] = false;
+		} 
+		else
+		{
+			while (pos != NULL)
+			{
+				peg& Temp = m_pPegsList[m_nChannelSelected].GetNext(pos);
+				//相对于Rect左上角位置
+				Temp.m_pt->x = LONG(m_pOnPaintRect->left+Temp.m_dRatioX*m_nRectWidth);
+				Temp.m_pt->y = LONG(m_pOnPaintRect->top+Temp.m_dRatioY*m_nRectHeight);
+			}
 		}
 	}
 }
@@ -1583,6 +1631,31 @@ BOOL CCurveWnd::OnEraseBkgnd(CDC* pDC)
 	return TRUE;
 }
 
+//分配数据
+BYTE* CCurveWnd::MallocData(BYTE* pSrc)
+{
+	BYTE* pDst = NULL;
+	if (m_nChannel > 1)
+	{
+		pDst = new BYTE[m_nlenData];
+		memcpy(pDst, pSrc, m_nlenData);
+		return pDst;
+	}
+	pDst = new BYTE[m_nNewlenData];
+//#pragma omp parallel for
+	for (int i = 0; i < m_nImageHeight; ++i)
+	{
+		for (int j = 0; j < m_nImageWidth; ++j)
+		{
+			pDst  [    i * m_nNewChannel + j * m_nNewRowlen] 
+			= pDst[1 + i * m_nNewChannel + j * m_nNewRowlen] 
+			= pDst[2 + i * m_nNewChannel + j * m_nNewRowlen] 
+			= pSrc[i * m_nChannel + j * m_nbytesWidth];
+		}
+	}
+	return pDst;
+}
+
 //将图像源数据储存起来
 void CCurveWnd::MallocData()
 {
@@ -1602,6 +1675,7 @@ void CCurveWnd::MallocData()
 	m_nNewlenData = m_nImageHeight * m_nNewRowlen;
 	m_dataSrc = new BYTE[m_nNewlenData];
 	m_curData = new BYTE[m_nNewlenData];
+//#pragma omp parallel for
 	for (int i = 0; i < m_nImageHeight; ++i)
 	{
 		for (int j = 0; j < m_nImageWidth; ++j)
@@ -1627,6 +1701,7 @@ void CCurveWnd::ApplyToImage()
 		return;
 	}
 	// 转换公式参考：http://www.cnblogs.com/carekee/articles/3629964.html
+//#pragma omp parallel for
 	for (int i = 0; i < m_nImageHeight; ++i)
 	{
 		for (int j = 0; j < m_nImageWidth; ++j)
@@ -1660,29 +1735,51 @@ bool CCurveWnd::DetectModified()
 }
 
 // 检查图像是否变化了
-bool CCurveWnd::DetectImageChanged()
+bool CCurveWnd::UpdateImageInfo()
 {
+	if (CHECK_IMAGE_NULL(m_pImage))
+		return false;
+	//如果图像的位深度不满足8、24、32
+	int nChannel = m_pImage->GetBPP() / 8;
+	if (nChannel != 1 && nChannel != 3 && nChannel != 4)
+	{
+		m_pImage = NULL;
+		return false;
+	}
+
 	int nImageWidth = m_pImage->GetWidth();
 	int nImageHeight = m_pImage->GetHeight();
-	int nChannel = m_pImage->GetBPP() / 8;
-	BYTE* pBits = (BYTE *)m_pImage->GetBits()+(m_pImage->GetPitch()*(m_nImageHeight-1));
-	if (m_nImageWidth != nImageWidth 
-		|| m_nImageHeight != nImageHeight 
-		|| m_nChannel != nChannel 
-		|| m_pBits != pBits)
-		return true;
-
-	int it_k = min(3, m_nChannel);
-	for (int i = 0; i < m_nImageHeight; ++i)
+	BYTE* pBits = (BYTE *)m_pImage->GetBits() + (m_pImage->GetPitch() * (nImageHeight - 1));
+	// 宽度、高度、通道、指针，其中一项不同就表示图像被修改了
+	if (m_nImageWidth != nImageWidth || m_nImageHeight != nImageHeight || m_nChannel != nChannel || m_pBits != pBits)
 	{
-		for (int j = 0; j < m_nImageWidth; ++j)
-		{
-			for (int k = 0; k < it_k; ++k)
-			{
-				if (m_pBits[k + j * m_nChannel + i * m_nbytesWidth] != pBits[k + j * m_nChannel + i * m_nbytesWidth])
-					return true;
-			}
-		}
+		m_nImageWidth = nImageWidth;
+		m_nImageHeight = nImageHeight;
+		m_nChannel = nChannel;
+		m_pBits = pBits;
+		UpdateExtraInfo();
+		MallocData();
+		return true;
 	}
+	// 从外观看图像没有被修改,未检测图像的数据
+	return false;
+}
+
+// UpdateImageInfo会检查图像宽度、高度、通道等信息是否修改，但不检测数据项，需要检测请调用这个函数。
+bool CCurveWnd::DetectDataChanged()
+{
+	// 以上各项都相同，则判断数据是否相同
+	BYTE* dataSrc = MallocData(m_pBits);
+	if (strcmp((char*)dataSrc, (char*)m_dataSrc) != 0)
+	{// 缓存数据被修改，需要更新缓存数据
+		SAFE_DELETE(m_dataSrc);
+		m_dataSrc = dataSrc;
+		dataSrc = NULL;
+		SAFE_DELETE(m_curData);
+		m_curData = new BYTE[m_nNewlenData];
+		memcpy(m_curData, m_dataSrc, m_nNewlenData);
+		return true;
+	}
+	SAFE_DELETE(dataSrc);
 	return false;
 }

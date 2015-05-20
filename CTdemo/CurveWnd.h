@@ -73,7 +73,6 @@ public:
 	void SetImage(CImage* pImage);						  //设置图像指针
 	BOOL GetHistogram();                                  //取得直方图
 	void InitPegs();									  //初始化pegs
-	void UpdateImageInfo();								  //更新图像信息
 	BOOL PegIsExist(CPoint& point);                       //看peg是否存在
 	POSITION AddNewPeg(CPoint& point);                    //增加新的peg
 	BOOL RePlacePeg(CPoint& point);                       //改变某个peg
@@ -101,9 +100,12 @@ public:
 	int m_nNewChannel;
 	int m_nNewlenData;
 	void ApplyToImage();								  //应用到图像
-	void MallocData();									  //分配缓存数据
+	void MallocData();									  //分配内存
+	BYTE* MallocData(BYTE* pSrc);						  //分配缓存数据
 	bool DetectModified();								  //检查图像是否更新
-	bool DetectImageChanged();							  //检查图像是否变换
+	bool UpdateImageInfo();							      //更新图像信息
+	void UpdateExtraInfo();								  //更新辅助数据
+	bool DetectDataChanged();							  //检查图像数据变化
 
 public:
 	//按钮
@@ -138,7 +140,7 @@ public:
 	d_type                             m_fHeightRatio;    //高度缩放比
 	POSITION                          m_posCurrentPeg;    //当前拽动的peg
 	int                                m_nLinePattern;    //线型
-	BOOL                              m_bInverseImage;    //反转图像
+	BOOL                           m_bInverseImage[4];    //反转图像
 
 	// 图像信息 - 图像可能会变化，因此图像信息不合适作为类成员变量.
 	BYTE*                                     m_pBits;    //图像指针
