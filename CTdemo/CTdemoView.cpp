@@ -424,6 +424,7 @@ void CCTdemoView::OnToolbarTransform()
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
 		float* pSrc = m_pCurrent->Rotate(RAD(dlg.m_fRotateAngle), 0, 0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
 		m_pCurrent->Create(pSrc, NewWidth, NewHeight, NewRowlen);
+		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->GetWidth(), m_PaintRect.top + m_pCurrent->GetHeight());
 		SAFE_DELETE(pSrc);
 		Invalidate();
 	}

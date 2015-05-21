@@ -8,9 +8,17 @@
 // ***** 首都师范大学，袁沅祥，2015年5月. ***** //
 // 
 
+#ifndef SAFE_DELETE
+#define SAFE_DELETE(p) if((p) != NULL){ delete [] (p); (p) = NULL; }	//安全删除指针p
+#endif
+
 #ifndef CHECK_IMAGE_NULL
 #define CHECK_IMAGE_NULL(p) ( ((p) == NULL) || ((p)->IsNull()) ) //检查图像是空
 #endif
+
+#ifndef RAD
+#define RAD(i) (PI * (i) / 180.0f)	//角度转弧度
+#endif // !RAD
 
 class CyImage : public CImage
 {
@@ -45,12 +53,15 @@ public:
 	// 图像几何变换
 	void FlipH();															//水平翻转图像
 	void FlipV();															//垂直翻转图像
+	void Rotate(float degree);												//图像按角度旋转
+	void Zoom(float rate);													//图像按倍数缩放
+	void Zoom(int nNewWidth, int nNewHeight);								//图像按像素缩放
 	/* 对图像旋转，返回新图像的数据，宽度、高度和每行浮点数 */
 	float* Rotate(float angle, int &NewWidth, int &NewHeight, int &NewRowlen);
 	float* Rotate(float angle, float x0, float y0, int &NewWidth, int &NewHeight, int &NewRowlen);
 	float* Rotate(float angle, float x0, float y0, int &Xmin, int &Ymin, int &Xmax, int &Ymax, int &NewWidth, int &NewHeight, int &NewRowlen);
 	/* 根据参数放大图像，返回浮点数据 */
-	float* Zoom(int NewWidth, int NewHeight);
+	float* Zoom(int NewWidth, int NewHeight, int Reserved);
 	/* 图像沿直线作线积分 */
 	float Integrate(float &k, float &c, int nCurChannel = 0);
 	/* 图像在某个方向所有线积分 */
@@ -76,6 +87,18 @@ public:
 	void GetInfomation(int &nWidth, int &nHeight, int &nRowlen);
 	void GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP);
 	void GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP, int &nChannel);
+
+	/* 修改图像位深度*/
+	BOOL	ChangeBPP(UINT bpp);						// 改变图像通道数
+	void	Bpp8To24();									// 8位转24位
+	void	Bpp8To32();									// 8位转32位
+	void	Bpp24To8();									// 24位转8位
+	void	Bpp24To32();								// 24位转32位
+	void	Bpp32To8();									// 32位转8位
+	void	Bpp32To24();								// 32位转24位
+	void	Bpp1To8();									// 掩码转8位
+	void	Bpp1To24();									// 掩码转24位
+	void	Bpp1To32();									// 掩码转32位
 
 	// 创建对象
 	BOOL Create(int nWidth, int nHeight, int nBPP, DWORD dwFlags = 0) throw();

@@ -544,7 +544,7 @@ void CCTdemoDoc::Rand_Pan1(float R, float D, int angles, int rays)
 	{
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
 		float ang = i * m_fAnglesSeparation;
-		float *pSrc = m_pImage->Rotate(ang, x0, x0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+		float *pSrc = m_pImage->Rotate(ang, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
 		for (int j = 0; j < rays; ++j)
 		{
 			float k = tan(theta_0 + j * m_fPan_delta_fai - PI / 2);
@@ -586,7 +586,7 @@ void CCTdemoDoc::Rand_Pan2(float R, float D, int angles, int rays)
 	{
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
 		float ang = i * m_fAnglesSeparation;
-		float *pSrc = m_pImage->Rotate(ang, x0, x0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+		float *pSrc = m_pImage->Rotate(ang, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
 		for (int j = 0; j < rays; ++j)
 		{
 			float u = -m_fPan_u0 + j * m_fPan_delta_u;
@@ -621,7 +621,7 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	float Rate = 1 / m_fRaysSeparation;
 	int Width = Rate * m_nWidth;
 	int Height = Rate * m_nHeight;
-	pZoom = m_pImage->Zoom(Width, Height);
+	pZoom = m_pImage->Zoom(Width, Height, 0);
 
 	float theta_0 = acos(m_nImageDiag / 2.f / R);
 	float theta_n = PI - theta_0;

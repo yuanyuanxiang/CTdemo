@@ -47,8 +47,8 @@ float* cudaComputeRotatedValues(float *_ptrT, int Width, int Height, float angle
 	x3 = x2;						y3 = float(Height - 1);
 	x4 = x1;						y4 = y3;
 	// 四个顶点顺时针旋转,绕坐标原点
-	float m_Ox = Width / 2.f;
-	float m_Oy = Height / 2.f;
+	float m_Ox = (Width + 1) / 2.f;
+	float m_Oy = (Height + 1) / 2.f;
 	PositionTransform(x1, y1, angle, m_Ox, m_Oy);
 	PositionTransform(x2, y2, angle, m_Ox, m_Oy);
 	PositionTransform(x3, y3, angle, m_Ox, m_Oy);

@@ -53,8 +53,8 @@ vector<float> _AMP_ComputeRotatedValues(array<float, 2> &src_array, int src_widt
 	x3 = x2;						y3 = float(src_height - 1);
 	x4 = x1;						y4 = y3;
 	// 四个顶点顺时针旋转,绕坐标原点
-	float m_Ox = src_width / 2.f;
-	float m_Oy = src_height / 2.f;
+	float m_Ox = (src_width + 1) / 2.f;
+	float m_Oy = (src_height + 1) / 2.f;
 	float cos_theta = cos(angle);
 	float sin_theta = sin(angle);
 	PositionTransform(x1, y1, cos_theta, sin_theta, m_Ox, m_Oy);
@@ -79,19 +79,6 @@ vector<float> _AMP_ComputeRotatedValues(array<float, 2> &src_array, int src_widt
 		_AMP_PositionTransform(x, y, cos_theta, -sin_theta, m_Ox, m_Oy);
 		rotated_array[t_idx] = _AMP_Interpolate(src_array, src_height, src_width, x, y);
 	});
-
-	/*
-	for (int i = 0; i < NewWidth; ++i)
-	{
-		for (int j = 0; j < NewHeight; ++j)
-		{
-			float x = float(i + Xmin);
-			float y = float(j + Ymin);
-			_AMP_PositionTransform(x, y, -angle);
-			*(pDst + i + j * NewWidth) = _AMP_Interpolate(_ptrT, Height, Width, x, y);
-		}
-	}
-	*/
 
 	return rotated_array;
 }

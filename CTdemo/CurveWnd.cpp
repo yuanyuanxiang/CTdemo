@@ -1068,6 +1068,7 @@ void CCurveWnd::OnCmdCurveOk()
 	InitPegs();
 	GetHistogram();
 	ImshowImmediately();
+	pView->m_pCurrent->MemcpyByteToFloat();
 }
 
 // 取消
@@ -1680,10 +1681,10 @@ void CCurveWnd::MallocData()
 	{
 		for (int j = 0; j < m_nImageWidth; ++j)
 		{
-			m_dataSrc  [    i * m_nNewChannel + j * m_nNewRowlen] 
-			= m_dataSrc[1 + i * m_nNewChannel + j * m_nNewRowlen] 
-			= m_dataSrc[2 + i * m_nNewChannel + j * m_nNewRowlen] 
-			= m_pBits[i * m_nChannel + j * m_nbytesWidth];
+			m_dataSrc  [    j * m_nNewChannel + i * m_nNewRowlen] 
+			= m_dataSrc[1 + j * m_nNewChannel + i * m_nNewRowlen] 
+			= m_dataSrc[2 + j * m_nNewChannel + i * m_nNewRowlen] 
+			= m_pBits[j * m_nChannel + i * m_nbytesWidth];
 		}
 	}
 	memcpy(m_curData, m_dataSrc, m_nNewlenData);
@@ -1693,6 +1694,9 @@ void CCurveWnd::ApplyToImage()
 {
 	// 未检测到修改则返回
 	if (!DetectModified())
+		return;
+	// 检查图像宽度、高度、通道是否没变
+	if (m_nImageWidth != m_pImage->GetWidth() || m_nImageHeight != m_pImage->GetHeight() || m_nChannel != m_pImage->GetBPP() / 8)
 		return;
 	// 3、4通道图像可以直接调用memcpy
 	if (m_nChannel > 1)
@@ -1706,10 +1710,10 @@ void CCurveWnd::ApplyToImage()
 	{
 		for (int j = 0; j < m_nImageWidth; ++j)
 		{
-			m_pBits[i * m_nChannel + j * m_nbytesWidth] = 
-				(299 * m_curData[ i * m_nNewChannel + j * m_nNewRowlen]
-			+ 587 * m_curData[1 + i * m_nNewChannel + j * m_nNewRowlen] 
-			+ 114 * m_curData[2 + i * m_nNewChannel + j * m_nNewRowlen]+ 500 ) / 1000;
+			m_pBits[j * m_nChannel + i * m_nbytesWidth] = 
+				(299 * m_curData[ j * m_nNewChannel + i * m_nNewRowlen]
+			+ 587 * m_curData[1 + j * m_nNewChannel + i * m_nNewRowlen] 
+			+ 114 * m_curData[2 + j * m_nNewChannel + i * m_nNewRowlen]+ 500 ) / 1000;
 		}
 	}
 }
