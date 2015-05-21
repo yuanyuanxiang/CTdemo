@@ -67,7 +67,7 @@ public:
 	/* 图像在某个方向所有线积分 */
 	float* DirIntegrate(float angle, int nCurChannel = 0);
 	/* 图像radon变换 */
-	float* Radon(float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum, int nCurChannel = 0);
+	float* Radon(float angles_separation, int nAnglesNum, float pixels_separation, int nRaysNum, int nCurChannel = 0);
 
 	// 字符串数据和浮点数据之间拷贝，同步数据时候需调用
 	void MemcpyByteToFloat();												//字符数据拷贝到浮点数据

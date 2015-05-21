@@ -208,10 +208,9 @@ BEGIN
         MENUITEM "保存滤波图像",                      ID_SAVE_AFTER_FILTER_IMG
         MENUITEM "保存重建图像",                      ID_SAVE_BACK_PROJECT_IMG
         MENUITEM SEPARATOR
-        MENUITEM "扇束投影(1)",                     ID_PAN_PROJECT
-        MENUITEM "扇束投影(2)",                     ID_AMP_PAN_PROJECT
-        MENUITEM "扇束投影(3)",                     ID_CUDA_PAN_PROJECT
-        MENUITEM "扇束重建(&R)",                    ID_PAN_RECONSTRUCT
+        MENUITEM "扇束投影(CPU)",                   ID_PAN_PROJECT
+        MENUITEM "扇束投影(GPU)",                   ID_CUDA_PAN_PROJECT
+        MENUITEM "扇束重建图像(&R)",                  ID_PAN_RECONSTRUCT
         MENUITEM SEPARATOR
     END
     POPUP "设置(&S)"
@@ -339,7 +338,7 @@ BEGIN
     LTEXT           "条",IDC_STATIC,216,20,9,8
     LTEXT           "个",IDC_STATIC,216,45,9,8
     LTEXT           "采样范围:",IDC_STATIC,20,20,36,8
-    LTEXT           "射线间距:",IDC_STATIC,20,45,36,8
+    LTEXT           "像素间距:",IDC_STATIC,20,45,36,8
     LTEXT           "rad",IDC_STATIC,103,20,12,8
     LTEXT           "∈(0, 1]",IDC_STATIC,100,44,27,8
 END

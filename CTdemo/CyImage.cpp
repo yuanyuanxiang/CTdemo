@@ -454,10 +454,10 @@ float CyImage::Integrate(float &k, float &c, int nCurChannel)
 
 
 // 沿着各个方向投影，即计算投影图像
-float* CyImage::Radon(float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum, int nCurChannel)
+float* CyImage::Radon(float angles_separation, int nAnglesNum, float pixels_separation, int nRaysNum, int nCurChannel)
 {
 	float* pDst = new float[nAnglesNum * nRaysNum];
-	ImageRadon(pDst, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angles_separation, nAnglesNum, rays_separation, nRaysNum);
+	ImageRadon(pDst, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angles_separation, nAnglesNum, pixels_separation, nRaysNum);
 	return pDst;
 }
 

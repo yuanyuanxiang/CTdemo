@@ -137,8 +137,6 @@ public:
 	afx_msg void OnPanReconstruct();
 	afx_msg void OnUpdatePanReconstruct(CCmdUI *pCmdUI);
 	afx_msg void OnFanScanSettings();
-	afx_msg void OnGpuPanProject();
-	afx_msg void OnUpdateGpuPanProject(CCmdUI *pCmdUI);
 	afx_msg void OnCudaPanProject();
 	afx_msg void OnUpdateCudaPanProject(CCmdUI *pCmdUI);
 	afx_msg void OnChangeImageShowNext();

@@ -69,6 +69,7 @@ CCTdemoDoc::CCTdemoDoc()
 	m_nChannel = 0;
 	m_nImageDiag = 0;
 	// 采样信息
+	m_fSubPixel = 0.5f;
 	m_fAnglesRange = PI;
 	m_nAnglesNum = 180;
 	m_nRaysNum = 360;
@@ -220,7 +221,6 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	m_pImage->Load(lpszPathName);
 	if (m_pImage->IsNull())
 	{
-		SAFE_DELETE(m_pImage);
 		return FALSE;
 	}
 	UpdateImageInfomation();
@@ -245,15 +245,14 @@ BOOL CCTdemoDoc::OpenProjectionFile(LPCTSTR lpszPathName)
 	m_pProject->Load(lpszPathName);
 	if (m_pProject->IsNull())
 	{
-		SAFE_DELETE(m_pProject);
 		return FALSE;
 	}
 	if (m_pProject->m_nyBpp != 8)
 	{
 		CString file = lpszPathName;
-		AfxMessageBox(file + _T("\n不是有效的投影文件。") , MB_OK | MB_ICONERROR);
-		SAFE_DELETE(m_pProject);
-		return FALSE;
+		AfxMessageBox(file + _T("\n文件的位深度被修改为8。") , MB_OK | MB_ICONWARNING);
+		m_pProject->ChangeBPP(8);
+		m_pProject->MemcpyByteToFloat();
 	}
 	m_strFilePath = lpszPathName;
 	CString temp = GetFileNameFromPath(m_strFilePath);
@@ -279,6 +278,15 @@ BOOL CCTdemoDoc::OpenProjectionFile(LPCTSTR lpszPathName)
 void CCTdemoDoc::SetReconstructImageSize()
 {
 	CDlgReconstructSettings dlg;
+	if (CHECK_IMAGE_NULL(m_pImage))
+	{
+		dlg.m_nWidth = dlg.m_nHeight = 256;
+	}
+	else
+	{
+		dlg.m_nWidth = m_pImage->GetWidth();
+		dlg.m_nHeight = m_pImage->GetHeight();
+	}
 	if (dlg.DoModal() == IDOK)
 	{
 		float w0 = dlg.m_fConvoluteW;
@@ -430,7 +438,7 @@ void CCTdemoDoc::RadonTransform()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
 	BeginWaitCursor();
-	float *pDst = m_pImage->Radon(m_fAnglesSeparation, m_nAnglesNum, m_fRaysSeparation, m_nRaysNum);
+	float *pDst = m_pImage->Radon(m_fAnglesSeparation, m_nAnglesNum, m_fSubPixel, m_nRaysNum);
 	EndWaitCursor();
 	m_pProject->SetFloatData(pDst, m_nAnglesNum, m_nRaysNum);
 	m_pProject->MemcpyFloatToByte();
@@ -468,7 +476,7 @@ void CCTdemoDoc::OnProjectUsingGpu()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	BeginWaitCursor();
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	const char *result = cudaRadon(m_pProject->m_pfFloat, m_nRaysNum, m_nAnglesNum, 1.f, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen, m_fRaysSeparation);
+	const char *result = cudaRadon(m_pProject->m_pfFloat, m_nRaysNum, m_nAnglesNum, 1.f, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen, m_fSubPixel);
 	if (result != NULL)
 	{
 		CString str(result);
@@ -524,7 +532,7 @@ void CCTdemoDoc::OnUpdateWindowAfterFilter(CCmdUI *pCmdUI)
  射线源、图像中心、探测器中心在同一水平线，即坐标轴x轴上面，默认D = 2R = 图像对角线某个倍数
  扇形束扫描，生成投影数据。R-SO,D-SO',angles-旋转角度,rays-每角度射线数.（等角度扫描，坐标原点为图像左下角顶点）
 */
-void CCTdemoDoc::Rand_Pan1(float R, float D, int angles, int rays)
+void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 {
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
@@ -560,7 +568,7 @@ void CCTdemoDoc::Rand_Pan1(float R, float D, int angles, int rays)
 
 
 // 扇形束扫描，生成投影数据。R-SO,D-SO',angles-旋转角度,rays-每角度射线数.（等间距扫描）
-void CCTdemoDoc::Rand_Pan2(float R, float D, int angles, int rays)
+void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 {
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
@@ -610,7 +618,6 @@ void CCTdemoDoc::Rand_Pan2(float R, float D, int angles, int rays)
 }
 
 extern void cudaPanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
-extern void AmpRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
 
 void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 {
@@ -634,15 +641,7 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	long t1 = GetTickCount();
 
 	BeginWaitCursor();
-	if (m_bUsingAMP)
-	{
-		AmpRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
-		m_bUsingAMP = false;
-	}
-	else
-	{
-		cudaPanRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
-	}
+	cudaPanRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
 	EndWaitCursor();
 
 	// 程序段结束后取得系统运行时间(ms)

@@ -85,8 +85,6 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_COMMAND(ID_PAN_RECONSTRUCT, &CCTdemoView::OnPanReconstruct)
 	ON_UPDATE_COMMAND_UI(ID_PAN_RECONSTRUCT, &CCTdemoView::OnUpdatePanReconstruct)
 	ON_COMMAND(ID_FAN_SCAN_SETTINGS, &CCTdemoView::OnFanScanSettings)
-	ON_COMMAND(ID_AMP_PAN_PROJECT, &CCTdemoView::OnGpuPanProject)
-	ON_UPDATE_COMMAND_UI(ID_AMP_PAN_PROJECT, &CCTdemoView::OnUpdateGpuPanProject)
 	ON_COMMAND(ID_CUDA_PAN_PROJECT, &CCTdemoView::OnCudaPanProject)
 	ON_UPDATE_COMMAND_UI(ID_CUDA_PAN_PROJECT, &CCTdemoView::OnUpdateCudaPanProject)
 	ON_COMMAND(ID_CHANGE_IMAGE_SHOW, &CCTdemoView::OnChangeImageShowNext)
@@ -474,7 +472,7 @@ void CCTdemoView::OnProjectSettings()
 	dlg.m_nRaysNum = pDoc->m_nRaysNum;
 	dlg.m_nAnglesNum = pDoc->m_nAnglesNum;
 	dlg.m_fAngleRange = pDoc->m_fAnglesRange;
-	dlg.m_fSubPixel = pDoc->m_fRaysSeparation;
+	dlg.m_fSubPixel = pDoc->m_fSubPixel;
 	if (dlg.DoModal() == IDOK)
 	{
 		pDoc->m_nRaysNum = dlg.m_nRaysNum;
@@ -485,7 +483,7 @@ void CCTdemoView::OnProjectSettings()
 			pDoc->m_fAnglesSeparation = pDoc->m_fAnglesRange / pDoc->m_nAnglesNum;
 		}
 		if (dlg.m_fSubPixel > 0)
-			pDoc->m_fRaysSeparation = dlg.m_fSubPixel;
+			pDoc->m_fSubPixel = dlg.m_fSubPixel;
 	}
 }
 
@@ -602,7 +600,7 @@ void CCTdemoView::OnToolbarBackProject()
 		switch(pDoc->m_nProjectionType)
 		{
 		case PROJECT_TYPE_PAR:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation);
 			break;
 		case PROJECT_TYPE_PAN:
 			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
@@ -909,7 +907,7 @@ void CCTdemoView::OnRButtonUp(UINT nFlags, CPoint point)
 void CCTdemoView::OnPanProject()
 {
 	CCTdemoDoc* pDoc = GetDocument();
-	pDoc->Rand_Pan2(pDoc->m_fPanSOR, pDoc->m_fPanSOD, pDoc->m_nAnglesNum, pDoc->m_nRaysNum);
+	pDoc->RandPanDiffRays(pDoc->m_fPanSOR, pDoc->m_fPanSOD, pDoc->m_nAnglesNum, pDoc->m_nRaysNum);
 }
 
 
@@ -967,21 +965,6 @@ void CCTdemoView::OnFanScanSettings()
 		else 
 			AfxMessageBox(_T("SOD是无效的设置"));
 	}
-}
-
-
-void CCTdemoView::OnGpuPanProject()
-{
-	CCTdemoDoc* pDoc = GetDocument();
-	pDoc->m_bUsingAMP = true;
-	pDoc->PanProject(pDoc->m_fPanSOR, pDoc->m_fPanSOD, pDoc->m_nAnglesNum, pDoc->m_nRaysNum);
-}
-
-
-void CCTdemoView::OnUpdateGpuPanProject(CCmdUI *pCmdUI)
-{
-	CCTdemoDoc* pDoc = GetDocument();
-	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 }
 
 

@@ -128,7 +128,6 @@
     <ClInclude Include="ImageViewerDllAPIs.h" />
     <ClInclude Include="IntSection.h" />
     <ClInclude Include="MainFrm.h" />
-    <ClInclude Include="AMP\AmpRadon.h" />
     <ClInclude Include="CurveView.h" />
     <ClInclude Include="NewView.h" />
     <ClInclude Include="Resource.h" />
@@ -152,7 +151,6 @@
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="IntSection.cpp" />
     <ClCompile Include="MainFrm.cpp" />
-    <ClCompile Include="AMP\AmpRadon.cpp" />
     <ClCompile Include="CurveView.cpp" />
     <ClCompile Include="NewView.cpp" />
     <ClCompile Include="SplitterWndDerived.cpp" />

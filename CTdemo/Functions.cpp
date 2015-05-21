@@ -406,12 +406,12 @@ radon结果：float* pDst
 输入图像信息：loat* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel
 当前通道：int nCurChannel
 角度间距及个数：float angles_separation, int nAnglesNum
-射线间距及个数：float rays_separation, int nRaysNum
+射线间距及个数：float pixels_separation, int nRaysNum
 */
 void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, 
-				float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum)
+				float angles_separation, int nAnglesNum, float pixels_separation, int nRaysNum)
 {
-	float zoom_rate = 1 / rays_separation;
+	float zoom_rate = 1 / pixels_separation;
 	int nNewWidth = zoom_rate * nWidth;
 	int nNewHeight = zoom_rate * nHeight;
 	int nNewRowlen = nNewWidth * nChannel;
@@ -433,7 +433,7 @@ void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowle
 		for (int j = 0; j < nRaysNum; ++j)
 		{
 			float x = j * alpha;
-			pDst[i + j * nAnglesNum] = LinearInterp(temp, nNewRaysNum, x) * rays_separation;
+			pDst[i + j * nAnglesNum] = LinearInterp(temp, nNewRaysNum, x) * pixels_separation;
 		}
 		SAFE_DELETE(temp);
 	}

@@ -42,6 +42,7 @@
 *.psess
 *.opensdf
 *.vsps
+*.res
 
 # ignored dirs
 Debug/*

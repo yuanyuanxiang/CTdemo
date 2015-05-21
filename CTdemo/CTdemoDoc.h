@@ -43,6 +43,7 @@ public:
 	int					m_nChannel;			//图像通道数
 	int 				m_nImageDiag;		//图像对角线长
 	// 采样信息
+	float				m_fSubPixel;		//亚像素级
 	float				m_fAnglesRange;		//采样的范围
 	int					m_nAnglesNum;		//采样角度个数
 	int					m_nRaysNum;			//每个角度射线数
@@ -74,8 +75,8 @@ public:
 	float				m_fPan_u0;
 	float				m_fPan_delta_u;
 	float				m_fPan_delta_fai;
-	void				Rand_Pan1(float R, float D, int angles, int rays);
-	void				Rand_Pan2(float R, float D, int angles, int rays);
+	void				RandPanDiffAngles(float R, float D, int angles, int rays);
+	void				RandPanDiffRays(float R, float D, int angles, int rays);
 	void				PanProject(float R, float D, int angles, int rays);
 
 private:

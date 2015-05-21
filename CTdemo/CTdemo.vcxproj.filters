@@ -16,9 +16,6 @@
     <Filter Include="CUDA">
       <UniqueIdentifier>{1414ed53-a55b-4645-acb0-3e91e6d77f62}</UniqueIdentifier>
     </Filter>
-    <Filter Include="AMP">
-      <UniqueIdentifier>{e3da6214-99e7-43ca-baf9-79e7bd32bba8}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CTdemo.h">
@@ -71,9 +68,6 @@
     </ClInclude>
     <ClInclude Include="DlgPanParameter.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AMP\AmpRadon.h">
-      <Filter>AMP</Filter>
     </ClInclude>
     <ClInclude Include="CUDA\PanRadon.h">
       <Filter>CUDA</Filter>
@@ -136,9 +130,6 @@
     </ClCompile>
     <ClCompile Include="DlgPanParameter.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AMP\AmpRadon.cpp">
-      <Filter>AMP</Filter>
     </ClCompile>
     <ClCompile Include="DlgReconstructSettings.cpp">
       <Filter>源文件</Filter>
