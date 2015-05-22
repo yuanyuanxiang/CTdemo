@@ -108,8 +108,8 @@ __host__ const char* cudaConvolute(float* h_pDst, float* h_prj, int row, int col
 	error = cudaGetDeviceProperties(&deviceProp, devID);
 	CHECK_ERRORS(error, errstr);
 	// 如果计算能力 < 1.1
-	if (deviceProp.major < 1) return errstr;
-	else if (deviceProp.major == 1 && deviceProp.minor < 1) return errstr;
+	if (deviceProp.major < 1) return "计算能力小于1.0.";
+	else if (deviceProp.major == 1 && deviceProp.minor < 1) return "计算能力小于1.1.";
 
 	float *d_prj = NULL, *d_pDst = NULL, *d_temp = NULL;
 	size_t length = row * col * sizeof(float);

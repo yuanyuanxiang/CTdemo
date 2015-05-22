@@ -1648,10 +1648,10 @@ BYTE* CCurveWnd::MallocData(BYTE* pSrc)
 	{
 		for (int j = 0; j < m_nImageWidth; ++j)
 		{
-			pDst  [    i * m_nNewChannel + j * m_nNewRowlen] 
-			= pDst[1 + i * m_nNewChannel + j * m_nNewRowlen] 
-			= pDst[2 + i * m_nNewChannel + j * m_nNewRowlen] 
-			= pSrc[i * m_nChannel + j * m_nbytesWidth];
+			pDst  [    j * m_nNewChannel + i * m_nNewRowlen] 
+			= pDst[1 + j * m_nNewChannel + i * m_nNewRowlen] 
+			= pDst[2 + j * m_nNewChannel + i * m_nNewRowlen] 
+			= pSrc[j * m_nChannel + i * m_nbytesWidth];
 		}
 	}
 	return pDst;
@@ -1772,6 +1772,8 @@ bool CCurveWnd::UpdateImageInfo()
 // UpdateImageInfo会检查图像宽度、高度、通道等信息是否修改，但不检测数据项，需要检测请调用这个函数。
 bool CCurveWnd::DetectDataChanged()
 {
+	if (CHECK_IMAGE_NULL(m_pImage))
+		return false;
 	// 以上各项都相同，则判断数据是否相同
 	BYTE* dataSrc = MallocData(m_pBits);
 	if (strcmp((char*)dataSrc, (char*)m_dataSrc) != 0)

@@ -88,6 +88,7 @@ BOOL CChangeBppDlg::OnInitDialog()
 	SetIcon(AfxGetApp()->LoadIconW(IDI_DLG_ICON), TRUE);
 
 	::SetWindowPos(this->m_hWnd, HWND_TOP, 100, 100, 240, 150, SWP_SHOWWINDOW);
+	this->CenterWindow();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }

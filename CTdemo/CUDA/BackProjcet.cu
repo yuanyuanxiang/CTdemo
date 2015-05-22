@@ -75,8 +75,8 @@ __host__ const char* cudaBackProject(float* h_pDst, float* h_prj, int width, int
 	error = cudaGetDeviceProperties(&deviceProp, devID);
 	CHECK_ERRORS(error, errstr);
 	// 如果计算能力 < 1.1
-	if (deviceProp.major < 1) return errstr;
-	else if (deviceProp.major == 1 && deviceProp.minor < 1) return errstr;
+	if (deviceProp.major < 1) return "计算能力小于1.0.";
+	else if (deviceProp.major == 1 && deviceProp.minor < 1) return "计算能力小于1.1.";
 
 	float *d_pDst = NULL;
 	float *d_prj = NULL;

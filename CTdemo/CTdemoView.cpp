@@ -603,15 +603,19 @@ void CCTdemoView::OnToolbarBackProject()
 			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation);
 			break;
 		case PROJECT_TYPE_PAN:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 			break;
 		default:
 			break;
 		}
 	}
+	// 由导入的投影数据进行重建
 	if (CHECK_IMAGE_NULL(pDoc->m_pImage))
+		pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
+	// 不滤波直接进行重建
+	else if (CHECK_IMAGE_NULL(pDoc->m_pAfterFilter))
 		pDoc->m_pReconstruct->MemcpyFloatToByte();
-	else
+	else 
 		pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
 	pDoc->OnWindowBackpro();
 	EndWaitCursor();
@@ -1011,12 +1015,14 @@ void CCTdemoView::OnChangeImageShowNext()
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	m_nCurrent++;
+	if (m_nCurrent == 4)
+		m_nCurrent = 0;
 	switch (m_nCurrent)
 	{
 	case 0 : SetCurrentImage(pDoc->m_pImage);						break;
 	case 1 : SetCurrentImage(pDoc->m_pProject);						break;
 	case 2 : SetCurrentImage(pDoc->m_pAfterFilter);					break;
-	case 3 : SetCurrentImage(pDoc->m_pReconstruct);m_nCurrent = -1;	break;
+	case 3 : SetCurrentImage(pDoc->m_pReconstruct);					break;
 	default:
 		break;
 	}

@@ -73,7 +73,7 @@ CCTdemoDoc::CCTdemoDoc()
 	m_fAnglesRange = PI;
 	m_nAnglesNum = 180;
 	m_nRaysNum = 360;
-	m_fRaysSeparation = 0.5f;
+	m_fRaysSeparation = 1.0f;
 	m_fAnglesSeparation = PI / 180;
 	m_nDetectorCenter = 0;
 	// 启用AMP
@@ -387,7 +387,7 @@ void CCTdemoDoc::UpdateImageInfomation()
 void CCTdemoDoc::InitScanningParameters()
 {
 	m_nRaysNum = ComputeRaysNum(m_nWidth, m_nHeight);		//射线条数
-	m_fRaysSeparation = 0.5f;								//射线间距
+	m_fRaysSeparation = 1.0f;								//射线间距
 	m_nDetectorCenter = (m_nRaysNum + 1) / 2;				//探测器中心
 	m_fPanSOR = m_nImageDiag * 3;
 	m_fPanSOD = 2 * m_fPanSOR;
@@ -460,7 +460,7 @@ void CCTdemoDoc::OnUpdateWindowProject(CCmdUI *pCmdUI)
 	pCmdUI->Enable(m_pProject != NULL);
 }
 
-extern const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float rays_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen, float fPixelDistance);
+extern const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float pixel_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen);
 
 // 使用CUDA加速投影
 void CCTdemoDoc::OnProjectUsingGpu()
@@ -476,7 +476,7 @@ void CCTdemoDoc::OnProjectUsingGpu()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	BeginWaitCursor();
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	const char *result = cudaRadon(m_pProject->m_pfFloat, m_nRaysNum, m_nAnglesNum, 1.f, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen, m_fSubPixel);
+	const char *result = cudaRadon(m_pProject->m_pfFloat, m_nRaysNum, m_nAnglesNum, m_fSubPixel, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen);
 	if (result != NULL)
 	{
 		CString str(result);
