@@ -188,6 +188,7 @@
     </CudaCompile>
     <CudaCompile Include="CUDA\PanRadon.cu">
       <Runtime Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">InheritFromHost</Runtime>
+      <Runtime Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">InheritFromHost</Runtime>
     </CudaCompile>
     <CudaCompile Include="CUDA\Radon.cu">
       <FileType>Document</FileType>

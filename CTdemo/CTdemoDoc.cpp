@@ -76,8 +76,6 @@ CCTdemoDoc::CCTdemoDoc()
 	m_fRaysSeparation = 1.0f;
 	m_fAnglesSeparation = PI / 180;
 	m_nDetectorCenter = 0;
-	// ∆Ù”√AMP
-	m_bUsingAMP = false;
 }
 
 CCTdemoDoc::~CCTdemoDoc()

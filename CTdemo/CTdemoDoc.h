@@ -69,7 +69,6 @@ public:
 	void				RadonTransform();									// 计算投影图像
 
 	// *** 扇形束相关 ***
-	bool				m_bUsingAMP;
 	float				m_fPanSOR;
 	float				m_fPanSOD;
 	float				m_fPan_u0;
