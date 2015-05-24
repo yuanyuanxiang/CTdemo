@@ -92,6 +92,8 @@ BOOL CImageScrollView::OnEraseBkgnd(CDC* pDC)
 		return CScrollView::OnEraseBkgnd(pDC);
 	CRect ClientRect;
 	GetClientRect(&ClientRect);
+	OnPrepareDC(pDC);			//进行坐标原点的匹配
+	pDC->DPtoLP(&ClientRect);	//将视图坐标转换为文档作标
 	pDC->PatBlt(0, 0, m_PaintRect.left, ClientRect.bottom, PATCOPY);	// 1 4 7
 	pDC->PatBlt(0, 0, ClientRect.right, m_PaintRect.top, PATCOPY);		// 1 2 3
 	pDC->PatBlt(m_PaintRect.right, 0, ClientRect.right - m_PaintRect.right, ClientRect.bottom, PATCOPY);	// 3 6 9	
@@ -142,23 +144,33 @@ void CImageScrollView::PaintSinglePoint(CDC* pDC, CPoint &point, int nSize)
 {
 	if (m_bMovingImage) return;
 	ShowRGBValue(point);
-	CRect rect(point.x - nSize, point.y - nSize, point.x + nSize, point.y + nSize);
-	// 用指定颜色填充圆点
-	CBrush brush;
-	brush.CreateSolidBrush(RGB(0, 255, 0));
-	CBrush* oldBr = pDC->SelectObject(&brush);
-	pDC->Ellipse(&rect);
-	pDC->SelectObject(oldBr);
+	CPoint pt = DP2LP(point);
+	CRect rect(pt.x - nSize, pt.y - nSize, pt.x + nSize, pt.y + nSize);
+	CPen *pOldPen, newPen;
+	newPen.CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	pOldPen = pDC->SelectObject(&newPen);
+	pDC->MoveTo(rect.left, rect.top);
+	pDC->LineTo(rect.left, rect.bottom);
+	pDC->MoveTo(rect.left, rect.bottom);
+	pDC->LineTo(rect.right, rect.bottom);
+	pDC->MoveTo(rect.right, rect.bottom);
+	pDC->LineTo(rect.right, rect.top);
+	pDC->MoveTo(rect.right, rect.top);
+	pDC->LineTo(rect.left, rect.top);
+	pDC->SelectObject(pOldPen);
+	newPen.DeleteObject();
 }
 
 
 void CImageScrollView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	if (m_pImageQuickViewer->IsWindowVisible())
+	{
 		m_pImageQuickViewer->ShowWindow(SW_HIDE);
+	}
 	m_ptLeftButtonDown = point;
 	m_ptMoveOrigin = point;
-	m_bMovingImage = (!CheckImageNull() && CheckPointInRect(m_ptMoveOrigin, m_PaintRect));
+	m_bMovingImage = (!CheckImageNull() && CheckPointInRect(DP2LP(point), m_PaintRect));
 	CScrollView::OnLButtonDown(nFlags, point);
 }
 
@@ -198,7 +210,8 @@ bool CImageScrollView::CheckImageNull()
 
 bool CImageScrollView::CheckPointInRect(CPoint &point, CRect &rect)
 {
-	if (rect.left < point.x && point.x < rect.right && rect.top < point.y && point.y < rect.bottom )
+	CPoint pt = DP2LP(point);
+	if (rect.left < pt.x && pt.x < rect.right && rect.top < pt.y && pt.y < rect.bottom )
 		return true;
 	return false;
 }
@@ -273,6 +286,10 @@ void CImageScrollView::MovePaintRect(int dx, int dy, CRect &rect)
 
 void CImageScrollView::OnRButtonDown(UINT nFlags, CPoint point)
 {
+	if (m_pImageQuickViewer->IsWindowVisible())
+	{
+		m_pImageQuickViewer->ShowWindow(SW_HIDE);
+	}
 	m_bRightButtonDown = true;
 	m_ptRightButtonDown = point;
 	m_bPaintRect = CheckPointInRect(m_ptRightButtonDown, m_PaintRect);
@@ -294,8 +311,6 @@ void CImageScrollView::OnRButtonUp(UINT nFlags, CPoint point)
 		CDC* pDC = this->GetDC();
 		m_SourceRect = CRect(min(m_ptRightButtonDown.x, m_ptRightButtonUp.x), min(m_ptRightButtonDown.y, m_ptRightButtonUp.y), 
 			max(m_ptRightButtonDown.x, m_ptRightButtonUp.x), max(m_ptRightButtonDown.y, m_ptRightButtonUp.y));
-		if (CheckPointInRect(m_ptMouseMoving, m_PaintRect))
-			PaintSelectedRect(pDC, m_ptRightButtonDown, m_ptMouseMoving);
 		if (m_SourceRect.Width() < 4 || m_SourceRect.Height() < 4)
 		{
 			m_bPaintRect = false;
@@ -319,14 +334,16 @@ void CImageScrollView::OnRButtonUp(UINT nFlags, CPoint point)
 
 void CImageScrollView::PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBottom)
 {
-	pDC->MoveTo(LeftTop);
-	pDC->LineTo(LeftTop.x, RightBottom.y);
-	pDC->MoveTo(LeftTop.x, RightBottom.y);
-	pDC->LineTo(RightBottom);
-	pDC->MoveTo(RightBottom);
-	pDC->LineTo(RightBottom.x, LeftTop.y);
-	pDC->MoveTo(RightBottom.x, LeftTop.y);
-	pDC->LineTo(LeftTop);
+	CPoint lt = DP2LP(LeftTop);
+	CPoint rb = DP2LP(RightBottom);
+	pDC->MoveTo(lt);
+	pDC->LineTo(lt.x, rb.y);
+	pDC->MoveTo(lt.x, rb.y);
+	pDC->LineTo(rb);
+	pDC->MoveTo(rb);
+	pDC->LineTo(rb.x, lt.y);
+	pDC->MoveTo(rb.x, lt.y);
+	pDC->LineTo(lt);
 }
 
 void CImageScrollView::OnTimer(UINT_PTR nIDEvent)
@@ -421,4 +438,25 @@ void CImageScrollView::SaveSelectedImage(CString path)
 	SAFE_DELETE(pImage);
 	SAFE_DELETE(pSrc);
 	cBmp.Detach();
+}
+
+
+CPoint CImageScrollView::DP2LP(const CPoint &point)
+{
+	CPoint pt = point;
+	CClientDC dc(this);
+	OnPrepareDC(&dc);
+	dc.DPtoLP(&pt);
+	return pt;
+}
+
+
+// 参看：http://blog.csdn.net/kevin_samuel/article/details/8288617
+CRect CImageScrollView::DP2LP(const CRect &rect)
+{
+	CRect rt = rect;
+	CClientDC dc(this);
+	OnPrepareDC(&dc);
+	dc.DPtoLP(&rt);
+	return rt;
 }

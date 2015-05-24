@@ -264,21 +264,29 @@ void CCTdemoView::PaintSinglePoint(CDC* pDC, CPoint &point, int nSize)
 {
 	if (m_bMovingImage) return;
 	ShowRGBValue(point);
-	CRect rect(point.x - nSize, point.y - nSize, point.x + nSize, point.y + nSize);
+	CPoint pt = DP2LP(point);
+	CRect rect(pt.x - nSize, pt.y - nSize, pt.x + nSize, pt.y + nSize);
+	// 用指定颜色填充圆点
+	CBrush brush;
+	brush.CreateSolidBrush(RGB(0, 0, 255));
+	CBrush* oldBr = pDC->SelectObject(&brush);
 	pDC->Ellipse(&rect);
+	pDC->SelectObject(oldBr);
 }
 
 
 void CCTdemoView::PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBottom)
 {
-	pDC->MoveTo(LeftTop);
-	pDC->LineTo(LeftTop.x, RightBottom.y);
-	pDC->MoveTo(LeftTop.x, RightBottom.y);
-	pDC->LineTo(RightBottom);
-	pDC->MoveTo(RightBottom);
-	pDC->LineTo(RightBottom.x, LeftTop.y);
-	pDC->MoveTo(RightBottom.x, LeftTop.y);
-	pDC->LineTo(LeftTop);
+	CPoint lt = DP2LP(LeftTop);
+	CPoint rb = DP2LP(RightBottom);
+	pDC->MoveTo(lt);
+	pDC->LineTo(lt.x, rb.y);
+	pDC->MoveTo(lt.x, rb.y);
+	pDC->LineTo(rb);
+	pDC->MoveTo(rb);
+	pDC->LineTo(rb.x, lt.y);
+	pDC->MoveTo(rb.x, lt.y);
+	pDC->LineTo(lt);
 }
 
 
@@ -343,6 +351,8 @@ BOOL CCTdemoView::OnEraseBkgnd(CDC* pDC)
 	// 4	5	6
 	// 7	8	9
 	// 其中5代表绘图区域
+	OnPrepareDC(pDC);			//进行坐标原点的匹配
+	pDC->DPtoLP(&m_ClientRect);	//将视图坐标转换为文档作标
 	pDC->PatBlt(0, 0, m_PaintRect.left, m_ClientRect.bottom, PATCOPY);	// 1 4 7
 	pDC->PatBlt(0, 0, m_ClientRect.right, m_PaintRect.top, PATCOPY);	// 1 2 3
 	pDC->PatBlt(m_PaintRect.right, 0, m_ClientRect.right - m_PaintRect.right, m_ClientRect.bottom, PATCOPY);	// 3 6 9	
@@ -811,7 +821,8 @@ void CCTdemoView::OnUpdateToolbarFlipV(CCmdUI *pCmdUI)
 
 bool CCTdemoView::CheckPointInRect(CPoint &point, CRect &rect)
 {
-	if (rect.left < point.x && point.x < rect.right && rect.top < point.y && point.y < rect.bottom )
+	CPoint pt = DP2LP(point);
+	if (rect.left < pt.x && pt.x < rect.right && rect.top < pt.y && pt.y < rect.bottom )
 		return true;
 	return false;
 }
@@ -819,20 +830,19 @@ bool CCTdemoView::CheckPointInRect(CPoint &point, CRect &rect)
 
 void CCTdemoView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	m_ptLeftButtonDown = point;
 	m_ptMoveOrigin = point;
-	m_bMovingImage = (!CHECK_IMAGE_NULL(m_pCurrent) && CheckPointInRect(m_ptMoveOrigin, m_PaintRect));
+	m_bMovingImage = (!CHECK_IMAGE_NULL(m_pCurrent) && CheckPointInRect(DP2LP(point), m_PaintRect));
 	CScrollView::OnLButtonDown(nFlags, point);
 }
 
 
 void CCTdemoView::OnLButtonUp(UINT nFlags, CPoint point)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	m_bMovingImage = false;
 	m_ptLeftButtonUp = point;
-	Invalidate(TRUE);
+	if (CheckPointInRect(m_ptLeftButtonUp, m_PaintRect))
+		Invalidate(TRUE);
 	CScrollView::OnLButtonUp(nFlags, point);
 }
 
@@ -854,7 +864,6 @@ void CCTdemoView::ShowRGBValue(CPoint &point)
 
 void CCTdemoView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	m_ptMouseMoving = point;
 	if (m_bMovingImage)
 	{
@@ -975,7 +984,6 @@ void CCTdemoView::OnFanScanSettings()
 void CCTdemoView::OnCudaPanProject()
 {
 	CCTdemoDoc* pDoc = GetDocument();
-	pDoc->m_bUsingAMP = false;
 	pDoc->PanProject(pDoc->m_fPanSOR, pDoc->m_fPanSOD, pDoc->m_nAnglesNum, pDoc->m_nRaysNum);
 }
 
@@ -1056,4 +1064,25 @@ void CCTdemoView::OnReconstructImageSize()
 void CCTdemoView::OnUpdateReconstructImageSize(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
+}
+
+
+CPoint CCTdemoView::DP2LP(const CPoint &point)
+{
+	CPoint pt = point;
+	CClientDC dc(this);
+	OnPrepareDC(&dc);
+	dc.DPtoLP(&pt);
+	return pt;
+}
+
+
+// 参看：http://blog.csdn.net/kevin_samuel/article/details/8288617
+CRect CCTdemoView::DP2LP(const CRect &rect)
+{
+	CRect rt = rect;
+	CClientDC dc(this);
+	OnPrepareDC(&dc);
+	dc.DPtoLP(&rt);
+	return rt;
 }

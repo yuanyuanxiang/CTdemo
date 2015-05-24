@@ -46,6 +46,8 @@ public:
 	void		ShowQuickViewerDlg(int nElapse, int show_type = SW_SHOW);
 	void		CopySelectedImage();
 	void		SaveSelectedImage(CString path);
+	CPoint		DP2LP(const CPoint &point);				// 视图坐标转换为文档坐标
+	CRect		DP2LP(const CRect &rect);
 
 public:
 #ifdef _DEBUG

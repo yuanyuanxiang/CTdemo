@@ -60,6 +60,8 @@ public:
 	void		MovePaintRect(int dx, int dy, CRect &rect);// 移动绘图区域
 	void		SetCurrentImage(CyImage* pImage);		// 设置当前图像
 	void		SetCurveWndImage(CImage* pImage);		// 设置曲线图像
+	CPoint		DP2LP(const CPoint &point);				// 视图坐标转换为文档坐标
+	CRect		DP2LP(const CRect &rect);
 
 // 重写
 public:
