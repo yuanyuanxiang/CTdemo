@@ -19,6 +19,7 @@
 #include "DlgPanParameter.h"
 #include "CurveView.h"
 #include "DlgReconstructSettings.h"
+#include "DlgHilbertAngle.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -91,6 +92,10 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_COMMAND(ID_CHANGE_IMAGE_SHOW_PREV, &CCTdemoView::OnChangeImageShowPrev)
 	ON_COMMAND(ID_RECONSTRUCT_IMAGE_SIZE, &CCTdemoView::OnReconstructImageSize)
 	ON_UPDATE_COMMAND_UI(ID_RECONSTRUCT_IMAGE_SIZE, &CCTdemoView::OnUpdateReconstructImageSize)
+	ON_COMMAND(ID_DBP_IMAGE, &CCTdemoView::OnDbpImage)
+	ON_UPDATE_COMMAND_UI(ID_DBP_IMAGE, &CCTdemoView::OnUpdateDbpImage)
+	ON_COMMAND(ID_TOOLBAR_INVERSE_HILBERT, &CCTdemoView::OnToolbarInverseHilbert)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_INVERSE_HILBERT, &CCTdemoView::OnUpdateToolbarInverseHilbert)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -264,7 +269,7 @@ void CCTdemoView::PaintSinglePoint(CDC* pDC, CPoint &point, int nSize)
 {
 	if (m_bMovingImage) return;
 	ShowRGBValue(point);
-	CPoint pt = DP2LP(point);
+	CPoint pt = DP2LP(pDC, point);
 	CRect rect(pt.x - nSize, pt.y - nSize, pt.x + nSize, pt.y + nSize);
 	// 用指定颜色填充圆点
 	CBrush brush;
@@ -277,8 +282,8 @@ void CCTdemoView::PaintSinglePoint(CDC* pDC, CPoint &point, int nSize)
 
 void CCTdemoView::PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBottom)
 {
-	CPoint lt = DP2LP(LeftTop);
-	CPoint rb = DP2LP(RightBottom);
+	CPoint lt = DP2LP(pDC, LeftTop);
+	CPoint rb = DP2LP(pDC, RightBottom);
 	pDC->MoveTo(lt);
 	pDC->LineTo(lt.x, rb.y);
 	pDC->MoveTo(lt.x, rb.y);
@@ -351,12 +356,13 @@ BOOL CCTdemoView::OnEraseBkgnd(CDC* pDC)
 	// 4	5	6
 	// 7	8	9
 	// 其中5代表绘图区域
+	CRect rect = m_ClientRect;
 	OnPrepareDC(pDC);			//进行坐标原点的匹配
-	pDC->DPtoLP(&m_ClientRect);	//将视图坐标转换为文档作标
-	pDC->PatBlt(0, 0, m_PaintRect.left, m_ClientRect.bottom, PATCOPY);	// 1 4 7
-	pDC->PatBlt(0, 0, m_ClientRect.right, m_PaintRect.top, PATCOPY);	// 1 2 3
-	pDC->PatBlt(m_PaintRect.right, 0, m_ClientRect.right - m_PaintRect.right, m_ClientRect.bottom, PATCOPY);	// 3 6 9	
-	pDC->PatBlt(0, m_PaintRect.bottom, m_ClientRect.right, m_ClientRect.bottom - m_PaintRect.bottom, PATCOPY);	// 7 8 9
+	pDC->DPtoLP(&rect);			//将视图坐标转换为文档坐标
+	pDC->PatBlt(0, 0, m_PaintRect.left, rect.bottom, PATCOPY);	// 1 4 7
+	pDC->PatBlt(0, 0, rect.right, m_PaintRect.top, PATCOPY);	// 1 2 3
+	pDC->PatBlt(m_PaintRect.right, 0, rect.right - m_PaintRect.right, rect.bottom, PATCOPY);	// 3 6 9	
+	pDC->PatBlt(0, m_PaintRect.bottom, rect.right, rect.bottom - m_PaintRect.bottom, PATCOPY);	// 7 8 9
 
 	return TRUE;
 }
@@ -619,6 +625,13 @@ void CCTdemoView::OnToolbarBackProject()
 			break;
 		}
 	}
+	EndWaitCursor();
+	if (pDoc->m_nProjectionType == PROJECT_TYPE_PAN)
+	{
+		// 扇束重建的图像像素值不在[0, 255]之间，加权可能错误
+		pDoc->Popup(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
+		return;
+	}
 	// 由导入的投影数据进行重建
 	if (CHECK_IMAGE_NULL(pDoc->m_pImage))
 		pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
@@ -628,7 +641,6 @@ void CCTdemoView::OnToolbarBackProject()
 	else 
 		pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
 	pDoc->OnWindowBackpro();
-	EndWaitCursor();
 }
 
 
@@ -832,7 +844,7 @@ void CCTdemoView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	m_ptLeftButtonDown = point;
 	m_ptMoveOrigin = point;
-	m_bMovingImage = (!CHECK_IMAGE_NULL(m_pCurrent) && CheckPointInRect(DP2LP(point), m_PaintRect));
+	m_bMovingImage = (!CHECK_IMAGE_NULL(m_pCurrent) && CheckPointInRect(point, m_PaintRect));
 	CScrollView::OnLButtonDown(nFlags, point);
 }
 
@@ -1085,4 +1097,62 @@ CRect CCTdemoView::DP2LP(const CRect &rect)
 	OnPrepareDC(&dc);
 	dc.DPtoLP(&rt);
 	return rt;
+}
+
+
+CPoint CCTdemoView::DP2LP(CDC* pDC, const CPoint &point)
+{
+	CPoint pt = point;
+	OnPrepareDC(pDC);
+	pDC->DPtoLP(&pt);
+	return pt;
+}
+
+
+CRect CCTdemoView::DP2LP(CDC* pDC, const CRect &rect)
+{
+	CRect rt = rect;
+	OnPrepareDC(pDC);
+	pDC->DPtoLP(&rt);
+	return rt;
+}
+
+
+void CCTdemoView::OnDbpImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	SAFE_DELETE(pDoc->m_pfDBPImage);
+	CDlgHilbertAngle dlg;
+	dlg.DoModal();
+	float theta = RAD(dlg.m_fHilberAngle - 90.f);
+	pDoc->m_pfDBPImage = new float[pDoc->m_nWidth * pDoc->m_nHeight * sizeof(float)];
+	BeginWaitCursor();
+	DBPImage(pDoc->m_pfDBPImage, pDoc->m_pProject->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation, theta);
+	EndWaitCursor();
+	pDoc->Popup(pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
+}
+
+
+void CCTdemoView::OnUpdateDbpImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
+}
+
+
+void CCTdemoView::OnToolbarInverseHilbert()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
+	BeginWaitCursor();
+	InverseHilbert(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, 1.f);
+	EndWaitCursor();
+	pDoc->Popup(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
+}
+
+
+void CCTdemoView::OnUpdateToolbarInverseHilbert(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->m_pfDBPImage != NULL);
 }

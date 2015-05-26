@@ -76,6 +76,8 @@ CCTdemoDoc::CCTdemoDoc()
 	m_fRaysSeparation = 1.0f;
 	m_fAnglesSeparation = PI / 180;
 	m_nDetectorCenter = 0;
+	// 导数图像
+	m_pfDBPImage = NULL;
 }
 
 CCTdemoDoc::~CCTdemoDoc()
@@ -84,6 +86,7 @@ CCTdemoDoc::~CCTdemoDoc()
 	SAFE_DELETE(m_pProject);
 	SAFE_DELETE(m_pAfterFilter);
 	SAFE_DELETE(m_pReconstruct);
+	SAFE_DELETE(m_pfDBPImage);
 }
 
 BOOL CCTdemoDoc::OnNewDocument()
@@ -363,6 +366,12 @@ void CCTdemoDoc::Popup(CyImage* pImage)
 }
 
 
+void CCTdemoDoc::Popup(float* pSrc, int Width, int Height, int Rowlen)
+{
+	PopImageViewerDlg(pSrc, Width, Height, Rowlen);
+}
+
+
 // 更新图像信息：首地址、宽、高、每行字节数、通道。
 void CCTdemoDoc::UpdateImageInfomation()
 {
@@ -535,7 +544,6 @@ void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
 	m_fRaysSeparation = 1.f;
-	float Rate = 1 / m_fRaysSeparation;
 
 	float theta_0 = acos(m_nImageDiag / 2.f / R);
 	float theta_n = PI - theta_0;
@@ -549,8 +557,8 @@ void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 	for (int i = 0; i < angles; ++i)
 	{
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
-		float ang = i * m_fAnglesSeparation;
-		float *pSrc = m_pImage->Rotate(ang, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+		float theta = i * m_fAnglesSeparation;
+		float *pSrc = m_pImage->Rotate(theta, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
 		for (int j = 0; j < rays; ++j)
 		{
 			float k = tan(theta_0 + j * m_fPan_delta_fai - PI / 2);
@@ -571,7 +579,6 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
 	m_fRaysSeparation = 1.f;
-	float Rate = 1 / m_fRaysSeparation;
 
 	float theta_0 = acos(m_nImageDiag / 2.f / R);
 	float theta_n = PI - theta_0;
@@ -591,8 +598,8 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 	for (int i = 0; i < angles; ++i)
 	{
 		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
-		float ang = i * m_fAnglesSeparation;
-		float *pSrc = m_pImage->Rotate(ang, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+		float theta = i * m_fAnglesSeparation;
+		float *pSrc = m_pImage->Rotate(theta, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
 		for (int j = 0; j < rays; ++j)
 		{
 			float u = -m_fPan_u0 + j * m_fPan_delta_u;
@@ -615,7 +622,7 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 	PopImageViewerDlg(m_pProject->m_pfFloat, angles, rays, angles);
 }
 
-extern void cudaPanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
+extern const char* cudaPanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
 
 void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 {
@@ -639,11 +646,19 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	long t1 = GetTickCount();
 
 	BeginWaitCursor();
-	cudaPanRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
+	const char* result = cudaPanRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
 	EndWaitCursor();
 
 	// 程序段结束后取得系统运行时间(ms)
 	long t2 = GetTickCount();
+
+	if (result != NULL)
+	{
+		CString str(result);
+		AfxMessageBox(_T("程序出现错误。CUDA 错误信息:\n") + str, MB_OK | MB_ICONWARNING);
+		t2 = t1;
+	}
+
 	// 前后之差即程序运行时间  
 	str.Format(_T("提示：程序耗时 %d ms."), t2 - t1);
 	AfxMessageBox(str);

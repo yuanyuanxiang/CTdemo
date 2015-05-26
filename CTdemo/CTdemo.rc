@@ -136,6 +136,9 @@ BEGIN
     SEPARATOR
     BUTTON      ID_TOOLBAR_FLIP_H
     BUTTON      ID_TOOLBAR_FLIP_V
+    SEPARATOR
+    BUTTON      ID_DBP_IMAGE
+    BUTTON      ID_TOOLBAR_INVERSE_HILBERT
 END
 
 
@@ -228,6 +231,7 @@ BEGIN
         MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
         MENUITEM "Next图像(&N)\tCtrl+->",         ID_CHANGE_IMAGE_SHOW
         MENUITEM "Prev图像(&P)\tCtrl+<-",         ID_CHANGE_IMAGE_SHOW_PREV
+        MENUITEM "导数图像(&D)",                    ID_DBP_IMAGE
     END
     POPUP "窗口(&W)"
     BEGIN
@@ -406,6 +410,17 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 END
 
+IDD_HILBERT_ANGLE DIALOGEX 0, 0, 171, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "角度"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,28,57,50,14
+    PUSHBUTTON      "取消",IDCANCEL,91,57,50,14
+    LTEXT           "theta(°):",IDC_STATIC,38,26,30,8
+    EDITTEXT        IDC_HILBERT_ANGLE,95,24,40,14,ES_CENTER | ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -508,6 +523,14 @@ BEGIN
         RIGHTMARGIN, 305
         TOPMARGIN, 7
         BOTTOMMARGIN, 171
+    END
+
+    IDD_HILBERT_ANGLE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 164
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -737,6 +760,13 @@ BEGIN
     ID_CHANGE_IMAGE_SHOW    "切换用以显示的图像\n下一张"
     ID_CHANGE_IMAGE_SHOW_PREV "切换用以显示的图像\n前一张"
     ID_RECONSTRUCT_IMAGE_SIZE "设置重建图像的大小\n设置图像大小"
+END
+
+STRINGTABLE
+BEGIN
+    ID_DBP_IMAGE            "计算导数图像\nDBP"
+    ID_TOOLBAR_DBP          "计算导数图像\nDBP"
+    ID_TOOLBAR_INVERSE_HILBERT "对DBP图像进行希尔伯特逆变换\n2步Hilbert"
 END
 
 #endif    // 中文(简体，中国) resources

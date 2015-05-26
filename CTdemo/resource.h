@@ -48,6 +48,7 @@
 #define IDD_PAN_SCAN_SETTINGS           322
 #define IDD_RECONSTRUCT_SETTINGS        323
 #define IDD_DLG_CURVE                   324
+#define IDD_HILBERT_ANGLE               325
 #define IDC_ROTATE_ANGLE                1000
 #define IDC_EDIT_RAYSNUM                1001
 #define IDC_EDIT_ANGLESNUM              1002
@@ -59,6 +60,7 @@
 #define IDC_PAN_SOR                     1009
 #define IDC_CONVOLUTE_W                 1009
 #define IDC_HEIGHT                      1010
+#define IDC_HILBERT_ANGLE               1010
 #define ID_TOOLBAR_BPP                  32771
 #define ID_HK_TOOBAR_BPP                32772
 #define ID_TOOBAR_BPP                   32772
@@ -137,14 +139,19 @@
 #define ID_CHANGE_IMAGE_SHOW_PREV       32873
 #define ID_32876                        32876
 #define ID_RECONSTRUCT_IMAGE_SIZE       32877
+#define ID_32879                        32879
+#define ID_DBP_IMAGE                    32880
+#define ID_TOOLBAR_DBP                  32882
+#define ID_BUTTON32884                  32884
+#define ID_TOOLBAR_INVERSE_HILBERT      32884
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        325
-#define _APS_NEXT_COMMAND_VALUE         32879
-#define _APS_NEXT_CONTROL_VALUE         1010
+#define _APS_NEXT_RESOURCE_VALUE        326
+#define _APS_NEXT_COMMAND_VALUE         32885
+#define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

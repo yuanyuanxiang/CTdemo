@@ -96,6 +96,9 @@
     <ClInclude Include="SplitterWndDerived.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DlgHilbertAngle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CTdemo.cpp">
@@ -153,6 +156,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SplitterWndDerived.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgHilbertAngle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

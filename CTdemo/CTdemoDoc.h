@@ -50,10 +50,13 @@ public:
 	float				m_fRaysSeparation;	//射线间距
 	float				m_fAnglesSeparation;//角度间距
 	int					m_nDetectorCenter;	//探测器中心
+	// 导数图像
+	float*				m_pfDBPImage;		//导数图像
 
 // 操作
 public:
 	void				Popup(CyImage* pImage);								//弹出图像预览对话框
+	void				Popup(float* pSrc, int Width, int Height, int Rowlen);
 	void				UpdateImageInfomation();							//更新图像信息
 	void				InitScanningParameters();							//初始化采样参数
 	CString				GetFileNameFromPath(CString path);					//从路径取得文件名

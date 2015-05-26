@@ -93,7 +93,7 @@ BOOL CImageScrollView::OnEraseBkgnd(CDC* pDC)
 	CRect ClientRect;
 	GetClientRect(&ClientRect);
 	OnPrepareDC(pDC);			//进行坐标原点的匹配
-	pDC->DPtoLP(&ClientRect);	//将视图坐标转换为文档作标
+	pDC->DPtoLP(&ClientRect);	//将视图坐标转换为文档坐标
 	pDC->PatBlt(0, 0, m_PaintRect.left, ClientRect.bottom, PATCOPY);	// 1 4 7
 	pDC->PatBlt(0, 0, ClientRect.right, m_PaintRect.top, PATCOPY);		// 1 2 3
 	pDC->PatBlt(m_PaintRect.right, 0, ClientRect.right - m_PaintRect.right, ClientRect.bottom, PATCOPY);	// 3 6 9	
@@ -144,7 +144,7 @@ void CImageScrollView::PaintSinglePoint(CDC* pDC, CPoint &point, int nSize)
 {
 	if (m_bMovingImage) return;
 	ShowRGBValue(point);
-	CPoint pt = DP2LP(point);
+	CPoint pt = DP2LP(pDC, point);
 	CRect rect(pt.x - nSize, pt.y - nSize, pt.x + nSize, pt.y + nSize);
 	CPen *pOldPen, newPen;
 	newPen.CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
@@ -170,7 +170,7 @@ void CImageScrollView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	m_ptLeftButtonDown = point;
 	m_ptMoveOrigin = point;
-	m_bMovingImage = (!CheckImageNull() && CheckPointInRect(DP2LP(point), m_PaintRect));
+	m_bMovingImage = (!CheckImageNull() && CheckPointInRect(point, m_PaintRect));
 	CScrollView::OnLButtonDown(nFlags, point);
 }
 
@@ -334,8 +334,8 @@ void CImageScrollView::OnRButtonUp(UINT nFlags, CPoint point)
 
 void CImageScrollView::PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBottom)
 {
-	CPoint lt = DP2LP(LeftTop);
-	CPoint rb = DP2LP(RightBottom);
+	CPoint lt = DP2LP(pDC, LeftTop);
+	CPoint rb = DP2LP(pDC, RightBottom);
 	pDC->MoveTo(lt);
 	pDC->LineTo(lt.x, rb.y);
 	pDC->MoveTo(lt.x, rb.y);
@@ -458,5 +458,23 @@ CRect CImageScrollView::DP2LP(const CRect &rect)
 	CClientDC dc(this);
 	OnPrepareDC(&dc);
 	dc.DPtoLP(&rt);
+	return rt;
+}
+
+
+CPoint CImageScrollView::DP2LP(CDC* pDC, const CPoint &point)
+{
+	CPoint pt = point;
+	OnPrepareDC(pDC);
+	pDC->DPtoLP(&pt);
+	return pt;
+}
+
+
+CRect CImageScrollView::DP2LP(CDC* pDC, const CRect &rect)
+{
+	CRect rt = rect;
+	OnPrepareDC(pDC);
+	pDC->DPtoLP(&rt);
 	return rt;
 }

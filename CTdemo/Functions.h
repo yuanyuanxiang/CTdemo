@@ -93,5 +93,13 @@ float* ImageZoom(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nCha
 // 根据图像的宽度与高度计算出最佳的射线采样条数，参考自MATLAB
 int ComputeRaysNum(int nWidth, int nHeight);
 
+float* DiffImage(float* pPrj, int nRays, int nAngles, float delta_r);
+
+void DBPImage(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai, float theta = 0.f);
+
+float HilbertKernel(float x);
+
+void InverseHilbert(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r);
+
 
 #endif

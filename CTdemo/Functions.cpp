@@ -3,6 +3,7 @@
 #include "IntSection.h"
 #include <vector>
 #include <algorithm>
+#include <limits>
 using namespace std;
 
 // 不显示数据截断警告
@@ -222,8 +223,8 @@ void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r,
 	int m, n, i;
 	float sum = 0.f;
 	float theta_0 = acos(nHeight * delta_r / 2.f / R);
-	float m_fPan_u0 = D / tan(theta_0);
-	float m_fPan_delta_u = (2.f * m_fPan_u0) / nHeight;
+	float u0 = D / tan(theta_0);
+	float delta_u = (2.f * u0) / nHeight;
 
 #pragma omp parallel for private(m, n, i) reduction(+ : sum)
 	for (m = 0; m < nHeight; ++m)
@@ -234,7 +235,7 @@ void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r,
 			for (i = 0; i < nHeight; ++i)
 			{
 				// 加权做卷积
-				float u = -m_fPan_u0 + i * m_fPan_delta_u;
+				float u = -u0 + i * delta_u;
 				float alpha = D / sqrt(D * D + u * u);
 				sum += alpha * pSrc[n + i * nWidth] * ConvKernel(m - i, w0);
 			}
@@ -251,12 +252,6 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 	int cy = (nHeight + 1) / 2;
 	int med = (nRays + 1) / 2;
 	float sum = 0.f;
-
-	float theta_0 = acos(nRays * delta_r / 2.f / R);
-	float m_fPan_u0 = D / tan(theta_0);
-	float m_fPan_delta_u = (2.f * m_fPan_u0) / nRays;
-	float delta_u = m_fPan_delta_u;
-	delta_r = R / D * delta_u;
 
 	// 2015.5.19 将三角函数放到循环体外面
 	float *cos_fai = new float[nAngles];
@@ -665,4 +660,143 @@ int ComputeRaysNum(int nWidth, int nHeight)
 	int temp1 = nWidth - (int)floor((nWidth - 1) / 2.f) - 1;
 	int temp2 = nHeight - (int)floor((nHeight - 1) / 2.f) - 1;
 	return 2 * (int)ceil(sqrt(1.f * temp1 * temp1 + temp2 * temp2)) + 3;
+}
+
+
+/*
+函数返回			导数图像
+float* pPrj			投影图像
+int nRays			图像高度
+int nAngles			图像宽度
+float delta_r		间距
+*/
+float* DiffImage(float* pPrj, int nRays, int nAngles, float delta_r)
+{
+	float* pDst = new float[nRays * nAngles * sizeof(float)];
+	for (int n = 0; n < nAngles; ++n)
+	{
+		pDst[n] =  pPrj[n] / delta_r;
+	}
+
+#pragma omp parallel for
+	for (int m = 1; m < nRays; ++m)
+	{
+		for (int n = 0; n < nAngles; ++n)
+		{
+			pDst[n + m * nAngles] =  (pPrj[n + m * nAngles] - pPrj[n + (m - 1) * nAngles]) / delta_r;
+		}
+	}
+	return pDst;
+}
+
+
+/*
+float* pDst			目标
+float* pPrj			投影图像
+int nWidth			原始图像的宽
+int nHeight			原始图像的高
+int nRays			投影的行数(r)
+int nAngles			投影的列数(fai)
+float delta_r		扫描参数
+float delta_fai		扫描参数
+float theta			Hilbert角度
+*/
+void DBPImage(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai, float theta)
+{
+	int m, n, i;
+	int cx = (nWidth + 1) / 2;
+	int cy = (nHeight + 1) / 2;
+	int med = (nRays + 1) / 2;
+	float sum = 0.f;
+
+	// 2015.5.19 将三角函数放到循环体外面
+	float *cos_fai = new float[nAngles];
+	float *sin_fai = new float[nAngles];
+	float *sgn = new float[nAngles];
+
+	// sin(fai - theta) = sin*cos - cos*sin
+	float sin_theta = sin(theta);
+	float cos_theta = cos(theta);
+
+#pragma omp parallel for
+	for (i = 0; i < nAngles; ++i)
+	{
+		float fai = i * delta_fai;
+		cos_fai[i] = cos(fai);
+		sin_fai[i] = sin(fai);
+		float sin_fai_theta = sin_fai[i] * cos_theta - cos_fai[i] * sin_theta;
+		if (sin_fai_theta > 0)
+			sgn[i] = 1.f;
+		else if (sin_fai_theta < 0)
+			sgn[i] = -1.f;
+		else
+			sgn[i] = 0.f;
+	}
+
+	float* pDiff = DiffImage(pPrj, nRays, nAngles, delta_r);
+
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+	for (m = 0; m < nHeight; ++m)
+	{
+		for (n = 0; n < nWidth; ++n)
+		{
+			sum = 0.f;
+			for (i = 0; i < nAngles; ++i)
+			{
+				float fai = i * delta_fai;
+				float r = (n - cx) * cos_fai[i] + (m - cy) * sin_fai[i];
+				sum += sgn[i] * LinearInterp(pDiff, nAngles, nRays, i, med + r / delta_r);
+			}
+			pDst[n + m * nWidth] = sum * delta_fai;
+		}
+	}
+
+	SAFE_DELETE(pDiff);
+	SAFE_DELETE(cos_fai);
+	SAFE_DELETE(sin_fai);
+	SAFE_DELETE(sgn);
+}
+
+
+// 希尔伯特卷积核函数
+float HilbertKernel(float x)
+{
+	if (x == 0)
+	//return 0;
+	return (numeric_limits<float>::max)();
+	return 1 / (PI * x);
+}
+
+
+/*
+float* pDst					目标
+float* pSrc					指向DBP数据的指针
+int nWidth					宽度，此处表示fai
+int nHeight					高度，此处表示r
+float delta_r				离散化之后的dr
+*/
+void InverseHilbert(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r)
+{
+	int s, t, s1;
+	float sum = 0.f;
+
+	float Lt = -1.f;
+	float Ut = nHeight;
+	float s0 = 0.f, Ct;
+
+//#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+	for (s = 0; s < nHeight; ++s)
+	{
+		for (t = 0; t < nWidth; ++t)
+		{
+			sum = 0.f;
+			Ct = 0.f;
+			for (s1 = 0; s1 < nHeight; ++s1)
+			{
+				sum += sqrt((s1 - Lt) * (Ut - s1)) * pSrc[t + s1 * nWidth] * HilbertKernel(s - s1);
+				Ct += sqrt((s1 - Lt) * (Ut - s1)) * pSrc[t + s1 * nWidth] * HilbertKernel(s0 - s1);
+			}
+			pDst[t + s * nWidth] = -(sum - Ct) / sqrt((s - Lt) * (Ut - s)) * delta_r;
+		}
+	}
 }

@@ -94,7 +94,7 @@ __global__ void cudaRotateKernel(float* d_pSrc, int Width, int Height, float* d_
 	{
 		float x = float(j + Xmin);
 		float y = float(i + Ymin);
-		cudaPositonTransform(x, y, cos_theta, -sin_theta);
+		cudaPositionTransform(x, y, cos_theta, -sin_theta);
 		*(d_pDst + j + i * NewWidth) = cudaGetPositionValue(x, y, d_pSrc, Width, Height);
 	}
 }
@@ -353,7 +353,7 @@ __device__ float cudaGetPositionValue(float x, float y, float* pSrc, int Width, 
 
 
 // 设备端：对坐标(x, y)旋转angle角度。
-__device__ void cudaPositonTransform(float &x, float &y, float theta)
+__device__ void cudaPositionTransform(float &x, float &y, float theta)
 {
 	float cos_theta = cos(theta);
 	float sin_theta = sin(theta);
@@ -364,7 +364,7 @@ __device__ void cudaPositonTransform(float &x, float &y, float theta)
 
 
 // 设备端：参数修改为角度的余弦和正弦。
-__device__ void cudaPositonTransform(float &x, float &y, float cos_theta, float sin_theta)
+__device__ void cudaPositionTransform(float &x, float &y, float cos_theta, float sin_theta)
 {
 	float x_temp = x * cos_theta - y * sin_theta;
 	y = x * sin_theta + y * cos_theta;

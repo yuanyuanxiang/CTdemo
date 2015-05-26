@@ -44,10 +44,12 @@ public:
 	bool		CheckPointInRect(CPoint &point, CRect &rect);
 	bool		CheckImageNull();						// 检查图像是否为空
 	void		ShowQuickViewerDlg(int nElapse, int show_type = SW_SHOW);
-	void		CopySelectedImage();
-	void		SaveSelectedImage(CString path);
+	void		CopySelectedImage();					// 复制选中图像
+	void		SaveSelectedImage(CString path);		// 保存选中图像
 	CPoint		DP2LP(const CPoint &point);				// 视图坐标转换为文档坐标
-	CRect		DP2LP(const CRect &rect);
+	CRect		DP2LP(const CRect &rect);				// 视图坐标转换为文档坐标
+	CPoint		DP2LP(CDC* pDC, const CPoint &point);	// 视图坐标转换为文档坐标
+	CRect		DP2LP(CDC* pDC, const CRect &rect);		// 视图坐标转换为文档坐标
 
 public:
 #ifdef _DEBUG

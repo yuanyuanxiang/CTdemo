@@ -61,7 +61,9 @@ public:
 	void		SetCurrentImage(CyImage* pImage);		// 设置当前图像
 	void		SetCurveWndImage(CImage* pImage);		// 设置曲线图像
 	CPoint		DP2LP(const CPoint &point);				// 视图坐标转换为文档坐标
-	CRect		DP2LP(const CRect &rect);
+	CRect		DP2LP(const CRect &rect);				// 视图坐标转换为文档坐标
+	CPoint		DP2LP(CDC* pDC, const CPoint &point);	// 视图坐标转换为文档坐标
+	CRect		DP2LP(CDC* pDC, const CRect &rect);		// 视图坐标转换为文档坐标
 
 // 重写
 public:
@@ -145,6 +147,10 @@ public:
 	afx_msg void OnChangeImageShowPrev();
 	afx_msg void OnReconstructImageSize();
 	afx_msg void OnUpdateReconstructImageSize(CCmdUI *pCmdUI);
+	afx_msg void OnDbpImage();
+	afx_msg void OnUpdateDbpImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarInverseHilbert();
+	afx_msg void OnUpdateToolbarInverseHilbert(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

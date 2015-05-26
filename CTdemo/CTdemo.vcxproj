@@ -119,6 +119,7 @@
     <ClInclude Include="CurveWnd.h" />
     <ClInclude Include="CyImage.h" />
     <ClInclude Include="DlgConvluteW.h" />
+    <ClInclude Include="DlgHilbertAngle.h" />
     <ClInclude Include="DlgPanParameter.h" />
     <ClInclude Include="DlgProjectSettings.h" />
     <ClInclude Include="DlgReconstructSettings.h" />
@@ -144,6 +145,7 @@
     <ClCompile Include="CurveWnd.cpp" />
     <ClCompile Include="CyImage.cpp" />
     <ClCompile Include="DlgConvluteW.cpp" />
+    <ClCompile Include="DlgHilbertAngle.cpp" />
     <ClCompile Include="DlgPanParameter.cpp" />
     <ClCompile Include="DlgProjectSettings.cpp" />
     <ClCompile Include="DlgReconstructSettings.cpp" />
@@ -189,6 +191,7 @@
     <CudaCompile Include="CUDA\PanRadon.cu">
       <Runtime Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">InheritFromHost</Runtime>
       <Runtime Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">InheritFromHost</Runtime>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_11,sm_11</CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA\Radon.cu">
       <FileType>Document</FileType>

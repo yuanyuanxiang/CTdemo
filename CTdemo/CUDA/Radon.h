@@ -37,9 +37,9 @@ __device__ float cudaGetPositionValue(int x, int y, float* pSrc, int Width, int 
 
 __device__ float cudaGetPositionValue(float x, float y, float* pSrc, int Width, int Height);
 
-__device__ void cudaPositonTransform(float &x, float &y, float theta);
+__device__ void cudaPositionTransform(float &x, float &y, float theta);
 
-__device__ void cudaPositonTransform(float &x, float &y, float cos_theta, float sin_theta);
+__device__ void cudaPositionTransform(float &x, float &y, float cos_theta, float sin_theta);
 
 __host__ float* cudaImageZoom(float* d_pDst, int NewWidth, int NewHeight, BYTE* d_pSrc, int Width, int Height, int Rowlen);
 
