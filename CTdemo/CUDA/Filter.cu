@@ -90,7 +90,7 @@ float* h_pDst				目标
 float* prj					指向投影数据的指针
 int row						投影数据的行，此处表示r
 int col						投影数据的列，此处表示fai
-float delta_r				离散化之后的dr
+float delta_r				射线密度
 float w0					高频截止
 */
 __host__ const char* cudaConvolute(float* h_pDst, float* h_prj, int row, int col, float delta_r, float w0)
@@ -139,7 +139,7 @@ __host__ const char* cudaConvolute(float* h_pDst, float* h_prj, int row, int col
 	error = cudaGetLastError();
 	CHECK_ERRORS(error, errstr);
 
-	float alpha = 1.f, belta = 0.f;
+	float alpha = delta_r, belta = 0.f;
 	cublasHandle_t handle;
 	cublasCreate(&handle);
 	//P = C * P -> P' = P' * C';

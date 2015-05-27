@@ -47,7 +47,7 @@ public:
 	float				m_fAnglesRange;		//采样的范围
 	int					m_nAnglesNum;		//采样角度个数
 	int					m_nRaysNum;			//每个角度射线数
-	float				m_fRaysSeparation;	//射线间距
+	float				m_fRaysDensity;		//射线密度
 	float				m_fAnglesSeparation;//角度间距
 	int					m_nDetectorCenter;	//探测器中心
 	// 导数图像

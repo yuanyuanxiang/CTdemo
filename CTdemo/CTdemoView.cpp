@@ -357,10 +357,11 @@ BOOL CCTdemoView::OnEraseBkgnd(CDC* pDC)
 	// 7	8	9
 	// 其中5代表绘图区域
 	CRect rect = m_ClientRect;
-	OnPrepareDC(pDC);			//进行坐标原点的匹配
-	pDC->DPtoLP(&rect);			//将视图坐标转换为文档坐标
-	pDC->PatBlt(0, 0, m_PaintRect.left, rect.bottom, PATCOPY);	// 1 4 7
-	pDC->PatBlt(0, 0, rect.right, m_PaintRect.top, PATCOPY);	// 1 2 3
+	pDC->SetWindowOrg(0, 0);//设置原点
+	OnPrepareDC(pDC);		//进行坐标原点的匹配
+	pDC->DPtoLP(&rect);		//将视图坐标转换为文档坐标
+	pDC->PatBlt(0, 0, m_PaintRect.left, rect.bottom, PATCOPY);		// 1 4 7
+	pDC->PatBlt(0, 0, rect.right, m_PaintRect.top, PATCOPY);		// 1 2 3
 	pDC->PatBlt(m_PaintRect.right, 0, rect.right - m_PaintRect.right, rect.bottom, PATCOPY);	// 3 6 9	
 	pDC->PatBlt(0, m_PaintRect.bottom, rect.right, rect.bottom - m_PaintRect.bottom, PATCOPY);	// 7 8 9
 
@@ -491,15 +492,35 @@ void CCTdemoView::OnProjectSettings()
 	dlg.m_fSubPixel = pDoc->m_fSubPixel;
 	if (dlg.DoModal() == IDOK)
 	{
-		pDoc->m_nRaysNum = dlg.m_nRaysNum;
-		pDoc->m_nAnglesNum = dlg.m_nAnglesNum;
+		bool modified = false;
+		if (pDoc->m_nRaysNum != dlg.m_nRaysNum)
+		{
+			pDoc->m_nRaysNum = dlg.m_nRaysNum;
+			int temp = ComputeRaysNum(pDoc->m_nWidth, pDoc->m_nHeight);
+			pDoc->m_fRaysDensity = 1.f * pDoc->m_nRaysNum / temp;
+			modified = true;
+		}
+		if (pDoc->m_nAnglesNum != dlg.m_nAnglesNum)
+		{
+			pDoc->m_nAnglesNum = dlg.m_nAnglesNum;
+			modified = true;
+		}
 		if(dlg.m_fAngleRange > 0)
 		{
 			pDoc->m_fAnglesRange = dlg.m_fAngleRange;
 			pDoc->m_fAnglesSeparation = pDoc->m_fAnglesRange / pDoc->m_nAnglesNum;
+			modified = true;
 		}
 		if (dlg.m_fSubPixel > 0)
+		{
 			pDoc->m_fSubPixel = dlg.m_fSubPixel;
+			modified = true;
+		}
+		if (modified)
+		{
+			pDoc->m_pProject->Destroy();
+			pDoc->m_pAfterFilter->Destroy();
+		}
 	}
 }
 
@@ -537,7 +558,7 @@ void CCTdemoView::OnToolbarConvolute()
 		pDoc->m_pAfterFilter->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
 		if (m_bUsingGpu)
 		{
-			const char* result = cudaConvolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, dlg.m_fW);
+			const char* result = cudaConvolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, dlg.m_fW);
 			if (result != NULL)
 			{
 				CString str(result);
@@ -554,10 +575,10 @@ void CCTdemoView::OnToolbarConvolute()
 			switch(pDoc->m_nProjectionType)
 			{
 			case PROJECT_TYPE_PAR:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 1.f, dlg.m_fW);
+				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW);
 				break;
 			case PROJECT_TYPE_PAN:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 1.f, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 				break;
 			default:
 				break;
@@ -599,7 +620,7 @@ void CCTdemoView::OnToolbarBackProject()
 	}
 	if (m_bUsingGpu)
 	{
-		const char* result = cudaBackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation);
+		const char* result = cudaBackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 		if (result != NULL)
 		{
 			CString str(result);
@@ -616,10 +637,10 @@ void CCTdemoView::OnToolbarBackProject()
 		switch(pDoc->m_nProjectionType)
 		{
 		case PROJECT_TYPE_PAR:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 			break;
 		case PROJECT_TYPE_PAN:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysSeparation, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 			break;
 		default:
 			break;
@@ -634,7 +655,7 @@ void CCTdemoView::OnToolbarBackProject()
 	}
 	// 由导入的投影数据进行重建
 	if (CHECK_IMAGE_NULL(pDoc->m_pImage))
-		pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
+		pDoc->m_pReconstruct->MemcpyFloatToByte();
 	// 不滤波直接进行重建
 	else if (CHECK_IMAGE_NULL(pDoc->m_pAfterFilter))
 		pDoc->m_pReconstruct->MemcpyFloatToByte();
@@ -960,13 +981,13 @@ void CCTdemoView::OnUpdatePanReconstruct(CCmdUI *pCmdUI)
 void CCTdemoView::OnFanScanSettings()
 {
 	CCTdemoDoc *pDoc = GetDocument();
-	pDoc->m_fRaysSeparation = 1.f;
+	pDoc->m_fRaysDensity = 1.f;
 
 	CDlgPanParameter dlg;
 	dlg.m_nRaysNum = pDoc->m_nRaysNum;
 	dlg.m_nAnglesNum = pDoc->m_nAnglesNum;
 	dlg.m_fAngleRange = pDoc->m_fAnglesRange;
-	dlg.m_fSubPixel = pDoc->m_fRaysSeparation;
+	dlg.m_fSubPixel = pDoc->m_fRaysDensity;
 	dlg.m_fPanSOR = pDoc->m_fPanSOR;
 	dlg.m_fPanSOD = pDoc->m_fPanSOD;
 	if (dlg.DoModal() == IDOK)
@@ -977,10 +998,10 @@ void CCTdemoView::OnFanScanSettings()
 		{
 			pDoc->m_fAnglesRange = dlg.m_fAngleRange;
 			pDoc->m_fAnglesSeparation = pDoc->m_fAnglesRange / pDoc->m_nAnglesNum;
-			pDoc->m_fRaysSeparation = 1.f * pDoc->m_nImageDiag / pDoc->m_nRaysNum;
+			pDoc->m_fRaysDensity = 1.f * pDoc->m_nImageDiag / pDoc->m_nRaysNum;
 		}
 		if (dlg.m_fSubPixel > 0)
-			pDoc->m_fRaysSeparation = dlg.m_fSubPixel;
+			pDoc->m_fRaysDensity = dlg.m_fSubPixel;
 		if (dlg.m_fPanSOR > (pDoc->m_nImageDiag + 1) / 2)
 			pDoc->m_fPanSOR = dlg.m_fPanSOR;
 		else 

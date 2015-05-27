@@ -73,7 +73,7 @@ CCTdemoDoc::CCTdemoDoc()
 	m_fAnglesRange = PI;
 	m_nAnglesNum = 180;
 	m_nRaysNum = 360;
-	m_fRaysSeparation = 1.0f;
+	m_fRaysDensity = 1.0f;
 	m_fAnglesSeparation = PI / 180;
 	m_nDetectorCenter = 0;
 	// 导数图像
@@ -298,7 +298,7 @@ void CCTdemoDoc::SetReconstructImageSize()
 		m_ptOrigin.y = (m_nHeight + 1) / 2;
 		m_Ox = m_nWidth / 2.f;
 		m_Oy = m_nHeight / 2.f;
-		m_fRaysSeparation = 1.f * ComputeRaysNum(m_nWidth, m_nHeight) / m_nRaysNum;	//射线间距
+		m_fRaysDensity = 1.f * m_nRaysNum / ComputeRaysNum(m_nWidth, m_nHeight);	//射线密度
 		m_nDetectorCenter = (m_nRaysNum + 1) / 2;									//探测器中心
 	}
 }
@@ -394,7 +394,7 @@ void CCTdemoDoc::UpdateImageInfomation()
 void CCTdemoDoc::InitScanningParameters()
 {
 	m_nRaysNum = ComputeRaysNum(m_nWidth, m_nHeight);		//射线条数
-	m_fRaysSeparation = 1.0f;								//射线间距
+	m_fRaysDensity = 1.0f;									//射线密度
 	m_nDetectorCenter = (m_nRaysNum + 1) / 2;				//探测器中心
 	m_fPanSOR = m_nImageDiag * 3;
 	m_fPanSOD = 2 * m_fPanSOR;
@@ -543,7 +543,7 @@ void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 {
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	m_fRaysSeparation = 1.f;
+	m_fRaysDensity = 1.f;
 
 	float theta_0 = acos(m_nImageDiag / 2.f / R);
 	float theta_n = PI - theta_0;
@@ -578,7 +578,7 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 {
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	m_fRaysSeparation = 1.f;
+	m_fRaysDensity = 1.f;
 
 	float theta_0 = acos(m_nImageDiag / 2.f / R);
 	float theta_n = PI - theta_0;
@@ -629,8 +629,8 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
 	float *pZoom = NULL;
-	m_fRaysSeparation = 1.f;
-	float Rate = 1 / m_fRaysSeparation;
+	m_fRaysDensity = 1.f;
+	float Rate = 1 / m_fRaysDensity;
 	int Width = Rate * m_nWidth;
 	int Height = Rate * m_nHeight;
 	pZoom = m_pImage->Zoom(Width, Height, 0);
@@ -695,7 +695,7 @@ void CCTdemoDoc::ReconstructImage(CString path)
 		float w0 = dlg.m_fConvoluteW;
 		m_pAfterFilter->Create(angles, rays, 8);
 		m_pReconstruct->Create(rec_width, rec_height, 8);
-		Convolute(m_pAfterFilter->m_pfFloat, m_pProject->m_pfFloat, angles, rays, m_fRaysSeparation, w0);
-		BackProject(m_pReconstruct->m_pfFloat, m_pAfterFilter->m_pfFloat, rec_width, rec_height, angles, rays, m_fRaysSeparation, delta_fai);
+		Convolute(m_pAfterFilter->m_pfFloat, m_pProject->m_pfFloat, angles, rays, m_fRaysDensity, w0);
+		BackProject(m_pReconstruct->m_pfFloat, m_pAfterFilter->m_pfFloat, rec_width, rec_height, angles, rays, m_fRaysDensity, delta_fai);
 	}
 }

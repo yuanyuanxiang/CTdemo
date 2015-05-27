@@ -132,7 +132,7 @@ void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r,
 			sum = 0.f;
 			for (i = 0; i < nHeight; ++i)
 				sum += pSrc[n + i * nWidth] * ConvKernel(m - i, w0);
-			pDst[n + m * nWidth] = sum;
+			pDst[n + m * nWidth] = sum * delta_r;
 		}
 	}
 }
@@ -154,7 +154,7 @@ int nWidth			重建图像的宽
 int nHeight			重建图像的高
 int nRays			投影的行数(r)
 int nAngles			投影的列数(fai)
-float delta_r		扫描参数
+float delta_r		射线密度
 float delta_fai		扫描参数
 */
 void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai)
@@ -187,7 +187,7 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 			{
 				float fai = i * delta_fai;
 				float r = (n - cx) * cos_fai[i] + (m - cy) * sin_fai[i];
-				sum += LinearInterp(pPrj, nAngles, nRays, i, med + r / delta_r);
+				sum += LinearInterp(pPrj, nAngles, nRays, i, med + r * delta_r);
 			}
 			pDst[n + m * nWidth] = sum * delta_fai;
 		}
@@ -239,7 +239,7 @@ void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r,
 				float alpha = D / sqrt(D * D + u * u);
 				sum += alpha * pSrc[n + i * nWidth] * ConvKernel(m - i, w0);
 			}
-			pDst[n + m * nWidth] = sum;
+			pDst[n + m * nWidth] = sum * delta_r;
 		}
 	}
 }
@@ -278,7 +278,7 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 				float fai = i * delta_fai;
 				float r = x1 * cos_fai[i] + x2 * sin_fai[i];
 				float alpha = R * D / ((R - x2 * cos_fai[i] + x1 * sin_fai[i]) * (R - x2 * cos_fai[i] + x1 * sin_fai[i]));
-				sum += alpha * LinearInterp(pPrj, nAngles, nRays, i, med + r / delta_r);
+				sum += alpha * LinearInterp(pPrj, nAngles, nRays, i, med + r * delta_r);
 			}
 			pDst[n + m * nWidth] = sum * delta_fai;
 		}
@@ -414,7 +414,7 @@ void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowle
 
 	int nNewRaysNum = ComputeRaysNum(nNewWidth, nNewHeight);
 	int nDetectorCenter = (nNewRaysNum + 1) / 2;
-	float alpha = 1.f * nNewRaysNum / nRaysNum;
+	float density = 1.f * nNewRaysNum / nRaysNum;
 
 #pragma omp parallel for
 	for (int i = 0; i < nAnglesNum; ++i)
@@ -427,7 +427,7 @@ void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowle
 #pragma omp parallel for
 		for (int j = 0; j < nRaysNum; ++j)
 		{
-			float x = j * alpha;
+			float x = j * density;
 			pDst[i + j * nAnglesNum] = LinearInterp(temp, nNewRaysNum, x) * pixels_separation;
 		}
 		SAFE_DELETE(temp);

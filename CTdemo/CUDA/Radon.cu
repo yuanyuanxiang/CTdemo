@@ -172,7 +172,7 @@ __host__ const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float 
 
 	error = cudaMalloc((void **)&d_pTemp, nNewRaysNum * sizeof(float));
 	CHECK_ERRORS(error, errstr);
-	float alpha = 1.f * nNewRaysNum / RaysNum;
+	float density = 1.f * nNewRaysNum / RaysNum;
 	// 沿某个方向线积分，index表示第几个角度
 	for (int index = 0; index < AnglesNum; ++index)
 	{
@@ -239,7 +239,7 @@ __host__ const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float 
 		cudaCopyTempData<<<(nNewRaysNum + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp, nNewRaysNum, nDetectorCenter, d_pWidth_add, NewWidth, nHalfWidth, pixel_separation);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
-		cudaCopyColumnData<<<(RaysNum + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pDst, AnglesNum, d_pTemp, nNewRaysNum, alpha, index, pixel_separation);
+		cudaCopyColumnData<<<(RaysNum + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pDst, AnglesNum, d_pTemp, nNewRaysNum, density, index, pixel_separation);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
 		cudaFree(d_pWidth_add);

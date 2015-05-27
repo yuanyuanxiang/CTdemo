@@ -92,6 +92,7 @@ BOOL CImageScrollView::OnEraseBkgnd(CDC* pDC)
 		return CScrollView::OnEraseBkgnd(pDC);
 	CRect ClientRect;
 	GetClientRect(&ClientRect);
+	pDC->SetWindowOrg(0, 0);
 	OnPrepareDC(pDC);			//进行坐标原点的匹配
 	pDC->DPtoLP(&ClientRect);	//将视图坐标转换为文档坐标
 	pDC->PatBlt(0, 0, m_PaintRect.left, ClientRect.bottom, PATCOPY);	// 1 4 7

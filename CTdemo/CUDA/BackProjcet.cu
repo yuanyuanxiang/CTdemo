@@ -42,7 +42,7 @@ __global__ void cudaBackProjectKernel(float* d_pDst, float* d_prj, int width, in
 		for (int i = 0; i < angles; ++i)
 		{
 			float r = (n - cx) * cos_fai[i] + (m - cy) * sin_fai[i];
-			d_pDst[n + m * width] += cudaLinearInterp(med + r / delta_r, i, d_prj, angles, rays);
+			d_pDst[n + m * width] += cudaLinearInterp(med + r * delta_r, i, d_prj, angles, rays);
 		}
 		d_pDst[n + m * width] *= delta_fai;
 	}
@@ -57,7 +57,7 @@ int width			重建图像的宽
 int height			重建图像的高
 int rays			投影的行数(r)
 int angles			投影的列数(fai)
-float delta_r		扫描参数
+float delta_r		射线密度
 float delta_fai		扫描参数
 */
 __host__ const char* cudaBackProject(float* h_pDst, float* h_prj, int width, int height, int rays, int angles, float delta_r, float delta_fai)
