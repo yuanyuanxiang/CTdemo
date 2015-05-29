@@ -142,15 +142,16 @@
 #define ID_32879                        32879
 #define ID_DBP_IMAGE                    32880
 #define ID_TOOLBAR_DBP                  32882
-#define ID_BUTTON32884                  32884
 #define ID_TOOLBAR_INVERSE_HILBERT      32884
+#define ID_32885                        32885
+#define ID_ART_METHOD                   32886
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        326
-#define _APS_NEXT_COMMAND_VALUE         32885
+#define _APS_NEXT_COMMAND_VALUE         32887
 #define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

@@ -99,6 +99,9 @@
     <ClInclude Include="DlgHilbertAngle.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Art.h">
+      <Filter>CUDA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CTdemo.cpp">
@@ -160,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="DlgHilbertAngle.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Art.cpp">
+      <Filter>CUDA</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

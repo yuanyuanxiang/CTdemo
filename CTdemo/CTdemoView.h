@@ -151,6 +151,8 @@ public:
 	afx_msg void OnUpdateDbpImage(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarInverseHilbert();
 	afx_msg void OnUpdateToolbarInverseHilbert(CCmdUI *pCmdUI);
+	afx_msg void OnArtMethod();
+	afx_msg void OnUpdateArtMethod(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

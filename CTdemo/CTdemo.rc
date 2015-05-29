@@ -211,6 +211,8 @@ BEGIN
         MENUITEM "保存滤波图像",                      ID_SAVE_AFTER_FILTER_IMG
         MENUITEM "保存重建图像",                      ID_SAVE_BACK_PROJECT_IMG
         MENUITEM SEPARATOR
+        MENUITEM "ART",                         ID_ART_METHOD
+        MENUITEM SEPARATOR
         MENUITEM "扇束投影(CPU)",                   ID_PAN_PROJECT
         MENUITEM "扇束投影(GPU)",                   ID_CUDA_PAN_PROJECT
         MENUITEM "扇束重建图像(&R)",                  ID_PAN_RECONSTRUCT
@@ -767,6 +769,7 @@ BEGIN
     ID_DBP_IMAGE            "计算导数图像\nDBP"
     ID_TOOLBAR_DBP          "计算导数图像\nDBP"
     ID_TOOLBAR_INVERSE_HILBERT "对DBP图像进行希尔伯特逆变换\n2步Hilbert"
+    ID_ART_METHOD           "代数重建算法\nART"
 END
 
 #endif    // 中文(简体，中国) resources

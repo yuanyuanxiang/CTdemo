@@ -96,6 +96,8 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_DBP_IMAGE, &CCTdemoView::OnUpdateDbpImage)
 	ON_COMMAND(ID_TOOLBAR_INVERSE_HILBERT, &CCTdemoView::OnToolbarInverseHilbert)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_INVERSE_HILBERT, &CCTdemoView::OnUpdateToolbarInverseHilbert)
+	ON_COMMAND(ID_ART_METHOD, &CCTdemoView::OnArtMethod)
+	ON_UPDATE_COMMAND_UI(ID_ART_METHOD, &CCTdemoView::OnUpdateArtMethod)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -1176,4 +1178,32 @@ void CCTdemoView::OnUpdateToolbarInverseHilbert(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	pCmdUI->Enable(pDoc->m_pfDBPImage != NULL);
+}
+
+
+extern const char* Art(float* pDst, int nWidth, int nHeight, float* pPrj, int nRays, int nAngles, float rays_separation, float angles_separation);
+
+void CCTdemoView::OnArtMethod()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	BeginWaitCursor();
+	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
+	const char* result = Art(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_pProject->m_pfFloat, 
+		pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
+	EndWaitCursor();
+	if (result != NULL)
+	{
+		CString str(result);
+		AfxMessageBox(_T("程序出现错误。错误信息:\n") + str, MB_OK | MB_ICONWARNING);
+		return;
+	}
+	pDoc->m_pReconstruct->MemcpyFloatToByte();
+	pDoc->OnWindowBackpro();
+}
+
+
+void CCTdemoView::OnUpdateArtMethod(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }

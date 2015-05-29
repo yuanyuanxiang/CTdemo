@@ -109,6 +109,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Art.h" />
     <ClInclude Include="CUDA\BackProject.h" />
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="CTdemo.h" />
@@ -137,6 +138,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Art.cpp" />
     <ClCompile Include="ChildFrm.cpp" />
     <ClCompile Include="CTdemo.cpp" />
     <ClCompile Include="CTdemoDoc.cpp" />
