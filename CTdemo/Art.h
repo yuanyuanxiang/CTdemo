@@ -24,9 +24,7 @@ float LineGetXValue(float &k, float &c, float y);
 
 float LineGetYValue(float &k, float &c, float x);
 
-void InitLine(float &angle, float &distance, float &k, float &c);
-
 float Distance(const float3 &a, const float3 &b);
 
 // 计算交线长
-void ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax, int Ymax, float &k, float &c);
+void ComputeIntsections(float3* pDst, float3* temp, float* pPrj, int nRaysIndex, int nAnglesIndex, int nAngles, float* pSrc, int Xmin, int Ymin, int Xmax, int Ymax, float &k, float &c);

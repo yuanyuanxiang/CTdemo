@@ -1188,6 +1188,7 @@ void CCTdemoView::OnArtMethod()
 	CCTdemoDoc* pDoc = GetDocument();
 	BeginWaitCursor();
 	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
+	pDoc->m_pAfterFilter->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
 	const char* result = Art(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_pProject->m_pfFloat, 
 		pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 	EndWaitCursor();
@@ -1198,6 +1199,7 @@ void CCTdemoView::OnArtMethod()
 		return;
 	}
 	pDoc->m_pReconstruct->MemcpyFloatToByte();
+	pDoc->m_pAfterFilter->MemcpyFloatToByte();
 	pDoc->OnWindowBackpro();
 }
 
