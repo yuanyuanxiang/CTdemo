@@ -20,6 +20,7 @@
 #include "CurveView.h"
 #include "DlgReconstructSettings.h"
 #include "DlgHilbertAngle.h"
+#include "DlgArtSettings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -98,6 +99,8 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_INVERSE_HILBERT, &CCTdemoView::OnUpdateToolbarInverseHilbert)
 	ON_COMMAND(ID_ART_METHOD, &CCTdemoView::OnArtMethod)
 	ON_UPDATE_COMMAND_UI(ID_ART_METHOD, &CCTdemoView::OnUpdateArtMethod)
+	ON_COMMAND(ID_ART_RADON, &CCTdemoView::OnArtRadon)
+	ON_UPDATE_COMMAND_UI(ID_ART_RADON, &CCTdemoView::OnUpdateArtRadon)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -1181,16 +1184,18 @@ void CCTdemoView::OnUpdateToolbarInverseHilbert(CCmdUI *pCmdUI)
 }
 
 
-extern const char* Art(float* pDst, int nWidth, int nHeight, float* pPrj, int nRays, int nAngles, float rays_separation, float angles_separation);
+extern const char* Art(float* pDst, int nWidth, int nHeight, float* pPrj, int nRays, int nAngles, float rays_separation, float angles_separation, int nItNum);
 
 void CCTdemoView::OnArtMethod()
 {
 	CCTdemoDoc* pDoc = GetDocument();
+	CDlgArtSettings dlg;
+	if (dlg.DoModal() != IDOK)
+		return;
 	BeginWaitCursor();
 	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
-	pDoc->m_pAfterFilter->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
 	const char* result = Art(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_pProject->m_pfFloat, 
-		pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
+		pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, dlg.m_nArtItNum);
 	EndWaitCursor();
 	if (result != NULL)
 	{
@@ -1199,7 +1204,6 @@ void CCTdemoView::OnArtMethod()
 		return;
 	}
 	pDoc->m_pReconstruct->MemcpyFloatToByte();
-	pDoc->m_pAfterFilter->MemcpyFloatToByte();
 	pDoc->OnWindowBackpro();
 }
 
@@ -1208,4 +1212,36 @@ void CCTdemoView::OnUpdateArtMethod(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
+}
+
+const char* ArtRadon(float* pPrj, int nRays, int nAngles, float* pSrc, int nWidth, int nHeight, float rays_separation, float angles_separation);
+
+void CCTdemoView::OnArtRadon()
+{
+	CCTdemoDoc *pDoc = GetDocument();
+	if (pDoc->m_nBPP > 8)
+	{
+		MessageBox(_T("图像必须先转化为8位色图像。"), _T("提示"), MB_OK | MB_ICONINFORMATION);
+		return;
+	}
+	pDoc->m_pProject->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
+	BeginWaitCursor();
+	const char* result = ArtRadon(pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 
+		pDoc->m_pImage->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
+	EndWaitCursor();
+	if (result != NULL)
+	{
+		CString str(result);
+		AfxMessageBox(_T("程序出现错误。错误信息:\n") + str, MB_OK | MB_ICONWARNING);
+		return;
+	}
+	pDoc->m_pProject->MemcpyFloatToByte();
+	pDoc->OnWindowProject();
+}
+
+
+void CCTdemoView::OnUpdateArtRadon(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 }

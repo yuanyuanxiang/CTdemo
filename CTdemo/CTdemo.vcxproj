@@ -119,6 +119,7 @@
     <ClInclude Include="CurveDlg.h" />
     <ClInclude Include="CurveWnd.h" />
     <ClInclude Include="CyImage.h" />
+    <ClInclude Include="DlgArtSettings.h" />
     <ClInclude Include="DlgConvluteW.h" />
     <ClInclude Include="DlgHilbertAngle.h" />
     <ClInclude Include="DlgPanParameter.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="CurveDlg.cpp" />
     <ClCompile Include="CurveWnd.cpp" />
     <ClCompile Include="CyImage.cpp" />
+    <ClCompile Include="DlgArtSettings.cpp" />
     <ClCompile Include="DlgConvluteW.cpp" />
     <ClCompile Include="DlgHilbertAngle.cpp" />
     <ClCompile Include="DlgPanParameter.cpp" />

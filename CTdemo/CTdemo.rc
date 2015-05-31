@@ -211,7 +211,8 @@ BEGIN
         MENUITEM "保存滤波图像",                      ID_SAVE_AFTER_FILTER_IMG
         MENUITEM "保存重建图像",                      ID_SAVE_BACK_PROJECT_IMG
         MENUITEM SEPARATOR
-        MENUITEM "ART",                         ID_ART_METHOD
+        MENUITEM "ART投影",                       ID_ART_RADON
+        MENUITEM "ART重建",                       ID_ART_METHOD
         MENUITEM SEPARATOR
         MENUITEM "扇束投影(CPU)",                   ID_PAN_PROJECT
         MENUITEM "扇束投影(GPU)",                   ID_CUDA_PAN_PROJECT
@@ -423,6 +424,17 @@ BEGIN
     EDITTEXT        IDC_HILBERT_ANGLE,95,24,40,14,ES_CENTER | ES_AUTOHSCROLL
 END
 
+IDD_ART_IT_NUM DIALOGEX 0, 0, 183, 87
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ART设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,32,56,50,14
+    PUSHBUTTON      "取消",IDCANCEL,101,55,50,14
+    EDITTEXT        IDC_EDIT_ART_IT_NUM,105,22,40,14,ES_AUTOHSCROLL
+    LTEXT           "迭代次数:",IDC_STATIC,38,26,36,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -533,6 +545,14 @@ BEGIN
         RIGHTMARGIN, 164
         TOPMARGIN, 7
         BOTTOMMARGIN, 83
+    END
+
+    IDD_ART_IT_NUM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 176
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 80
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -770,6 +790,7 @@ BEGIN
     ID_TOOLBAR_DBP          "计算导数图像\nDBP"
     ID_TOOLBAR_INVERSE_HILBERT "对DBP图像进行希尔伯特逆变换\n2步Hilbert"
     ID_ART_METHOD           "代数重建算法\nART"
+    ID_ART_RADON            "生成用于ART重建的投影数据\nART投影"
 END
 
 #endif    // 中文(简体，中国) resources

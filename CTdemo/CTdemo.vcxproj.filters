@@ -102,6 +102,9 @@
     <ClInclude Include="Art.h">
       <Filter>CUDA</Filter>
     </ClInclude>
+    <ClInclude Include="DlgArtSettings.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CTdemo.cpp">
@@ -166,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="Art.cpp">
       <Filter>CUDA</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgArtSettings.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
