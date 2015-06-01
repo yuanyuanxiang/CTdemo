@@ -26,7 +26,6 @@ BEGIN_MESSAGE_MAP(CCTdemoApp, CWinAppEx)
 	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
-	ON_COMMAND(ID_RECONSTRUCT_FROM_PROJECT, &CCTdemoApp::OnLoadProject)
 END_MESSAGE_MAP()
 
 
@@ -148,8 +147,6 @@ BOOL CCTdemoApp::InitInstance()
 	pMainFrame->ShowWindow(m_nCmdShow);
 	pMainFrame->UpdateWindow();
 
-	m_bProjectionFile = false;
-
 	return TRUE;
 }
 
@@ -217,22 +214,6 @@ void CCTdemoApp::LoadCustomState()
 
 void CCTdemoApp::SaveCustomState()
 {
-}
-
-// 用户导入投影数据用来重建
-void CCTdemoApp::OnLoadProject()
-{
-	m_bProjectionFile = true;
-	OnFileOpen();
-	m_bProjectionFile = false;
-}
-
-// 检查用户打开的图像是否为投影数据
-bool CCTdemoApp::CheckProjectionFile()
-{
-	bool result = m_bProjectionFile;
-	m_bProjectionFile = false;
-	return result;
 }
 
 void CCTdemoApp::OnFileNew()

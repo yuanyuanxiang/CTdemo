@@ -101,6 +101,18 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_ART_METHOD, &CCTdemoView::OnUpdateArtMethod)
 	ON_COMMAND(ID_ART_RADON, &CCTdemoView::OnArtRadon)
 	ON_UPDATE_COMMAND_UI(ID_ART_RADON, &CCTdemoView::OnUpdateArtRadon)
+	ON_COMMAND(ID_TOOLBAR_ORIGIN_IMAGE, &CCTdemoView::OnToolbarOriginImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_ORIGIN_IMAGE, &CCTdemoView::OnUpdateToolbarOriginImage)
+	ON_COMMAND(ID_TOOLBAR_PROJECT_IMAGE, &CCTdemoView::OnToolbarProjectImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PROJECT_IMAGE, &CCTdemoView::OnUpdateToolbarProjectImage)
+	ON_COMMAND(ID_TOOLBAR_AFTER_PROJECT_IMAGE, &CCTdemoView::OnToolbarAfterProjectImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_AFTER_PROJECT_IMAGE, &CCTdemoView::OnUpdateToolbarAfterProjectImage)
+	ON_COMMAND(ID_TOOLBAR_RECONSTRUCT_IMAGE, &CCTdemoView::OnToolbarReconstructImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_RECONSTRUCT_IMAGE, &CCTdemoView::OnUpdateToolbarReconstructImage)
+	ON_COMMAND(ID_TOOLBAR_IMAGE_TO_PROJECT, &CCTdemoView::OnToolbarImageToProject)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_IMAGE_TO_PROJECT, &CCTdemoView::OnUpdateToolbarImageToProject)
+	ON_COMMAND(ID_TOOLBAR_PROJECT_TO_IMAGE, &CCTdemoView::OnToolbarProjectToImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PROJECT_TO_IMAGE, &CCTdemoView::OnUpdateToolbarProjectToImage)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -533,7 +545,10 @@ void CCTdemoView::OnProjectSettings()
 void CCTdemoView::OnSaveProjectImg()
 {
 	CCTdemoDoc *pDoc = GetDocument();
-	if (pDoc->m_pProject->Save() != true)
+	BeginWaitCursor();
+	bool result = pDoc->m_pProject->Save();
+	EndWaitCursor();
+	if (result != true)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
 }
 
@@ -680,7 +695,10 @@ void CCTdemoView::OnUpdateToolbarBackProject(CCmdUI *pCmdUI)
 void CCTdemoView::OnSaveBackProjectImg()
 {
 	CCTdemoDoc *pDoc = GetDocument();
-	if(pDoc->m_pReconstruct->Save() != true)
+	BeginWaitCursor();
+	bool result = pDoc->m_pReconstruct->Save();
+	EndWaitCursor();
+	if(result != true)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
 }
 
@@ -695,7 +713,10 @@ void CCTdemoView::OnUpdateSaveBackProjectImg(CCmdUI *pCmdUI)
 void CCTdemoView::OnSaveAfterFilterImg()
 {
 	CCTdemoDoc *pDoc = GetDocument();
-	if (pDoc->m_pAfterFilter->Save() != true)
+	BeginWaitCursor();
+	bool result = pDoc->m_pAfterFilter->Save();
+	EndWaitCursor();
+	if (result != true)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
 }
 
@@ -1153,7 +1174,7 @@ void CCTdemoView::OnDbpImage()
 	float theta = RAD(dlg.m_fHilberAngle - 90.f);
 	pDoc->m_pfDBPImage = new float[pDoc->m_nWidth * pDoc->m_nHeight * sizeof(float)];
 	BeginWaitCursor();
-	DBPImage(pDoc->m_pfDBPImage, pDoc->m_pProject->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1.f, pDoc->m_fAnglesSeparation, theta);
+	DBPImage(pDoc->m_pfDBPImage, pDoc->m_pProject->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, theta);
 	EndWaitCursor();
 	pDoc->Popup(pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
 }
@@ -1171,8 +1192,9 @@ void CCTdemoView::OnToolbarInverseHilbert()
 	CCTdemoDoc* pDoc = GetDocument();
 	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
 	BeginWaitCursor();
-	InverseHilbert(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, 1.f);
+	InverseHilbert(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, 1.f);
 	EndWaitCursor();
+	pDoc->m_pReconstruct->MemcpyFloatToByte();
 	pDoc->Popup(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
 }
 
@@ -1244,4 +1266,148 @@ void CCTdemoView::OnUpdateArtRadon(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
+}
+
+
+void CCTdemoView::OnToolbarOriginImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	if (m_pCurrent == pDoc->m_pImage)
+		return;
+	SetCurrentImage(pDoc->m_pImage);
+}
+
+
+void CCTdemoView::OnUpdateToolbarOriginImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pImage);
+}
+
+
+void CCTdemoView::OnToolbarProjectImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	if (m_pCurrent == pDoc->m_pProject)
+		return;
+	SetCurrentImage(pDoc->m_pProject);
+}
+
+
+void CCTdemoView::OnUpdateToolbarProjectImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pProject);
+}
+
+
+void CCTdemoView::OnToolbarAfterProjectImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	if (m_pCurrent == pDoc->m_pAfterFilter)
+		return;
+	SetCurrentImage(pDoc->m_pAfterFilter);
+}
+
+
+void CCTdemoView::OnUpdateToolbarAfterProjectImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pAfterFilter);
+}
+
+
+void CCTdemoView::OnToolbarReconstructImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	if (m_pCurrent == pDoc->m_pReconstruct)
+		return;
+	SetCurrentImage(pDoc->m_pReconstruct);
+}
+
+
+void CCTdemoView::OnUpdateToolbarReconstructImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pReconstruct);
+}
+
+
+// 将当前图像标记为投影图像
+void CCTdemoView::OnToolbarImageToProject()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	if (m_pCurrent == pDoc->m_pProject)
+		return;
+	CyImage* pImage = NULL;
+	pImage = pDoc->m_pProject;
+	pDoc->m_pProject = m_pCurrent;
+	if (m_pCurrent == pDoc->m_pImage)
+	{
+		pDoc->m_pImage = pImage;
+	}
+	else if (m_pCurrent == pDoc->m_pAfterFilter)
+	{
+		pDoc->m_pAfterFilter = pImage;
+	}
+	else
+	{
+		pDoc->m_pReconstruct = pImage;
+	}
+
+	pDoc->m_nAnglesNum = m_pCurrent->GetWidth();
+	pDoc->m_nRaysNum = m_pCurrent->GetHeight();
+
+	pDoc->SetReconstructImageSize();
+
+	SetCurrentImage(pDoc->m_pProject);
+}
+
+
+void CCTdemoView::OnUpdateToolbarImageToProject(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
+	pCmdUI->SetCheck(!CHECK_IMAGE_NULL(pDoc->m_pProject));
+	pCmdUI->Enable(CHECK_IMAGE_NULL(pDoc->m_pImage) || CHECK_IMAGE_NULL(pDoc->m_pProject));
+}
+
+
+void CCTdemoView::OnToolbarProjectToImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	if (m_pCurrent == pDoc->m_pImage)
+		return;
+	CyImage* pImage = NULL;
+	pImage = pDoc->m_pImage;
+	pDoc->m_pImage = m_pCurrent;
+	if (m_pCurrent == pDoc->m_pProject)
+	{
+		pDoc->m_pProject = pImage;
+	}
+	else if (m_pCurrent == pDoc->m_pAfterFilter)
+	{
+		pDoc->m_pAfterFilter = pImage;
+	}
+	else
+	{
+		pDoc->m_pReconstruct = pImage;
+	}
+
+	pDoc->m_nAnglesNum = m_pCurrent->GetWidth();
+	pDoc->m_nRaysNum = m_pCurrent->GetHeight();
+
+	pDoc->UpdateImageInfomation();
+	pDoc->InitScanningParameters();
+
+	SetCurrentImage(pDoc->m_pImage);
+}
+
+
+void CCTdemoView::OnUpdateToolbarProjectToImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
+	pCmdUI->SetCheck(!CHECK_IMAGE_NULL(pDoc->m_pImage));
+	pCmdUI->Enable(CHECK_IMAGE_NULL(pDoc->m_pImage) || CHECK_IMAGE_NULL(pDoc->m_pProject));
 }

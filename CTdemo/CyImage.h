@@ -106,7 +106,7 @@ public:
 	HRESULT Save(LPCTSTR pszFileName, REFGUID guidFileType = GUID_NULL) const throw();
 	bool Save(REFGUID guidFileType) const throw();
 	bool Save(CWnd* pParentWnd = NULL, REFGUID guidFileType = GUID_NULL) const throw();
-	BOOL Create(float* pSrc, int nWidth, int nHeight, int nRowlen, DWORD dwFlags = 0) throw();
+	BOOL Create(float* pSrc, int nWidth, int nHeight, int nRowlen) throw();
 	void Destroy() throw();
 
 private:

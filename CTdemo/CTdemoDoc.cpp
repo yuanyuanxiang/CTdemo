@@ -213,64 +213,25 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (!CDocument::OnOpenDocument(lpszPathName))
 		return FALSE;
 
-	// 检查是否导入投影文件
-	CCTdemoApp* pApp = (CCTdemoApp*)AfxGetApp();
-	if (pApp->CheckProjectionFile())
-		return OpenProjectionFile(lpszPathName);
+	m_strFilePath = lpszPathName;
+	CString temp = GetFileNameFromPath(m_strFilePath);
+	int num = temp.ReverseFind('.');
+	m_strFileName = temp.Left(num);
+	m_strFilePostfix = temp.Right(temp.GetLength() - num);
 
 	m_pImage = new CyImage;
-	m_pImage->Load(lpszPathName);
+	m_pImage->Load(m_strFilePath);
 	if (m_pImage->IsNull())
 	{
 		return FALSE;
 	}
 	UpdateImageInfomation();
 	InitScanningParameters();
-	m_strFilePath = lpszPathName;
-	CString temp = GetFileNameFromPath(m_strFilePath);
-	int num = temp.ReverseFind('.');
-	m_strFileName = temp.Left(num);
-	m_strFilePostfix = temp.Right(temp.GetLength() - num);
 	SetPathName(m_strFilePath);
 	SetModifiedFlag(FALSE);
 
 	CCTdemoView* pView = GetMainView();
 	pView->SetCurrentImage(m_pImage);
-
-	return TRUE;
-}
-
-
-BOOL CCTdemoDoc::OpenProjectionFile(LPCTSTR lpszPathName)
-{
-	m_pProject->Load(lpszPathName);
-	if (m_pProject->IsNull())
-	{
-		return FALSE;
-	}
-	if (m_pProject->m_nyBpp != 8)
-	{
-		CString file = lpszPathName;
-		AfxMessageBox(file + _T("\n文件的位深度被修改为8。") , MB_OK | MB_ICONWARNING);
-		m_pProject->ChangeBPP(8);
-		m_pProject->MemcpyByteToFloat();
-	}
-	m_strFilePath = lpszPathName;
-	CString temp = GetFileNameFromPath(m_strFilePath);
-	int num = temp.ReverseFind('.');
-	m_strFileName = temp.Left(num);
-	m_strFilePostfix = temp.Right(temp.GetLength() - num);
-	SetPathName(m_strFilePath, FALSE);
-	SetModifiedFlag(FALSE);
-
-	m_nAnglesNum = m_pProject->GetWidth();
-	m_nRaysNum = m_pProject->GetHeight();
-	int rowlen = abs(m_pProject->GetPitch());
-
-	SetReconstructImageSize();
-
-	CCTdemoView* pView = GetMainView();
-	pView->SetCurrentImage(m_pProject);
 
 	return TRUE;
 }

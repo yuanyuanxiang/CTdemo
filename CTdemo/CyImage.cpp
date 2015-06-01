@@ -201,11 +201,11 @@ BOOL CyImage::Create(int nWidth, int nHeight, int nBPP, DWORD dwFlags) throw()
 }
 
 
-BOOL CyImage::Create(float* pSrc, int nWidth, int nHeight, int nRowlen, DWORD dwFlags) throw()
+BOOL CyImage::Create(float* pSrc, int nWidth, int nHeight, int nRowlen) throw()
 {
 	this->Destroy();
 	int nBPP = 8 * nRowlen / nWidth;
-	BOOL result = CImage::Create(nWidth, nHeight, nBPP, dwFlags);
+	BOOL result = CImage::Create(nWidth, nHeight, nBPP);
 	if (result == 0)
 		return result;
 	if (nBPP == 8)
@@ -220,6 +220,59 @@ BOOL CyImage::Create(float* pSrc, int nWidth, int nHeight, int nRowlen, DWORD dw
 HRESULT CyImage::Load(LPCTSTR pszFileName) throw()
 {
 	this->Destroy();
+
+	// 获取文件后缀
+	CString strFilePath = pszFileName;
+	int last = strFilePath.ReverseFind('\\');
+	CString temp = strFilePath.Right(strFilePath.GetLength() - last - 1);
+	int num = temp.ReverseFind('.');
+	CString strFilePostfix = temp.Right(temp.GetLength() - num);
+	// 读取文本文档
+	if (strFilePostfix == _T(".txt") || strFilePostfix == _T(".TXT"))
+	{
+		CString strText = _T("");
+		CString szLine = _T("");
+		CStdioFile file;
+		if (file.Open(strFilePath, CFile::modeRead))
+		{
+			int nFileLine = 0;
+			vector<float> TxtData;
+			while(file.ReadString(szLine))
+			{
+				//strText += szLine + _T("\n");
+				int Length = szLine.GetLength();
+				int k, i = 0;
+				while (i < Length)
+				{
+					k = i;
+					while (i < Length && szLine[i] != ',')
+					{
+						i++;
+					}
+					CString str_temp = szLine.Mid(k, i - k);
+					float data_temp = _tstof(str_temp);
+					TxtData.push_back(data_temp);
+					i++;
+				}
+				nFileLine++;
+			}
+			int Total = TxtData.size();
+			if (Total % nFileLine != 0)
+				return S_FALSE;
+			int width = Total / nFileLine;
+			float* pSrc = new float[Total];
+			for (int i = 0; i < Total; ++i)
+			{
+				pSrc[i] = TxtData[i];
+			}
+			Create(pSrc, width, nFileLine, width);
+			SAFE_DELETE(pSrc);
+			file.Close();
+			return S_OK;
+		}
+	}
+
+	// 加载进图像
 	HRESULT hr = FAILED(CImage::Load(pszFileName));
 	if (hr != S_OK)
 		return hr;
@@ -547,6 +600,7 @@ BOOL CyImage::ChangeBPP(UINT bpp)
 	default:
 		break;
 	}
+	MemcpyByteToFloat();
 	return TRUE;
 }
 

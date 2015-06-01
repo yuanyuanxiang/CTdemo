@@ -155,6 +155,18 @@ public:
 	afx_msg void OnUpdateArtMethod(CCmdUI *pCmdUI);
 	afx_msg void OnArtRadon();
 	afx_msg void OnUpdateArtRadon(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarOriginImage();
+	afx_msg void OnUpdateToolbarOriginImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarProjectImage();
+	afx_msg void OnUpdateToolbarProjectImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarAfterProjectImage();
+	afx_msg void OnUpdateToolbarAfterProjectImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarReconstructImage();
+	afx_msg void OnUpdateToolbarReconstructImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarImageToProject();
+	afx_msg void OnUpdateToolbarImageToProject(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarProjectToImage();
+	afx_msg void OnUpdateToolbarProjectToImage(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

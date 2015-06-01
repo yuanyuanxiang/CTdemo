@@ -3,32 +3,32 @@
 // π© CTdemo.rc  π”√
 //
 #define IDD_ABOUTBOX                    100
-#define IDP_OLE_INIT_FAILED             100
-#define ID_INDICATOR_CLOCK              101
-#define ID_COPYRIGHT_STRING             102
-#define ID_STATUSBAR_PANE1              120
-#define ID_STATUSBAR_PANE2              121
-#define IDS_STATUS_PANE1                122
-#define IDS_STATUS_PANE2                123
-#define IDS_TOOLBAR_STANDARD            124
-#define IDS_TOOLBAR_CUSTOMIZE           125
-#define ID_VIEW_CUSTOMIZE               126
-#define IDR_MAINFRAME                   128
-#define IDR_MAINFRAME_256               129
-#define IDR_CTdemoTYPE                  130
-#define ID_WINDOW_MANAGER               131
-#define ID_VIEW_FILEVIEW                133
-#define ID_VIEW_CLASSVIEW               134
-#define ID_CLASS_ADD_MEMBER_FUNCTION    139
-#define ID_TOOLBAR_PRJ                  139
-#define ID_CLASS_ADD_MEMBER_VARIABLE    140
-#define ID_CLASS_DEFINITION             141
-#define ID_CLASS_PROPERTIES             142
-#define ID_VIEW_PROPERTIESWND           150
-#define IDS_FILE_VIEW                   155
-#define IDS_CLASS_VIEW                  156
-#define IDS_OUTPUT_WND                  157
-#define IDS_PROPERTIES_WND              158
+#define IDP_OLE_INIT_FAILED             101
+#define ID_INDICATOR_CLOCK              102
+#define ID_COPYRIGHT_STRING             103
+#define ID_STATUSBAR_PANE1              104
+#define ID_STATUSBAR_PANE2              105
+#define IDS_STATUS_PANE1                106
+#define IDS_STATUS_PANE2                107
+#define IDS_TOOLBAR_STANDARD            108
+#define IDS_TOOLBAR_CUSTOMIZE           109
+#define ID_VIEW_CUSTOMIZE               110
+#define IDR_MAINFRAME                   111
+#define IDR_MAINFRAME_256               112
+#define IDR_CTdemoTYPE                  113
+#define ID_WINDOW_MANAGER               114
+#define ID_VIEW_FILEVIEW                115
+#define ID_VIEW_CLASSVIEW               116
+#define ID_CLASS_ADD_MEMBER_FUNCTION    117
+#define ID_TOOLBAR_PRJ                  118
+#define ID_CLASS_ADD_MEMBER_VARIABLE    119
+#define ID_CLASS_DEFINITION             120
+#define ID_CLASS_PROPERTIES             121
+#define ID_VIEW_PROPERTIESWND           122
+#define IDS_FILE_VIEW                   123
+#define IDS_CLASS_VIEW                  124
+#define IDS_OUTPUT_WND                  125
+#define IDS_PROPERTIES_WND              126
 #define IDS_BUILD_TAB                   300
 #define IDS_DEBUG_TAB                   301
 #define IDS_FIND_TAB                    302
@@ -49,7 +49,6 @@
 #define IDD_RECONSTRUCT_SETTINGS        323
 #define IDD_DLG_CURVE                   324
 #define IDD_HILBERT_ANGLE               325
-#define IDD_DIALOG1                     326
 #define IDD_ART_IT_NUM                  326
 #define IDC_ROTATE_ANGLE                1000
 #define IDC_EDIT_RAYSNUM                1001
@@ -150,13 +149,19 @@
 #define ID_ART_METHOD                   32886
 #define ID_32887                        32887
 #define ID_ART_RADON                    32888
+#define ID_TOOLBAR_ORIGIN_IMAGE         32890
+#define ID_TOOLBAR_PROJECT_IMAGE        32891
+#define ID_TOOLBAR_AFTER_PROJECT_IMAGE  32893
+#define ID_TOOLBAR_RECONSTRUCT_IMAGE    32895
+#define ID_TOOLBAR_IMAGE_TO_PROJECT     32896
+#define ID_TOOLBAR_PROJECT_TO_IMAGE     32898
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        327
-#define _APS_NEXT_COMMAND_VALUE         32889
+#define _APS_NEXT_COMMAND_VALUE         32899
 #define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

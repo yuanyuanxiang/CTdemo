@@ -64,7 +64,6 @@ public:
 	CCTdemoView*		GetMainView();										// 获取主视图
 	CChildFrame*		GetChildFrame();									// 获取子框架
 	CString				GetExeFilePath();									// 获取当前exe文件路径
-	BOOL				OpenProjectionFile(LPCTSTR lpszPathName);			// 打开投影文件
 	void				ReconstructImage(CString path);						// 对数据进行重建
 	void				SetReconstructImageSize();							// 设置重建图像大小
 

@@ -26,12 +26,10 @@ public:
 	virtual int ExitInstance();
 
 // 实现
-	bool		m_bProjectionFile;	//当前图像为投影数据
 	BOOL		m_bHiColorIcons;
 
 	CMultiDocTemplate * m_pDocTemplate;
 
-	bool CheckProjectionFile();		//检查是否为投影数据
 	virtual void PreLoadState();
 	virtual void LoadCustomState();
 	virtual void SaveCustomState();
@@ -39,7 +37,6 @@ public:
 	DECLARE_MESSAGE_MAP()
 
 	afx_msg void OnAppAbout();
-	afx_msg void OnLoadProject();
 	afx_msg void OnFileNew();
 };
 

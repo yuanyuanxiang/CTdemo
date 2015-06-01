@@ -308,11 +308,12 @@ bool Write2File(float* pSrc, int nWidth, int nHeight, CString path)
 	{
 		for (int i = 0; i < nHeight; i++)
 		{
-			for (int j = 0; j < nWidth; j++)
+			for (int j = 0; j < nWidth - 1; j++)
 			{
 				InputFile << pSrc[j + i * nWidth] << ",";
 			}
-			InputFile << endl;
+			// 每行最后一个数据
+			InputFile << pSrc[nWidth - 1 + i * nWidth] << endl;
 		}
 		InputFile.close();
 		return true;
@@ -745,7 +746,7 @@ void DBPImage(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int 
 			{
 				float fai = i * delta_fai;
 				float r = (n - cx) * cos_fai[i] + (m - cy) * sin_fai[i];
-				sum += sgn[i] * LinearInterp(pDiff, nAngles, nRays, i, med + r / delta_r);
+				sum += sgn[i] * LinearInterp(pDiff, nAngles, nRays, i, med + r * delta_r);
 			}
 			pDst[n + m * nWidth] = sum * delta_fai;
 		}
@@ -762,8 +763,7 @@ void DBPImage(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int 
 float HilbertKernel(float x)
 {
 	if (x == 0)
-	//return 0;
-	return (numeric_limits<float>::max)();
+		return 0;
 	return 1 / (PI * x);
 }
 
@@ -780,23 +780,25 @@ void InverseHilbert(float* pDst, float* pSrc, int nWidth, int nHeight, float del
 	int s, t, s1;
 	float sum = 0.f;
 
-	float Lt = -1.f;
+	float Lt = 0;
 	float Ut = nHeight;
-	float s0 = 0.f, Ct;
+	float s0 = 0.f, Ct = 0.f;
 
-//#pragma omp parallel for private(m, n, i) reduction(+ : sum)
-	for (s = 0; s < nHeight; ++s)
+#pragma omp parallel for private(t, s, s1) reduction(+ : sum, Ct)
+	for (t = 0; t < nWidth; ++t)
 	{
-		for (t = 0; t < nWidth; ++t)
+		for (s = 0; s < nHeight; ++s)
 		{
 			sum = 0.f;
 			Ct = 0.f;
-			for (s1 = 0; s1 < nHeight; ++s1)
+			for (s1 = Lt; s1 < Ut; ++s1)
 			{
 				sum += sqrt((s1 - Lt) * (Ut - s1)) * pSrc[t + s1 * nWidth] * HilbertKernel(s - s1);
 				Ct += sqrt((s1 - Lt) * (Ut - s1)) * pSrc[t + s1 * nWidth] * HilbertKernel(s0 - s1);
 			}
-			pDst[t + s * nWidth] = -(sum - Ct) / sqrt((s - Lt) * (Ut - s)) * delta_r;
+			float sqrt_result = sqrt((s - Lt) * (Ut - s));
+			if (sqrt_result != 0)
+				pDst[t + s * nWidth] = -1.f / sqrt_result * (sum - Ct) * delta_r;
 		}
 	}
 }
