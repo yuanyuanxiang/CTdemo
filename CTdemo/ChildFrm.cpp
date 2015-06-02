@@ -61,6 +61,12 @@ void CChildFrame::Dump(CDumpContext& dc) const
 
 BOOL CChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 {
+	// 如果使用OpenGL
+	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
+	bool UsingOpenGL = pApp->m_bUsingOpenGL;
+	if (UsingOpenGL)
+		return CMDIChildWndEx::OnCreateClient(lpcs, pContext);
+
 	if(m_ImageView.CreateStatic(this, 1, 2) == NULL) 
 		return FALSE; 
 
@@ -77,7 +83,7 @@ BOOL CChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 
 	if(m_SplitterWnd.CreateStatic(&m_ImageView, 2, 1, WS_CHILD | WS_VISIBLE, m_ImageView.IdFromRowCol(0, 1)) == NULL)
 		return FALSE;
-	
+
 	// 将第0行1列再分开2行1列
 	// 将FormView1类连接到第二个分栏对象的0行0列
 	m_SplitterWnd.CreateView(0, 0, RUNTIME_CLASS(CCurveView), CSize(right_view_width, 3 * height / 4), pContext);

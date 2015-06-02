@@ -27,6 +27,7 @@ public:
 
 // й╣ож
 	BOOL		m_bHiColorIcons;
+	bool		m_bUsingOpenGL;
 
 	CMultiDocTemplate * m_pDocTemplate;
 
@@ -38,6 +39,7 @@ public:
 
 	afx_msg void OnAppAbout();
 	afx_msg void OnFileNew();
+	afx_msg void OnFileOpenUsingOpenGL();
 };
 
 extern CCTdemoApp theApp;

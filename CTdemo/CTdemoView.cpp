@@ -113,6 +113,7 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_IMAGE_TO_PROJECT, &CCTdemoView::OnUpdateToolbarImageToProject)
 	ON_COMMAND(ID_TOOLBAR_PROJECT_TO_IMAGE, &CCTdemoView::OnToolbarProjectToImage)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PROJECT_TO_IMAGE, &CCTdemoView::OnUpdateToolbarProjectToImage)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -140,6 +141,11 @@ CCTdemoView::CCTdemoView()
 	m_hBppEditorDll = NULL;
 	m_fZoomRate = 1.f;
 	m_nPointSize = 2;
+	// OpenGL
+	m_bUsingOpenGL = false;
+	m_hRC = NULL;
+	m_pDC = NULL;
+	m_pfd = NULL;
 }
 
 CCTdemoView::~CCTdemoView()
@@ -151,7 +157,137 @@ CCTdemoView::~CCTdemoView()
 	SAFE_DELETE(pDoc->m_pImage);
 	if (m_hBppEditorDll)
 		FreeLibrary(m_hBppEditorDll);
+	SAFE_DELETE(m_pfd);
 }
+
+
+BOOL CCTdemoView::InitializeOpenGL()
+{
+	// 如果使用OpenGL
+	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
+	m_bUsingOpenGL = pApp->m_bUsingOpenGL;
+	if (!m_bUsingOpenGL)
+		return FALSE;
+
+	PIXELFORMATDESCRIPTOR pfd;
+	int n;
+	m_pDC = new CClientDC(this);
+	ASSERT(m_pDC != NULL);
+	// 设置当前的绘图像素格式
+	if(!SetupPixelFormat())
+	{
+		return FALSE;
+	}
+
+	n = ::GetPixelFormat(m_pDC->GetSafeHdc());
+	::DescribePixelFormat(m_pDC->GetSafeHdc(), n, sizeof(pfd), &pfd);
+	// 创建绘图描述表
+	m_hRC = wglCreateContext(m_pDC->GetSafeHdc());
+	if(m_hRC == NULL)
+	{
+		return FALSE;
+	}
+	// 使绘图描述表为当前调用现程的当前绘图描述表
+	if( wglMakeCurrent(m_pDC->GetSafeHdc(), m_hRC) == FALSE)
+	{
+		return FALSE;
+	}
+	glClearDepth(1.0f);
+	glEnable(GL_DEPTH_TEST);
+	return TRUE;
+}
+
+
+BOOL CCTdemoView::SetupPixelFormat()
+{
+	if (m_pfd == NULL)
+		m_pfd = new PIXELFORMATDESCRIPTOR;
+	memset(m_pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+
+	m_pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	m_pfd->nVersion = 1;
+	m_pfd->dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	m_pfd->cColorBits = 24;
+	m_pfd->cDepthBits = 32;
+	/* 像素格式
+	static PIXELFORMATDESCRIPTOR pfd =   
+	{  
+		sizeof(PIXELFORMATDESCRIPTOR),  // pfd结构的大小   
+		1,                              // 版本号   
+		PFD_DRAW_TO_WINDOW |            // 支持在窗口中绘图   
+		PFD_SUPPORT_OPENGL |            // 支持 OpenGL   
+		PFD_DOUBLEBUFFER,               // 双缓存模式   
+		PFD_TYPE_RGBA,                  // RGBA 颜色模式   
+		24,                             // 24 位颜色深度   
+		0, 0, 0, 0, 0, 0,               // 忽略颜色位   
+		0,                              // 没有非透明度缓存   
+		0,                              // 忽略移位位   
+		0,                              // 无累计缓存   
+		0, 0, 0, 0,                     // 忽略累计位   
+		32,                             // 32 位深度缓存       
+		0,                              // 无模板缓存   
+		0,                              // 无辅助缓存   
+		PFD_MAIN_PLANE,                 // 主层   
+		0,                              // 保留   
+		0, 0, 0                         // 忽略层,可见性和损毁掩模   
+
+	}; */
+	int pixelFormat;
+	// 为设备描述表得到最匹配的像素格式 
+	if((pixelFormat = ChoosePixelFormat(m_pDC->GetSafeHdc(), m_pfd)) == 0)
+	{
+		MessageBox( _T("ChoosePixelFormat failed!") );
+		return FALSE;
+	}
+	// 设置最匹配的像素格式为当前的像素格式 
+	if(SetPixelFormat(m_pDC->GetSafeHdc(), pixelFormat, m_pfd) == FALSE)
+	{
+		MessageBox( _T("SetPixelFormat failed!") );
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+void CCTdemoView::RenderScene()
+{
+	if (!m_bUsingOpenGL)
+		return;
+	//设置清屏颜色为黑色
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//清除颜色缓冲区和深度缓冲区
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//透视投影变换
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(1.f, (double)m_nViewportWidth/(double)m_nViewportHeight, 1.f, 100.f);
+	//视角变换
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(10, 10, 10, 0, 0, 0, 0, 1, 0);
+	//矩阵堆栈函数，和glPopMatrix()相对应
+	glPushMatrix();
+
+	glBegin( GL_LINES );
+	glColor3d(1.0, 0.0, 0.0);	// X轴 红色
+	glVertex3d(0.0, 0.0, 0.0); 
+	glVertex3d(2.0, 0.0, 0.0);
+	glColor3d(0.0, 1.0, 0.0);	// Y轴 绿色
+	glVertex3d(0.0, 0.0, 0.0);
+	glVertex3d(0.0, 2.0, 0.0);
+	glColor3d(0.0, 0.0, 1.0);	// Z轴 蓝色
+	glVertex3d(0.0, 0.0, 0.0); 
+	glVertex3d(0.0, 0.0, 2.0);
+	glEnd();
+
+	glColor3f(1.0, 1.0, 1.0);
+	glutWireCube(0.5);
+
+	glPopMatrix();
+	glFinish();
+	SwapBuffers(wglGetCurrentDC());
+}
+
 
 BOOL CCTdemoView::PreCreateWindow(CREATESTRUCT& cs)
 {
@@ -169,6 +305,8 @@ void CCTdemoView::OnDraw(CDC* pDC)
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
 		return;
+
+	RenderScene(); 
 
 	if (!CHECK_IMAGE_NULL(m_pCurrent))
 	{
@@ -369,6 +507,10 @@ void CCTdemoView::MovePaintRect(int dx, int dy, CRect &rect)
 // 重绘背景
 BOOL CCTdemoView::OnEraseBkgnd(CDC* pDC)
 {
+	if (m_bUsingOpenGL)
+	{
+		return TRUE;
+	}
 	// 1	2	3
 	// 4	5	6
 	// 7	8	9
@@ -392,6 +534,16 @@ void CCTdemoView::OnSize(UINT nType, int cx, int cy)
 
 	// TODO: 在此处添加消息处理程序代码
 	GetClientRect(&m_ClientRect);
+
+	m_nViewportWidth = cx;	// 表示视口宽度的成员变量  
+	m_nViewportHeight = cy;	// 表示视口高度的成员变量  
+	// 避免除数为0  
+	if(m_nViewportHeight == 0)  
+	{  
+		m_nViewportHeight = 1;  
+	}  
+	//设置视口与窗口的大小  
+	glViewport(0, 0, m_nViewportWidth, m_nViewportHeight); 
 }
 
 // 改变图像位深度
@@ -442,6 +594,12 @@ int CCTdemoView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CScrollView::OnCreate(lpCreateStruct) == -1)
 		return -1;
+
+	if (InitializeOpenGL())
+	{
+		return 0;
+	}
+
 	return 0;
 }
 
@@ -1281,6 +1439,7 @@ void CCTdemoView::OnToolbarOriginImage()
 void CCTdemoView::OnUpdateToolbarOriginImage(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pImage);
 }
 
@@ -1297,6 +1456,7 @@ void CCTdemoView::OnToolbarProjectImage()
 void CCTdemoView::OnUpdateToolbarProjectImage(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pProject);
 }
 
@@ -1313,6 +1473,7 @@ void CCTdemoView::OnToolbarAfterProjectImage()
 void CCTdemoView::OnUpdateToolbarAfterProjectImage(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pAfterFilter));
 	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pAfterFilter);
 }
 
@@ -1329,6 +1490,7 @@ void CCTdemoView::OnToolbarReconstructImage()
 void CCTdemoView::OnUpdateToolbarReconstructImage(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pReconstruct));
 	pCmdUI->SetCheck(m_pCurrent == pDoc->m_pReconstruct);
 }
 
@@ -1410,4 +1572,32 @@ void CCTdemoView::OnUpdateToolbarProjectToImage(CCmdUI *pCmdUI)
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 	pCmdUI->SetCheck(!CHECK_IMAGE_NULL(pDoc->m_pImage));
 	pCmdUI->Enable(CHECK_IMAGE_NULL(pDoc->m_pImage) || CHECK_IMAGE_NULL(pDoc->m_pProject));
+}
+
+
+void CCTdemoView::OnDestroy()
+{
+	CScrollView::OnDestroy();
+
+	// TODO: 在此处添加消息处理程序代码
+	
+	m_hRC = ::wglGetCurrentContext();
+	if(::wglMakeCurrent (0,0) == FALSE)
+	{
+		TRACE("Could not make RC non-current!\n");
+	}
+
+	if(m_hRC)
+	{
+		if(::wglDeleteContext(m_hRC)==FALSE)
+		{
+			MessageBox(_T("Could not delete RC!"));
+		}
+	}
+
+	if(m_pDC)
+	{
+		delete m_pDC;
+	}
+	m_pDC = NULL;
 }

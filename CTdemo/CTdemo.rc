@@ -155,31 +155,32 @@ END
 // Menu
 //
 
-IDR_MAINFRAME MENUEX
+IDR_MAINFRAME MENU
 BEGIN
-    POPUP "文件(&F)",                         65535,MFT_STRING,MFS_ENABLED
+    POPUP "文件(&F)"
     BEGIN
-        MENUITEM "新建(&N)\tCtrl+N",              ID_FILE_NEW,MFT_STRING | MFT_RIGHTJUSTIFY,MFS_ENABLED
-        MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN,MFT_STRING,MFS_ENABLED
-        MENUITEM "关闭(&W)\tCtrl+W",              ID_FILE_CLOSE,MFT_STRING,MFS_ENABLED
-        MENUITEM MFT_SEPARATOR
-        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP,MFT_STRING,MFS_ENABLED
-        MENUITEM MFT_SEPARATOR
-        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1,MFT_STRING,MFS_GRAYED
-        MENUITEM MFT_SEPARATOR
-        MENUITEM "退出(&Q)\tCtrl+Q",              ID_APP_EXIT,MFT_STRING,MFS_ENABLED
+        MENUITEM "新建(&N)\tCtrl+N",              ID_FILE_NEW
+        MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN
+        MENUITEM "关闭(&W)\tCtrl+W",              ID_FILE_CLOSE
+        MENUITEM "OpenGL",                      ID_FILE_OPEN_USING_OPENGL
+        MENUITEM SEPARATOR
+        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1, INACTIVE
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&Q)\tCtrl+Q",              ID_APP_EXIT
     END
-    POPUP "视图(&V)",                         65535,MFT_STRING,MFS_ENABLED
+    POPUP "视图(&V)"
     BEGIN
-        POPUP "工具栏和停靠窗口(&T)",                   65535,MFT_STRING,MFS_ENABLED
+        POPUP "工具栏和停靠窗口(&T)"
         BEGIN
-            MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR,MFT_STRING,MFS_ENABLED
+            MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR
         END
-        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
     END
-    POPUP "帮助(&H)",                         65535,MFT_STRING,MFS_ENABLED
+    POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "关于 CTdemo(&F1)...",           ID_APP_ABOUT,MFT_STRING,MFS_ENABLED
+        MENUITEM "关于 CTdemo(&F1)...",           ID_APP_ABOUT
     END
 END
 
@@ -191,6 +192,7 @@ BEGIN
         MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN
         MENUITEM "关闭(&W)\tCtrl+W",              ID_FILE_CLOSE
         MENUITEM "保存(&S)\tCtrl+S",              ID_FILE_SAVE
+        MENUITEM "OpenGL",                      ID_FILE_OPEN_USING_OPENGL
         MENUITEM "另存为(&A)...\tCtrl+Shift+S",    ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "打印(&P)...\tCtrl+P",           ID_FILE_PRINT
@@ -797,6 +799,7 @@ STRINGTABLE
 BEGIN
     ID_TOOLBAR_IMAGE_TO_PROJECT "将当前图像标定为投影图像\n标定图像"
     ID_TOOLBAR_PROJECT_TO_IMAGE "将当前图像标定为原始图像\n标定图像"
+    ID_FILE_OPEN_USING_OPENGL "\n应用OpenGL"
 END
 
 #endif    // 中文(简体，中国) resources

@@ -44,6 +44,11 @@
 #define RAD(i) (PI * (i) / 180.0f)	//½Ç¶È×ª»¡¶È
 
 
+#include <GL\glaux.h>
+
+#include <GL\glut.h>
+
+
 #ifdef _UNICODE
 #if defined _M_IX86
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")

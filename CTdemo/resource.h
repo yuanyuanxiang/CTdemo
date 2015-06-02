@@ -155,13 +155,15 @@
 #define ID_TOOLBAR_RECONSTRUCT_IMAGE    32895
 #define ID_TOOLBAR_IMAGE_TO_PROJECT     32896
 #define ID_TOOLBAR_PROJECT_TO_IMAGE     32898
+#define ID_32899                        32899
+#define ID_FILE_OPEN_USING_OPENGL       32900
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        327
-#define _APS_NEXT_COMMAND_VALUE         32899
+#define _APS_NEXT_COMMAND_VALUE         32901
 #define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

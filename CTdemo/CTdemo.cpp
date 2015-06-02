@@ -26,6 +26,7 @@ BEGIN_MESSAGE_MAP(CCTdemoApp, CWinAppEx)
 	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
+	ON_COMMAND(ID_FILE_OPEN_USING_OPENGL, &CCTdemoApp::OnFileOpenUsingOpenGL)
 END_MESSAGE_MAP()
 
 
@@ -147,6 +148,8 @@ BOOL CCTdemoApp::InitInstance()
 	pMainFrame->ShowWindow(m_nCmdShow);
 	pMainFrame->UpdateWindow();
 
+	m_bUsingOpenGL = false;
+
 	return TRUE;
 }
 
@@ -219,4 +222,12 @@ void CCTdemoApp::SaveCustomState()
 void CCTdemoApp::OnFileNew()
 {
 	m_pDocTemplate->OpenDocumentFile(NULL);
+}
+
+
+void CCTdemoApp::OnFileOpenUsingOpenGL()
+{
+	m_bUsingOpenGL = true;
+	CWinAppEx::OnFileOpen();
+	m_bUsingOpenGL = false;
 }

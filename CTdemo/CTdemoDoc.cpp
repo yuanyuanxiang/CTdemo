@@ -55,9 +55,9 @@ CCTdemoDoc::CCTdemoDoc()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	// 指针相关
 	m_pImage = NULL;
-	m_pProject = new CyImage;
-	m_pAfterFilter = new CyImage;
-	m_pReconstruct = new CyImage;
+	m_pProject = NULL;
+	m_pAfterFilter = NULL;
+	m_pReconstruct = NULL;
 	m_pHead = NULL;
 	// 图像信息
 	m_ptOrigin = CPoint(0, 0);
@@ -76,6 +76,9 @@ CCTdemoDoc::CCTdemoDoc()
 	m_fRaysDensity = 1.0f;
 	m_fAnglesSeparation = PI / 180;
 	m_nDetectorCenter = 0;
+	// SO,SO'
+	m_fPanSOR = 1.f;
+	m_fPanSOD = 1.f;
 	// 导数图像
 	m_pfDBPImage = NULL;
 }
@@ -212,6 +215,17 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 {
 	if (!CDocument::OnOpenDocument(lpszPathName))
 		return FALSE;
+
+	// 如果使用OpenGL
+	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
+	bool UsingOpenGL = pApp->m_bUsingOpenGL;
+	if (UsingOpenGL)
+		return TRUE;
+
+	// 初始化图像指针
+	m_pProject = new CyImage;
+	m_pAfterFilter = new CyImage;
+	m_pReconstruct = new CyImage;
 
 	m_strFilePath = lpszPathName;
 	CString temp = GetFileNameFromPath(m_strFilePath);

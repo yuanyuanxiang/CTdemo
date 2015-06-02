@@ -49,6 +49,17 @@ public:
 	int			m_nPointSize;							// 绘制点的大小
 	int			m_nCpuMaxImageSize;						// 用CPU处理的最大尺寸
 
+	/*OpenGL*/
+	bool		m_bUsingOpenGL;							//使用OpenGL
+	int			m_nViewportWidth;						//视口宽度
+	int			m_nViewportHeight;						//视口高度
+	PIXELFORMATDESCRIPTOR *m_pfd;						//像素格式
+	HGLRC		m_hRC;									//Rendering Context着色描述表
+	CClientDC*	m_pDC;									//Device Context设备描述表
+	BOOL		InitializeOpenGL();						//初始化 OpenGL
+	BOOL		SetupPixelFormat();						//设置像素格式
+	void		RenderScene();							//绘制场景
+
 	void		RePaint();								// 重绘图像
 	void		PaintSinglePoint(CDC* pDC, CPoint &point, int nSize = 3);
 	void		PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBottom);
@@ -167,6 +178,7 @@ public:
 	afx_msg void OnUpdateToolbarImageToProject(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarProjectToImage();
 	afx_msg void OnUpdateToolbarProjectToImage(CCmdUI *pCmdUI);
+	afx_msg void OnDestroy();
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本
