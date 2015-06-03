@@ -61,7 +61,14 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 void SetColorTabFor8BitImage(CImage *pImage);
 
 // 将浮点数写入文本文档
-bool Write2File(float* pSrc, int nWidth, int nHeight, CString path);
+bool Write2Txt(float* pSrc, int nWidth, int nHeight, CString path);
+
+bool ReadTxt(float* &pDst, int &nWidth, int &nHeight, CString path);
+
+// 将浮点数写入RAW文件
+bool Write2Raw(float* pSrc, int nWidth, int nHeight, CString path);
+
+bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path);
 
 // 获取直线的自变量
 float LineGetXValue(float &k, float &c, float y);

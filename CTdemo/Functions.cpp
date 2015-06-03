@@ -300,8 +300,59 @@ void SetColorTabFor8BitImage(CImage *pImage)
 }
 
 
+bool Write2Raw(float* pSrc, int nWidth, int nHeight, CString path)
+{
+	std::ofstream fout(path, std::ios::binary);
+
+	if(fout)
+	{
+		// 可以看作文件头
+		char* str = "# CTdemo";
+		fout.write(str, sizeof(char) * strlen(str));
+		// 将宽度、高度、数据以二进制写入RAW文件
+		// 宽度、高度作为文件头，占用8字节
+		fout.write((char*)&nWidth, sizeof(int));
+		fout.write((char*)&nHeight, sizeof(int));
+		fout.write((char*)pSrc, sizeof(float) * nWidth * nHeight);
+		fout.close();
+		return true;
+	}
+	return false;
+}
+
+
+bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path)
+{
+	std::ifstream fin(path, std::ios::binary);
+	if (fin)
+	{
+		// 读取文件头
+		char* str = "# CTdemo";
+		int len = strlen(str);
+		char* buf = new char[len];
+		fin.read(buf, sizeof(char) * len);
+		for (int i = 0; i < len; ++i)
+		{
+			if (str[i] != buf[i])
+			{
+				SAFE_DELETE(buf);
+				return false;
+			}
+		}
+		SAFE_DELETE(buf);
+		fin.read((char*)&nWidth, sizeof(int));
+		fin.read((char*)&nHeight, sizeof(int));
+		pDst = new float[nWidth * nHeight];
+		fin.read((char*)pDst, sizeof(float) * nWidth * nHeight);
+		fin.close();
+		return true;
+	}
+	return false;
+}
+
+
 // 将pSrc指针指向的数据写入文件[path]，width和height指定了宽与高.
-bool Write2File(float* pSrc, int nWidth, int nHeight, CString path)
+bool Write2Txt(float* pSrc, int nWidth, int nHeight, CString path)
 {
 	ofstream InputFile(path);
 	if(InputFile)
@@ -316,6 +367,51 @@ bool Write2File(float* pSrc, int nWidth, int nHeight, CString path)
 			InputFile << pSrc[nWidth - 1 + i * nWidth] << endl;
 		}
 		InputFile.close();
+		return true;
+	}
+	return false;
+}
+
+
+bool ReadTxt(float* &pDst, int &nWidth, int &nHeight, CString path)
+{
+	CString strText = _T("");
+	CString szLine = _T("");
+	CStdioFile file;
+	if (file.Open(path, CFile::modeRead))
+	{
+		// 文件行数
+		nHeight = 0;
+		vector<float> TxtData;
+		while(file.ReadString(szLine))
+		{
+			//strText += szLine + _T("\n");
+			int Length = szLine.GetLength();
+			int k, i = 0;
+			while (i < Length)
+			{
+				k = i;
+				while (i < Length && szLine[i] != ',')
+				{
+					i++;
+				}
+				CString str_temp = szLine.Mid(k, i - k);
+				float data_temp = _tstof(str_temp);
+				TxtData.push_back(data_temp);
+				i++;
+			}
+			nHeight++;
+		}
+		int Total = TxtData.size();
+		if (Total % nHeight != 0)
+			return false;
+		nWidth = Total / nHeight;
+		pDst = new float[Total];
+		for (int i = 0; i < Total; ++i)
+		{
+			pDst[i] = TxtData[i];
+		}
+		file.Close();
 		return true;
 	}
 	return false;

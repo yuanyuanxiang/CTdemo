@@ -114,6 +114,7 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_COMMAND(ID_TOOLBAR_PROJECT_TO_IMAGE, &CCTdemoView::OnToolbarProjectToImage)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PROJECT_TO_IMAGE, &CCTdemoView::OnUpdateToolbarProjectToImage)
 	ON_WM_DESTROY()
+	ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -143,10 +144,11 @@ CCTdemoView::CCTdemoView()
 	m_nPointSize = 2;
 	// OpenGL
 	m_bUsingOpenGL = false;
-	m_hRC = NULL;
-	m_pDC = NULL;
+	m_nGLPixelIndex = 0;
+	m_hGLContext = NULL;
 	m_pfd = NULL;
 }
+
 
 CCTdemoView::~CCTdemoView()
 {
@@ -161,44 +163,35 @@ CCTdemoView::~CCTdemoView()
 }
 
 
-BOOL CCTdemoView::InitializeOpenGL()
+BOOL CCTdemoView::CreateViewGLContext(HDC hDC)
+{
+	m_hGLContext = wglCreateContext(hDC);
+	if(m_hGLContext == NULL)
+		return FALSE;
+	if(wglMakeCurrent(hDC, m_hGLContext) == FALSE)
+		return FALSE;
+	return TRUE;    
+}
+
+
+BOOL CCTdemoView::InitializeOpenGL(HDC hDC)
 {
 	// 如果使用OpenGL
 	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
 	m_bUsingOpenGL = pApp->m_bUsingOpenGL;
 	if (!m_bUsingOpenGL)
 		return FALSE;
-
-	PIXELFORMATDESCRIPTOR pfd;
-	int n;
-	m_pDC = new CClientDC(this);
-	ASSERT(m_pDC != NULL);
-	// 设置当前的绘图像素格式
-	if(!SetupPixelFormat())
-	{
-		return FALSE;
-	}
-
-	n = ::GetPixelFormat(m_pDC->GetSafeHdc());
-	::DescribePixelFormat(m_pDC->GetSafeHdc(), n, sizeof(pfd), &pfd);
-	// 创建绘图描述表
-	m_hRC = wglCreateContext(m_pDC->GetSafeHdc());
-	if(m_hRC == NULL)
-	{
-		return FALSE;
-	}
-	// 使绘图描述表为当前调用现程的当前绘图描述表
-	if( wglMakeCurrent(m_pDC->GetSafeHdc(), m_hRC) == FALSE)
-	{
-		return FALSE;
-	}
+	if(SetWindowPixelFormat(hDC) == FALSE)
+		return -1;
+	if(CreateViewGLContext(hDC) == FALSE)
+		return -1;
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	return TRUE;
 }
 
 
-BOOL CCTdemoView::SetupPixelFormat()
+BOOL CCTdemoView::SetWindowPixelFormat(HDC hDC)
 {
 	if (m_pfd == NULL)
 		m_pfd = new PIXELFORMATDESCRIPTOR;
@@ -232,15 +225,16 @@ BOOL CCTdemoView::SetupPixelFormat()
 		0, 0, 0                         // 忽略层,可见性和损毁掩模   
 
 	}; */
-	int pixelFormat;
+	m_nGLPixelIndex = ChoosePixelFormat(hDC, m_pfd);
 	// 为设备描述表得到最匹配的像素格式 
-	if((pixelFormat = ChoosePixelFormat(m_pDC->GetSafeHdc(), m_pfd)) == 0)
+	if(m_nGLPixelIndex == 0)
 	{
-		MessageBox( _T("ChoosePixelFormat failed!") );
-		return FALSE;
+		m_nGLPixelIndex = 1;
+		if(DescribePixelFormat(hDC, m_nGLPixelIndex, sizeof(PIXELFORMATDESCRIPTOR), m_pfd) == 0)
+			return FALSE;
 	}
 	// 设置最匹配的像素格式为当前的像素格式 
-	if(SetPixelFormat(m_pDC->GetSafeHdc(), pixelFormat, m_pfd) == FALSE)
+	if(SetPixelFormat(hDC, m_nGLPixelIndex, m_pfd) == FALSE)
 	{
 		MessageBox( _T("SetPixelFormat failed!") );
 		return FALSE;
@@ -251,41 +245,12 @@ BOOL CCTdemoView::SetupPixelFormat()
 
 void CCTdemoView::RenderScene()
 {
-	if (!m_bUsingOpenGL)
-		return;
 	//设置清屏颜色为黑色
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	//清除颜色缓冲区和深度缓冲区
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//透视投影变换
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(1.f, (double)m_nViewportWidth/(double)m_nViewportHeight, 1.f, 100.f);
-	//视角变换
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(10, 10, 10, 0, 0, 0, 0, 1, 0);
-	//矩阵堆栈函数，和glPopMatrix()相对应
-	glPushMatrix();
-
-	glBegin( GL_LINES );
-	glColor3d(1.0, 0.0, 0.0);	// X轴 红色
-	glVertex3d(0.0, 0.0, 0.0); 
-	glVertex3d(2.0, 0.0, 0.0);
-	glColor3d(0.0, 1.0, 0.0);	// Y轴 绿色
-	glVertex3d(0.0, 0.0, 0.0);
-	glVertex3d(0.0, 2.0, 0.0);
-	glColor3d(0.0, 0.0, 1.0);	// Z轴 蓝色
-	glVertex3d(0.0, 0.0, 0.0); 
-	glVertex3d(0.0, 0.0, 2.0);
-	glEnd();
-
 	glColor3f(1.0, 1.0, 1.0);
 	glutWireCube(0.5);
-
-	glPopMatrix();
-	glFinish();
-	SwapBuffers(wglGetCurrentDC());
 }
 
 
@@ -305,8 +270,6 @@ void CCTdemoView::OnDraw(CDC* pDC)
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
 		return;
-
-	RenderScene(); 
 
 	if (!CHECK_IMAGE_NULL(m_pCurrent))
 	{
@@ -595,11 +558,9 @@ int CCTdemoView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CScrollView::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	if (InitializeOpenGL())
-	{
-		return 0;
-	}
-
+	HWND hWnd = GetSafeHwnd();
+	HDC hDC = ::GetDC(hWnd);
+	InitializeOpenGL(hDC);
 	return 0;
 }
 
@@ -1578,26 +1539,44 @@ void CCTdemoView::OnUpdateToolbarProjectToImage(CCmdUI *pCmdUI)
 void CCTdemoView::OnDestroy()
 {
 	CScrollView::OnDestroy();
-
-	// TODO: 在此处添加消息处理程序代码
-	
-	m_hRC = ::wglGetCurrentContext();
+	m_hGLContext = ::wglGetCurrentContext();
 	if(::wglMakeCurrent (0,0) == FALSE)
 	{
 		TRACE("Could not make RC non-current!\n");
 	}
 
-	if(m_hRC)
+	if(m_hGLContext)
 	{
-		if(::wglDeleteContext(m_hRC)==FALSE)
+		if(::wglDeleteContext(m_hGLContext) == FALSE)
 		{
 			MessageBox(_T("Could not delete RC!"));
 		}
 	}
+}
 
-	if(m_pDC)
-	{
-		delete m_pDC;
-	}
-	m_pDC = NULL;
+
+void CCTdemoView::OnPaint()
+{
+	CPaintDC dc(this); // device context for painting
+	if (!m_bUsingOpenGL)
+		return OnDraw(&dc);
+	HWND hWnd = GetSafeHwnd();
+	HDC hDC = ::GetDC(hWnd);
+	wglMakeCurrent(dc.m_ps.hdc, m_hGLContext);
+	RenderScene();
+	// Double buffer
+	SwapBuffers(dc.m_ps.hdc);
+	glFlush();
+	// release
+	::ReleaseDC(hWnd, hDC);
+}
+
+
+void CCTdemoView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView)
+{
+	HWND hWnd = GetSafeHwnd();
+	HDC hDC = ::GetDC(hWnd);
+	wglMakeCurrent(hDC, m_hGLContext);
+	::ReleaseDC(hWnd, hDC);
+	CScrollView::OnActivateView(bActivate, pActivateView, pDeactiveView);
 }

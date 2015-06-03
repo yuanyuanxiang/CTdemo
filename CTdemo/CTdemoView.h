@@ -54,11 +54,12 @@ public:
 	int			m_nViewportWidth;						//视口宽度
 	int			m_nViewportHeight;						//视口高度
 	PIXELFORMATDESCRIPTOR *m_pfd;						//像素格式
-	HGLRC		m_hRC;									//Rendering Context着色描述表
-	CClientDC*	m_pDC;									//Device Context设备描述表
-	BOOL		InitializeOpenGL();						//初始化 OpenGL
-	BOOL		SetupPixelFormat();						//设置像素格式
+	int			m_nGLPixelIndex;						//像素索引
+	HGLRC		m_hGLContext;							//Rendering Context着色描述表
+	BOOL		InitializeOpenGL(HDC hDC);				//初始化 OpenGL
 	void		RenderScene();							//绘制场景
+	BOOL		SetWindowPixelFormat(HDC hDC);			//设置像素格式
+	BOOL		CreateViewGLContext(HDC hDC);			//创建OpenGL上下文
 
 	void		RePaint();								// 重绘图像
 	void		PaintSinglePoint(CDC* pDC, CPoint &point, int nSize = 3);
@@ -179,6 +180,8 @@ public:
 	afx_msg void OnToolbarProjectToImage();
 	afx_msg void OnUpdateToolbarProjectToImage(CCmdUI *pCmdUI);
 	afx_msg void OnDestroy();
+	afx_msg void OnPaint();
+	virtual void OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

@@ -230,44 +230,24 @@ HRESULT CyImage::Load(LPCTSTR pszFileName) throw()
 	// 读取文本文档
 	if (strFilePostfix == _T(".txt") || strFilePostfix == _T(".TXT"))
 	{
-		CString strText = _T("");
-		CString szLine = _T("");
-		CStdioFile file;
-		if (file.Open(strFilePath, CFile::modeRead))
+		float* pDst;
+		int nWidth, nHeight;
+		if (ReadTxt(pDst, nWidth, nHeight, strFilePath))
 		{
-			int nFileLine = 0;
-			vector<float> TxtData;
-			while(file.ReadString(szLine))
-			{
-				//strText += szLine + _T("\n");
-				int Length = szLine.GetLength();
-				int k, i = 0;
-				while (i < Length)
-				{
-					k = i;
-					while (i < Length && szLine[i] != ',')
-					{
-						i++;
-					}
-					CString str_temp = szLine.Mid(k, i - k);
-					float data_temp = _tstof(str_temp);
-					TxtData.push_back(data_temp);
-					i++;
-				}
-				nFileLine++;
-			}
-			int Total = TxtData.size();
-			if (Total % nFileLine != 0)
-				return S_FALSE;
-			int width = Total / nFileLine;
-			float* pSrc = new float[Total];
-			for (int i = 0; i < Total; ++i)
-			{
-				pSrc[i] = TxtData[i];
-			}
-			Create(pSrc, width, nFileLine, width);
-			SAFE_DELETE(pSrc);
-			file.Close();
+			Create(pDst, nWidth, nHeight, nWidth);
+			SAFE_DELETE(pDst);
+			return S_OK;
+		}
+	}
+	// 读取RAW文档
+	else if (strFilePostfix == _T(".raw") || strFilePostfix == _T(".RAW"))
+	{
+		float* pDst;
+		int nWidth, nHeight;
+		if (ReadRaw(pDst, nWidth, nHeight, strFilePath))
+		{
+			Create(pDst, nWidth, nHeight, nWidth);
+			SAFE_DELETE(pDst);
 			return S_OK;
 		}
 	}
@@ -450,7 +430,7 @@ bool CyImage::Save(REFGUID guidFileType) const throw()
 bool CyImage::Save(CWnd* pParentWnd, REFGUID guidFileType) const throw()
 {
 	// 过滤器
-	CString strFilter = L"文本文档|*.TXT|所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
+	CString strFilter = L"文本文档|*.TXT|所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|RAW文档|*.RAW|所有文件|*.*||";
 
 	// 获取系统时间
 	SYSTEMTIME CurTime;
@@ -477,19 +457,22 @@ bool CyImage::Save(CWnd* pParentWnd, REFGUID guidFileType) const throw()
 	{
 		switch (hFileDlg.m_ofn.nFilterIndex)
 		{
-		case 1 :ext = _T(".BMP"); break;
-		case 2 :ext = _T(".TXT"); break;
-		case 3 :ext = _T(".BMP"); break;
-		case 4 :ext = _T(".JPG"); break;
-		case 5 :ext = _T(".GIF"); break;
-		case 6 :ext = _T(".ICO"); break;
-		case 7 :ext = _T(".JPG"); break;
-		default:ext = _T(".JPG"); break;
+		case 1 :ext = _T("BMP"); break;
+		case 2 :ext = _T("TXT"); break;
+		case 3 :ext = _T("BMP"); break;
+		case 4 :ext = _T("JPG"); break;
+		case 5 :ext = _T("GIF"); break;
+		case 6 :ext = _T("ICO"); break;
+		case 7 :ext = _T("JPG"); break;
+		case 8 :ext = _T("RAW"); break;
+		default:ext = _T("JPG"); break;
 		}
-		path = path + ext;
+		path = path + _T(".") + ext;
 	}
 	if (ext == _T("TXT") || ext == _T("txt"))
-		return Write2File(m_pfFloat, m_nyRowlen2, m_nyHeight, path);
+		return Write2Txt(m_pfFloat, m_nyRowlen2, m_nyHeight, path);
+	else if (ext == _T("RAW") || ext == _T("raw"))
+		return Write2Raw(m_pfFloat, m_nyRowlen2, m_nyHeight, path);
 	else
 		return SUCCEEDED(CImage::Save(path, guidFileType));
 }
