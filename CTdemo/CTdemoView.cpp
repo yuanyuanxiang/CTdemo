@@ -249,8 +249,6 @@ void CCTdemoView::RenderScene()
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	//清除颜色缓冲区和深度缓冲区
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glColor3f(1.0, 1.0, 1.0);
-	glutWireCube(0.5);
 }
 
 
@@ -368,6 +366,9 @@ void CCTdemoView::OnInitialUpdate()
 	}
 	// 设置绘图矩形
 	SetPaintRect(0, 0, width, height);
+	if (m_bUsingOpenGL)
+	{
+	}
 }
 
 

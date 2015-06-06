@@ -43,6 +43,7 @@
 
 #define RAD(i) (PI * (i) / 180.0f)	//½Ç¶È×ª»¡¶È
 
+#include <GL\glew.h>
 
 #include <GL\glaux.h>
 

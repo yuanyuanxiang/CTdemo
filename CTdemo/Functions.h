@@ -65,9 +65,10 @@ bool Write2Txt(float* pSrc, int nWidth, int nHeight, CString path);
 
 bool ReadTxt(float* &pDst, int &nWidth, int &nHeight, CString path);
 
-// 将浮点数写入RAW文件
+// 将浮点数写入专有RAW文件
 bool Write2Raw(float* pSrc, int nWidth, int nHeight, CString path);
 
+// 读取专有raw格式文件
 bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path);
 
 // 获取直线的自变量
@@ -100,13 +101,19 @@ float* ImageZoom(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nCha
 // 根据图像的宽度与高度计算出最佳的射线采样条数，参考自MATLAB
 int ComputeRaysNum(int nWidth, int nHeight);
 
+// 导数图像
 float* DiffImage(float* pPrj, int nRays, int nAngles, float delta_r);
 
+// 导数反投影图像
 void DBPImage(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai, float theta = 0.f);
 
+// 希尔伯特卷积核
 float HilbertKernel(float x);
 
+// 有限区域希尔伯特逆变换
 void InverseHilbert(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r);
+
+void *loadRawFile(CString filename, size_t size);
 
 
 #endif

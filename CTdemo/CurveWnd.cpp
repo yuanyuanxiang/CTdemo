@@ -457,7 +457,7 @@ BOOL CCurveWnd::RePlacePeg(CPoint& point)
 	{
 		prev = pos;
 		peg& Temp = m_pPegsList[m_nChannelSelected].GetNext(pos);
-		if (fabs(1.0*point.x - Temp.m_pt->x)<max(m_nRectWidth/100, 3.0) || fabs(1.0*point.y - Temp.m_pt->y)<max(m_nRectHeight/100, 3.0))
+		if (fabs(1.0*point.x - Temp.m_pt->x)<max(m_nRectWidth/100.0, 3.0) || fabs(1.0*point.y - Temp.m_pt->y)<max(m_nRectHeight/100.0, 3.0))
 		{
 			//½«prevÎ»ÖÃµÄpegÉ¾µô
 			if (Temp.m_pt->x != m_pOnPaintRect->left && Temp.m_pt->x != m_pOnPaintRect->right)
@@ -475,7 +475,7 @@ BOOL CCurveWnd::RePlacePeg(CPoint& point)
 BOOL CCurveWnd::UserWillDrag(CPoint& point)
 {
 	d_type error = point.y - m_V4Transform[m_nChannelSelected][point.x - m_pOnPaintRect->left];
-	if (error < max(m_nRectHeight/100.0, 16)) return TRUE;
+	if (error < max(m_nRectHeight/100.0, 16.0)) return TRUE;
 	return FALSE;
 }
 

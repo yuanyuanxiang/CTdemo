@@ -336,12 +336,23 @@ bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path)
 			if (str[i] != buf[i])
 			{
 				SAFE_DELETE(buf);
+				fin.close();
 				return false;
 			}
 		}
 		SAFE_DELETE(buf);
 		fin.read((char*)&nWidth, sizeof(int));
 		fin.read((char*)&nHeight, sizeof(int));
+		int temp1, temp2;
+		temp1 = fin.tellg();			// 记录下当前位置
+		fin.seekg(0, ios_base::end);	// 移动到文件尾
+		temp2 = fin.tellg();			// 取得当前位置的指针长度
+		fin.seekg(temp1);				// 移动到原来的位置
+		if (temp2 - temp1 != sizeof(float) * nWidth * nHeight)
+		{
+			fin.close();
+			return false;
+		}
 		pDst = new float[nWidth * nHeight];
 		fin.read((char*)pDst, sizeof(float) * nWidth * nHeight);
 		fin.close();
@@ -404,7 +415,10 @@ bool ReadTxt(float* &pDst, int &nWidth, int &nHeight, CString path)
 		}
 		int Total = TxtData.size();
 		if (Total % nHeight != 0)
+		{
+			file.Close();
 			return false;
+		}
 		nWidth = Total / nHeight;
 		pDst = new float[Total];
 		for (int i = 0; i < Total; ++i)
@@ -897,4 +911,19 @@ void InverseHilbert(float* pDst, float* pSrc, int nWidth, int nHeight, float del
 				pDst[t + s * nWidth] = -1.f / sqrt_result * (sum - Ct) * delta_r;
 		}
 	}
+}
+
+
+// Load raw data from disk
+void *loadRawFile(CString filename, size_t size)
+{
+	std::ifstream fin(filename, std::ios::binary);
+	if (fin)
+	{
+		void *data = malloc(size);
+		fin.read((char*)data, size);
+		fin.close();
+		return data;
+	}
+	return NULL;
 }

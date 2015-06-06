@@ -216,6 +216,12 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (!CDocument::OnOpenDocument(lpszPathName))
 		return FALSE;
 
+	m_strFilePath = lpszPathName;
+	CString temp = GetFileNameFromPath(m_strFilePath);
+	int num = temp.ReverseFind('.');
+	m_strFileName = temp.Left(num);
+	m_strFilePostfix = temp.Right(temp.GetLength() - num);
+
 	// 如果使用OpenGL
 	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
 	bool UsingOpenGL = pApp->m_bUsingOpenGL;
@@ -226,12 +232,6 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	m_pProject = new CyImage;
 	m_pAfterFilter = new CyImage;
 	m_pReconstruct = new CyImage;
-
-	m_strFilePath = lpszPathName;
-	CString temp = GetFileNameFromPath(m_strFilePath);
-	int num = temp.ReverseFind('.');
-	m_strFileName = temp.Left(num);
-	m_strFilePostfix = temp.Right(temp.GetLength() - num);
 
 	m_pImage = new CyImage;
 	m_pImage->Load(m_strFilePath);

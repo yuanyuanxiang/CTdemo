@@ -4,6 +4,21 @@
 
 #pragma once
 
+// CUDA Runtime, Interop, and includes
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+#include <vector_types.h>
+#include <vector_functions.h>
+#include <driver_functions.h>
+
+// CUDA utilities
+#include <helper_cuda.h>
+#include <helper_cuda_gl.h>
+
+// Helper functions
+#include <helper_cuda.h>
+#include <helper_functions.h>
+#include <helper_timer.h>
 
 class CCTdemoDoc;
 class CyImage;
@@ -16,6 +31,13 @@ class CyImage;
 
 // 检测图像p为空，如果是空，结果为1
 #define CHECK_IMAGE_NULL(p) ( ((p) == NULL) || ((p)->IsNull()) )
+
+typedef unsigned int uint;
+typedef unsigned char uchar;
+typedef unsigned char VolumeType;
+
+#define MAX_EPSILON_ERROR 5.00f
+#define THRESHOLD         0.30f
 
 class CCTdemoView : public CScrollView
 {
