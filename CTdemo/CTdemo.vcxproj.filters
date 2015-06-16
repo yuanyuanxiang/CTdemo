@@ -16,32 +16,11 @@
     <Filter Include="CUDA">
       <UniqueIdentifier>{1414ed53-a55b-4645-acb0-3e91e6d77f62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="程序框架">
+      <UniqueIdentifier>{fa1a5d6e-fd9b-4999-979c-dfd5a224198c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CTdemo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MainFrm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ChildFrm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CTdemoDoc.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CTdemoView.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="DlgRotateAngle.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -105,26 +84,32 @@
     <ClInclude Include="ImageViewerDllFuncs.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
+    <ClInclude Include="ChildFrm.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
+    <ClInclude Include="CTdemo.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
+    <ClInclude Include="CTdemoDoc.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
+    <ClInclude Include="CTdemoView.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
+    <ClInclude Include="MainFrm.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>程序框架</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CTdemo.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MainFrm.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ChildFrm.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CTdemoDoc.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CTdemoView.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="DlgRotateAngle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -172,6 +157,24 @@
     </ClCompile>
     <ClCompile Include="DlgArtSettings.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ChildFrm.cpp">
+      <Filter>程序框架</Filter>
+    </ClCompile>
+    <ClCompile Include="CTdemo.cpp">
+      <Filter>程序框架</Filter>
+    </ClCompile>
+    <ClCompile Include="CTdemoDoc.cpp">
+      <Filter>程序框架</Filter>
+    </ClCompile>
+    <ClCompile Include="CTdemoView.cpp">
+      <Filter>程序框架</Filter>
+    </ClCompile>
+    <ClCompile Include="MainFrm.cpp">
+      <Filter>程序框架</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>程序框架</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
