@@ -63,9 +63,6 @@
     <ClInclude Include="IntSection.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ImageViewerDllAPIs.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="DlgPanParameter.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -103,6 +100,9 @@
       <Filter>CUDA</Filter>
     </ClInclude>
     <ClInclude Include="DlgArtSettings.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageViewerDllFuncs.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

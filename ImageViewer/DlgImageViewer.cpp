@@ -125,7 +125,7 @@ template <typename T> void CDlgImageViewer::CopyData(BYTE* pDst, T* ptr, int wid
 		for (int j = 0; j < width; ++j)
 		{
 			for (int c = 0; c < channel; ++c)
-				pDst[j * c + c + i * ImageRowlen] = BYTE( 255.f * (ptr[j * c + c + i * rowlen] - MIN) / (MAX - MIN) );
+				pDst[j * channel + c + i * ImageRowlen] = BYTE( 255.f * (ptr[j * channel + c + i * rowlen] - MIN) / (MAX - MIN) );
 		}
 	}
 	return;

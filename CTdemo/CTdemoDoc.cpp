@@ -16,7 +16,7 @@
 #include <math.h>
 #include <fstream>
 using namespace std;
-#include "ImageViewerDllAPIs.h"
+#include "ImageViewerDllFuncs.h"
 #include <vector>
 #include "IntSection.h"
 #include <algorithm>

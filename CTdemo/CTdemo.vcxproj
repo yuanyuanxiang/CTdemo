@@ -128,7 +128,7 @@
     <ClInclude Include="DlgRotateAngle.h" />
     <ClInclude Include="CUDA\Filter.h" />
     <ClInclude Include="Functions.h" />
-    <ClInclude Include="ImageViewerDllAPIs.h" />
+    <ClInclude Include="ImageViewerDllFuncs.h" />
     <ClInclude Include="IntSection.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="CurveView.h" />
