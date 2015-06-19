@@ -674,3 +674,15 @@ void CCTdemoDoc::ReconstructImage(CString path)
 		BackProject(m_pReconstruct->m_pfFloat, m_pAfterFilter->m_pfFloat, rec_width, rec_height, angles, rays, m_fRaysDensity, delta_fai);
 	}
 }
+
+
+// ÐÂ½¨¿Õ°×ÎÄµµ
+CCTdemoDoc* CCTdemoDoc::CreateNewDocument()
+{
+	CCTdemoDoc* pDoc = (CCTdemoDoc *)GetDocTemplate()->OpenDocumentFile(NULL);
+	pDoc->m_pProject = new CyImage;
+	pDoc->m_pAfterFilter = new CyImage;
+	pDoc->m_pReconstruct = new CyImage;
+	pDoc->m_pImage = new CyImage;
+	return pDoc;
+}

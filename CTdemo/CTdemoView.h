@@ -99,6 +99,9 @@ public:
 	CPoint		DP2LP(CDC* pDC, const CPoint &point);	// 视图坐标转换为文档坐标
 	CRect		DP2LP(CDC* pDC, const CRect &rect);		// 视图坐标转换为文档坐标
 
+	void CopyImage(CyImage* pImage);					// 拷贝图像
+	void PasteImage();									// 黏贴图像
+
 // 重写
 public:
 	virtual void OnDraw(CDC* pDC);  // 重写以绘制该视图

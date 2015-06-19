@@ -192,7 +192,7 @@ BEGIN
         MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN
         MENUITEM "关闭(&W)\tCtrl+W",              ID_FILE_CLOSE
         MENUITEM "保存(&S)\tCtrl+S",              ID_FILE_SAVE
-        MENUITEM "OpenGL",                      ID_FILE_OPEN_USING_OPENGL
+        MENUITEM "Open&GL",                     ID_FILE_OPEN_USING_OPENGL
         MENUITEM "另存为(&A)...\tCtrl+Shift+S",    ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "打印(&P)...\tCtrl+P",           ID_FILE_PRINT
@@ -205,25 +205,25 @@ BEGIN
     END
     POPUP "编辑(&E)"
     BEGIN
-        MENUITEM "撤消(&U)\tCtrl+Z",              ID_EDIT_UNDO
+        MENUITEM "撤消(&Z)\tCtrl+Z",              ID_EDIT_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "剪切(&T)\tCtrl+X",              ID_EDIT_CUT
+        MENUITEM "剪切(&X)\tCtrl+X",              ID_EDIT_CUT
         MENUITEM "复制(&C)\tCtrl+C",              ID_EDIT_COPY
-        MENUITEM "粘贴(&P)\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "粘贴(&V)\tCtrl+V",              ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "加速投影(&1)\tCtrl+Shift+P",      ID_PRJ_USING_GPU
         MENUITEM "加速卷积(&2)\tCtrl+Shift+C",      ID_CONV_USING_GPU
         MENUITEM "加速重建(&3)\tCtrl+Shift+R",      ID_BKP_USING_GPU
         MENUITEM SEPARATOR
-        MENUITEM "保存投影图像",                      ID_SAVE_PROJECT
-        MENUITEM "保存滤波图像",                      ID_SAVE_AFTER_FILTER_IMG
-        MENUITEM "保存重建图像",                      ID_SAVE_BACK_PROJECT_IMG
+        MENUITEM "保存投影图像(&4)",                  ID_SAVE_PROJECT
+        MENUITEM "保存滤波图像(&5)",                  ID_SAVE_AFTER_FILTER_IMG
+        MENUITEM "保存重建图像(&6)",                  ID_SAVE_BACK_PROJECT_IMG
         MENUITEM SEPARATOR
-        MENUITEM "ART投影",                       ID_ART_RADON
-        MENUITEM "ART重建",                       ID_ART_METHOD
+        MENUITEM "ART投影(&P)",                   ID_ART_RADON
+        MENUITEM "ART重建(&A)\tCtlr+A",           ID_ART_METHOD
         MENUITEM SEPARATOR
-        MENUITEM "扇束投影(CPU)",                   ID_PAN_PROJECT
-        MENUITEM "扇束投影(GPU)",                   ID_CUDA_PAN_PROJECT
+        MENUITEM "扇束投影(CP&U)",                  ID_PAN_PROJECT
+        MENUITEM "扇束投影(&GPU)",                  ID_CUDA_PAN_PROJECT
         MENUITEM "扇束重建图像(&R)",                  ID_PAN_RECONSTRUCT
         MENUITEM SEPARATOR
     END
@@ -242,7 +242,7 @@ BEGIN
         MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
         MENUITEM "Next图像(&N)\tCtrl+->",         ID_CHANGE_IMAGE_SHOW
         MENUITEM "Prev图像(&P)\tCtrl+<-",         ID_CHANGE_IMAGE_SHOW_PREV
-        MENUITEM "导数图像(&D)",                    ID_DBP_IMAGE
+        MENUITEM "导数图像(&D)\tCTrl+D",            ID_DBP_IMAGE
     END
     POPUP "窗口(&W)"
     BEGIN
@@ -269,42 +269,44 @@ END
 IDR_MAINFRAME ACCELERATORS
 BEGIN
     VK_F1,          ID_APP_ABOUT,           VIRTKEY, NOINVERT
-    VK_F3,          ID_FAN_SCAN_SETTINGS,   VIRTKEY, NOINVERT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
-    VK_F2,          ID_PROJECT_SETTINGS,    VIRTKEY, NOINVERT
-    VK_F4,          ID_RECONSTRUCT_IMAGE_SIZE, VIRTKEY, NOINVERT
-    VK_LEFT,        ID_TOOLBAR_FLIP_H,      VIRTKEY, NOINVERT
-    VK_RIGHT,       ID_TOOLBAR_FLIP_H,      VIRTKEY, NOINVERT
-    VK_DOWN,        ID_TOOLBAR_FLIP_V,      VIRTKEY, NOINVERT
-    VK_UP,          ID_TOOLBAR_FLIP_V,      VIRTKEY, NOINVERT
-    VK_HOME,        ID_TOOLBAR_ZOOM_DEFAULT, VIRTKEY, NOINVERT
-    VK_ADD,         ID_TOOLBAR_ZOOM_IN,     VIRTKEY, NOINVERT
-    VK_SUBTRACT,    ID_TOOLBAR_ZOOM_OUT,    VIRTKEY, NOINVERT
     "Q",            ID_APP_EXIT,            VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_BKP_USING_GPU,       VIRTKEY, SHIFT, CONTROL, NOINVERT
     VK_RIGHT,       ID_CHANGE_IMAGE_SHOW,   VIRTKEY, CONTROL, NOINVERT
     VK_LEFT,        ID_CHANGE_IMAGE_SHOW_PREV, VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_CONV_USING_GPU,      VIRTKEY, SHIFT, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_F3,          ID_FAN_SCAN_SETTINGS,   VIRTKEY, NOINVERT
     "W",            ID_FILE_CLOSE,          VIRTKEY, CONTROL, NOINVERT
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
     "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
     "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
     "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    "P",            ID_PRJ_USING_GPU,       VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F2,          ID_PROJECT_SETTINGS,    VIRTKEY, NOINVERT
+    VK_F4,          ID_RECONSTRUCT_IMAGE_SIZE, VIRTKEY, NOINVERT
     "R",            ID_TOOLBAR_BKP,         VIRTKEY, CONTROL, NOINVERT
     "B",            ID_TOOLBAR_BPP,         VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_TOOLBAR_CONV,        VIRTKEY, CONTROL, ALT, NOINVERT
+    VK_LEFT,        ID_TOOLBAR_FLIP_H,      VIRTKEY, NOINVERT
+    VK_RIGHT,       ID_TOOLBAR_FLIP_H,      VIRTKEY, NOINVERT
+    VK_DOWN,        ID_TOOLBAR_FLIP_V,      VIRTKEY, NOINVERT
+    VK_UP,          ID_TOOLBAR_FLIP_V,      VIRTKEY, NOINVERT
+    "P",            ID_TOOLBAR_PRJ,         VIRTKEY, CONTROL, ALT, NOINVERT
     "T",            ID_TOOLBAR_TRS,         VIRTKEY, CONTROL, NOINVERT
+    VK_HOME,        ID_TOOLBAR_ZOOM_DEFAULT, VIRTKEY, NOINVERT
+    VK_ADD,         ID_TOOLBAR_ZOOM_IN,     VIRTKEY, NOINVERT
+    VK_SUBTRACT,    ID_TOOLBAR_ZOOM_OUT,    VIRTKEY, NOINVERT
     VK_NUMPAD2,     ID_WINDOW_AFTER_FILTER, VIRTKEY, CONTROL, NOINVERT
     VK_NUMPAD3,     ID_WINDOW_BACKPRO,      VIRTKEY, CONTROL, NOINVERT
     VK_NUMPAD1,     ID_WINDOW_PROJECT,      VIRTKEY, CONTROL, NOINVERT
-    "C",            ID_TOOLBAR_CONV,        VIRTKEY, CONTROL, ALT, NOINVERT
-    "P",            ID_TOOLBAR_PRJ,         VIRTKEY, CONTROL, ALT, NOINVERT
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
-    "R",            ID_BKP_USING_GPU,       VIRTKEY, SHIFT, CONTROL, NOINVERT
-    "C",            ID_CONV_USING_GPU,      VIRTKEY, SHIFT, CONTROL, NOINVERT
-    "S",            ID_FILE_SAVE_AS,        VIRTKEY, SHIFT, CONTROL, NOINVERT
-    "P",            ID_PRJ_USING_GPU,       VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "A",            ID_ART_METHOD,          VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_DBP_IMAGE,           VIRTKEY, CONTROL, NOINVERT
 END
 
 

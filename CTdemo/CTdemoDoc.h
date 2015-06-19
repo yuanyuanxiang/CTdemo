@@ -80,6 +80,9 @@ public:
 	void				RandPanDiffRays(float R, float D, int angles, int rays);
 	void				PanProject(float R, float D, int angles, int rays);
 
+	/* ÐÂ½¨¿Õ°×ÎÄµµ */
+	CCTdemoDoc* CreateNewDocument();
+
 private:
 	CFrameWnd* CreateNewWindow(CDocTemplate* pTemplate,CDocument* pDocument);
 

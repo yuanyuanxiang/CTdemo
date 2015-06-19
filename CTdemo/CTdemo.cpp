@@ -27,6 +27,9 @@ BEGIN_MESSAGE_MAP(CCTdemoApp, CWinAppEx)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 	ON_COMMAND(ID_FILE_OPEN_USING_OPENGL, &CCTdemoApp::OnFileOpenUsingOpenGL)
+	ON_COMMAND(ID_EDIT_COPY, &CCTdemoApp::OnEditCopy)
+	ON_COMMAND(ID_EDIT_PASTE, &CCTdemoApp::OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CCTdemoApp::OnUpdateEditCopy)
 END_MESSAGE_MAP()
 
 
@@ -230,4 +233,47 @@ void CCTdemoApp::OnFileOpenUsingOpenGL()
 	m_bUsingOpenGL = true;
 	CWinAppEx::OnFileOpen();
 	m_bUsingOpenGL = false;
+}
+
+
+CCTdemoDoc* CCTdemoApp::GetMainDoc()
+{
+	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
+	CChildFrame* pChildFrame = (CChildFrame*)pMainFrame->GetActiveFrame();
+	CCTdemoDoc* pDoc = (CCTdemoDoc*)pChildFrame->GetActiveDocument();
+	return pDoc;
+}
+
+
+CCTdemoView* CCTdemoApp::GetActiveView()
+{
+	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
+	CChildFrame* pChildFrame = (CChildFrame*)pMainFrame->GetActiveFrame();
+	CCTdemoView* pView = (CCTdemoView*)pChildFrame->GetActiveView();
+	return pView;
+}
+
+
+void CCTdemoApp::OnEditCopy()
+{
+	CCTdemoView* pView = GetActiveView();
+	ASSERT(pView != NULL);
+	pView->CopyImage(pView->m_pCurrent);
+}
+
+
+void CCTdemoApp::OnEditPaste()
+{
+	CCTdemoView* pView = GetActiveView();
+	ASSERT(pView != NULL);
+	pView->PasteImage();
+}
+
+
+void CCTdemoApp::OnUpdateEditCopy(CCmdUI *pCmdUI)
+{
+	CCTdemoView* pView = GetActiveView();
+	if (!pView)
+		return;
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(pView->m_pCurrent));
 }

@@ -8,6 +8,8 @@
 #endif
 
 #include "resource.h"       // Ö÷·ûºÅ
+#include "CTdemoDoc.h"
+#include "CTdemoView.h"
 
 
 // CCTdemoApp:
@@ -29,6 +31,9 @@ public:
 	BOOL		m_bHiColorIcons;
 	bool		m_bUsingOpenGL;
 
+	CCTdemoDoc* GetMainDoc();
+	CCTdemoView* GetActiveView();
+
 	CMultiDocTemplate * m_pDocTemplate;
 
 	virtual void PreLoadState();
@@ -40,6 +45,9 @@ public:
 	afx_msg void OnAppAbout();
 	afx_msg void OnFileNew();
 	afx_msg void OnFileOpenUsingOpenGL();
+	afx_msg void OnEditCopy();
+	afx_msg void OnEditPaste();
+	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
 };
 
 extern CCTdemoApp theApp;

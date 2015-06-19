@@ -657,6 +657,7 @@ void CCTdemoView::OnProjectSettings()
 		{
 			pDoc->m_pProject->Destroy();
 			pDoc->m_pAfterFilter->Destroy();
+			SetCurrentImage(pDoc->m_pImage);
 		}
 	}
 }
@@ -1580,4 +1581,68 @@ void CCTdemoView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* pD
 	wglMakeCurrent(hDC, m_hGLContext);
 	::ReleaseDC(hWnd, hDC);
 	CScrollView::OnActivateView(bActivate, pActivateView, pDeactiveView);
+}
+
+
+void CCTdemoView::CopyImage(CyImage* pImage)
+{
+	if (OpenClipboard())
+	{
+		if (pImage->IsNull())
+		{
+			CloseClipboard();
+			return;
+		}
+
+		int width, height;
+		pImage->GetInfomation(width, height);
+		CDC *pDC = GetDC();
+		CBitmap cBmp;   
+		cBmp.CreateCompatibleBitmap(pDC, width, height);   
+		CDC MemDC;   
+		MemDC.CreateCompatibleDC(pDC); 
+		CBitmap* pOldBitmap = MemDC.SelectObject(&cBmp);
+		pImage->Draw(MemDC, CRect(0, 0, width, height), Gdiplus::InterpolationModeBicubic);
+
+		EmptyClipboard();
+		SetClipboardData(CF_BITMAP, cBmp.GetSafeHandle()) ;
+		CloseClipboard();
+		MemDC.SelectObject(pOldBitmap);
+		MemDC.DeleteDC();
+		ReleaseDC(pDC);
+		BITMAP bmp = {0};
+		cBmp.GetBitmap(&bmp);
+		cBmp.Detach();
+	}
+}
+
+
+void CCTdemoView::PasteImage()
+{
+	// 获取文档
+	CCTdemoDoc* pDoc = GetDocument();
+	if (!CHECK_IMAGE_NULL(pDoc->m_pImage))
+		pDoc = pDoc->CreateNewDocument();
+	if (OpenClipboard())
+	{
+		HBITMAP handle = (HBITMAP)GetClipboardData(CF_BITMAP);
+		CBitmap* pBitmap = CBitmap::FromHandle(handle);
+		CyImage* pImage = pDoc->m_pImage;
+		// 取得源数据
+		BITMAP bmp = {0};
+		pBitmap->GetBitmap(&bmp);
+		long Length = bmp.bmHeight * bmp.bmWidthBytes;
+		BYTE* pSrc = new BYTE[Length];
+		pBitmap->GetBitmapBits(Length, pSrc);
+		// 给目标地址拷贝数据
+		pImage->Create(bmp.bmWidth, bmp.bmHeight, bmp.bmBitsPixel);
+		BYTE* pDst = (BYTE*)pImage->GetBits() + (pImage->GetPitch()*(pImage->GetHeight() - 1));
+		memcpy(pDst, pSrc, Length);
+		delete [] pSrc;
+		CloseClipboard();
+		pDoc->UpdateImageInfomation();
+		pDoc->InitScanningParameters();
+		CCTdemoView* pNewView = pDoc->GetMainView();
+		pNewView->SetCurrentImage(pImage);
+	}
 }

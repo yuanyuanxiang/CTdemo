@@ -411,8 +411,12 @@ void CImageScrollView::SaveSelectedImage(CString path)
 	int width = m_SourceRect.Width() - 2;
 	int height = m_SourceRect.Height() - 2;
 	if (width < 4 || height < 4)
+	{
+		// 并没有选中任何图像区域，则保存当前图像
+		m_pImage->Save(path);
 		return;
-	
+	}
+	// 将选中区域绘制到内存图像中，并保存
 	CDC* pSrcDC = GetDC();
 	CBitmap cBmp;   
 	cBmp.CreateCompatibleBitmap(pSrcDC, width, height);

@@ -472,9 +472,6 @@ void CDlgImageViewer::OnCopyImage()
 
 void CDlgImageViewer::OnSaveImage()
 {
-	if (m_pScrollView->m_SourceRect.Width() < 4 || m_pScrollView->m_SourceRect.Height() < 4)
-		return;
-
 	// 过滤器
 	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
 
