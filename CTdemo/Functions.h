@@ -69,6 +69,9 @@ bool ReadTxt(float* &pDst, int &nWidth, int &nHeight, CString path);
 bool Write2Raw(float* pSrc, int nWidth, int nHeight, CString path);
 
 // 读取专有raw格式文件
+bool ReadPropRaw(float* &pDst, int &nWidth, int &nHeight, CString path);
+
+// 读取一般的裸数据
 bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path);
 
 // 获取直线的自变量

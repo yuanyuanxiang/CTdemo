@@ -115,6 +115,8 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PROJECT_TO_IMAGE, &CCTdemoView::OnUpdateToolbarProjectToImage)
 	ON_WM_DESTROY()
 	ON_WM_PAINT()
+	ON_COMMAND(ID_IS_PAN_SCAN_DATA, &CCTdemoView::OnIsPanScanData)
+	ON_UPDATE_COMMAND_UI(ID_IS_PAN_SCAN_DATA, &CCTdemoView::OnUpdateIsPanScanData)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -1545,7 +1547,7 @@ void CCTdemoView::OnDestroy()
 	m_hGLContext = ::wglGetCurrentContext();
 	if(::wglMakeCurrent (0,0) == FALSE)
 	{
-		TRACE("Could not make RC non-current!\n");
+		TRACE("Warning : Could not make RC non-current!\n");
 	}
 
 	if(m_hGLContext)
@@ -1620,30 +1622,110 @@ void CCTdemoView::CopyImage(CyImage* pImage)
 
 void CCTdemoView::PasteImage()
 {
-	// 获取文档
-	CCTdemoDoc* pDoc = GetDocument();
-	if (!CHECK_IMAGE_NULL(pDoc->m_pImage))
-		pDoc = pDoc->CreateNewDocument();
 	if (OpenClipboard())
 	{
-		HBITMAP handle = (HBITMAP)GetClipboardData(CF_BITMAP);
-		CBitmap* pBitmap = CBitmap::FromHandle(handle);
-		CyImage* pImage = pDoc->m_pImage;
-		// 取得源数据
-		BITMAP bmp = {0};
-		pBitmap->GetBitmap(&bmp);
-		long Length = bmp.bmHeight * bmp.bmWidthBytes;
-		BYTE* pSrc = new BYTE[Length];
-		pBitmap->GetBitmapBits(Length, pSrc);
-		// 给目标地址拷贝数据
-		pImage->Create(bmp.bmWidth, bmp.bmHeight, bmp.bmBitsPixel);
-		BYTE* pDst = (BYTE*)pImage->GetBits() + (pImage->GetPitch()*(pImage->GetHeight() - 1));
-		memcpy(pDst, pSrc, Length);
-		delete [] pSrc;
+		int i, type = 0;
+		HANDLE handle;
+		for (i = 1; i < CF_MAX; ++i)
+		{
+			handle = GetClipboardData(i);
+			if (handle != NULL)
+			{
+				TRACE("提示: 剪切板的数据类型是%d.\n", i);
+				type = i;
+				break;
+			}
+		}
+
+		// 获取文档
+		CCTdemoDoc* pDoc = GetDocument();
+
+		switch (type)
+		{
+		case CF_BITMAP:
+			{
+				HBITMAP hBitmap = (HBITMAP)handle;
+				if (hBitmap == NULL)
+				{
+					CloseClipboard();
+					return;
+				}
+
+				if (!CHECK_IMAGE_NULL(pDoc->m_pImage))
+					pDoc = pDoc->CreateNewDocument();
+
+				CBitmap* pBitmap = CBitmap::FromHandle(hBitmap);
+				CyImage* pImage = pDoc->m_pImage;
+				// 取得源数据
+				BITMAP bmp = {0};
+				pBitmap->GetBitmap(&bmp);
+				long Length = bmp.bmHeight * bmp.bmWidthBytes;
+				BYTE* pSrc = new BYTE[Length];
+				pBitmap->GetBitmapBits(Length, pSrc);
+				// 给目标地址拷贝数据
+				pImage->Create(bmp.bmWidth, bmp.bmHeight, bmp.bmBitsPixel);
+				BYTE* pDst = (BYTE*)pImage->GetBits() + (pImage->GetPitch()*(pImage->GetHeight() - 1));
+				memcpy(pDst, pSrc, Length);
+				delete [] pSrc;
+				pDoc->UpdateImageInfomation();
+				pDoc->InitScanningParameters();
+				CCTdemoView* pNewView = pDoc->GetMainView();
+				pNewView->SetCurrentImage(pImage);
+			}
+			break;
+		case CF_HDROP:
+			{
+				HDROP hDrop = (HDROP)handle;
+				// 获取拖动的文件个数
+				const int fileCount = DragQueryFile(hDrop, (UINT)-1, NULL, 0);
+				ASSERT(fileCount >= 1);
+
+				for (int i = 0; i < fileCount; i++)
+				{
+					TCHAR fileName[MAX_PATH] = { 0 };
+					DragQueryFile(hDrop, i, fileName, MAX_PATH);
+					CString str;
+					str.Format(_T("%s"), fileName);
+					// 如果当前文档已经打开了图像，则新建一个文档，再复制剪切板图像到文档
+					if (!CHECK_IMAGE_NULL(pDoc->m_pImage))
+					{
+						pDoc = pDoc->CreateNewDocument(str);
+					}
+					else
+					{
+						// Windows的剪切板操作实际上是复制了一个文件列表
+						pDoc->OnOpenDocument(str);
+					}
+				}
+			}
+			break;
+		default:
+			break;
+		}
 		CloseClipboard();
-		pDoc->UpdateImageInfomation();
-		pDoc->InitScanningParameters();
-		CCTdemoView* pNewView = pDoc->GetMainView();
-		pNewView->SetCurrentImage(pImage);
+		return;
 	}
+}
+
+
+// 将当前图像标记为扇束扫描数据
+void CCTdemoView::OnIsPanScanData()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	if (pDoc->m_nProjectionType != PROJECT_TYPE_PAN)
+	{
+		pDoc->m_nProjectionType = PROJECT_TYPE_PAN;
+	}
+	else
+	{
+		pDoc->m_nProjectionType = PROJECT_TYPE_PAR;
+	}
+}
+
+
+void CCTdemoView::OnUpdateIsPanScanData(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
+	pCmdUI->SetCheck(pDoc->m_nProjectionType == PROJECT_TYPE_PAN);
 }

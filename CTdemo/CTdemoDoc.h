@@ -81,7 +81,7 @@ public:
 	void				PanProject(float R, float D, int angles, int rays);
 
 	/* ÐÂ½¨¿Õ°×ÎÄµµ */
-	CCTdemoDoc* CreateNewDocument();
+	CCTdemoDoc* CreateNewDocument(LPCTSTR lpszPathName = NULL);
 
 private:
 	CFrameWnd* CreateNewWindow(CDocTemplate* pTemplate,CDocument* pDocument);

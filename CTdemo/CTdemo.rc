@@ -232,6 +232,7 @@ BEGIN
         MENUITEM "平行束扫描设置(&2)\tF2",             ID_PROJECT_SETTINGS
         MENUITEM "扇形束扫描设置(&3)\tF3",             ID_FAN_SCAN_SETTINGS
         MENUITEM "重建图像大小设置(&4)\tF4",            ID_RECONSTRUCT_IMAGE_SIZE
+        MENUITEM "标记为扇束扫描数据(&M)",               ID_IS_PAN_SCAN_DATA
     END
     POPUP "视图(&V)"
     BEGIN
@@ -443,6 +444,25 @@ BEGIN
     LTEXT           "迭代次数:",IDC_STATIC,38,26,36,8
 END
 
+IDD_RAW_DATA_SIZE DIALOGEX 0, 0, 193, 138
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "数据尺寸"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_RAW_WIDTH,99,18,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RAW_HEIGHT,99,43,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,27,110,50,14
+    PUSHBUTTON      "取消",IDCANCEL,111,110,50,14
+    LTEXT           "宽    度 :",IDC_STATIC,33,23,30,8
+    LTEXT           "高    度 :",IDC_STATIC,34,48,30,8
+    LTEXT           "注    意 : 必须是浮点型裸数据。",IDC_STATIC,34,92,112,8
+    LTEXT           "文件头 :",IDC_STATIC,34,70,30,8
+    EDITTEXT        IDC_RAW_HEADER,100,68,40,14,ES_AUTOHSCROLL
+    LTEXT           "像素",IDC_STATIC,144,20,17,8
+    LTEXT           "像素",IDC_STATIC,143,46,17,8
+    LTEXT           "字节",IDC_STATIC,145,72,17,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -561,6 +581,14 @@ BEGIN
         RIGHTMARGIN, 176
         TOPMARGIN, 7
         BOTTOMMARGIN, 80
+    END
+
+    IDD_RAW_DATA_SIZE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 186
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 131
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -802,6 +830,7 @@ BEGIN
     ID_TOOLBAR_IMAGE_TO_PROJECT "将当前图像标定为投影图像\n标定图像"
     ID_TOOLBAR_PROJECT_TO_IMAGE "将当前图像标定为原始图像\n标定图像"
     ID_FILE_OPEN_USING_OPENGL "使用OpenGL绘图\n应用OpenGL"
+    ID_IS_PAN_SCAN_DATA     "将投影数据标记为扇形束扫描数据\n标记为扇束数据"
 END
 
 #endif    // 中文(简体，中国) resources

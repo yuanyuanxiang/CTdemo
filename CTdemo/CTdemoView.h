@@ -207,6 +207,8 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg void OnPaint();
 	virtual void OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
+	afx_msg void OnIsPanScanData();
+	afx_msg void OnUpdateIsPanScanData(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

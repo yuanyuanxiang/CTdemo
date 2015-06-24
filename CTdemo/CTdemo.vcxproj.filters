@@ -108,6 +108,9 @@
     <ClInclude Include="stdafx.h">
       <Filter>程序框架</Filter>
     </ClInclude>
+    <ClInclude Include="DlgRawDataSize.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DlgRotateAngle.cpp">
@@ -175,6 +178,9 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>程序框架</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgRawDataSize.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

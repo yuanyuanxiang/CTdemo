@@ -263,16 +263,16 @@ CCTdemoView* CCTdemoApp::GetMainView()
 void CCTdemoApp::OnEditCopy()
 {
 	CCTdemoView* pView = GetMainView();
-	ASSERT(pView != NULL);
-	pView->CopyImage(pView->m_pCurrent);
+	if (pView != NULL)
+		pView->CopyImage(pView->m_pCurrent);
 }
 
 
 void CCTdemoApp::OnEditPaste()
 {
 	CCTdemoView* pView = GetMainView();
-	ASSERT(pView != NULL);
-	pView->PasteImage();
+	if (pView != NULL)
+		pView->PasteImage();
 }
 
 

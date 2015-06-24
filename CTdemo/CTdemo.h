@@ -42,6 +42,7 @@ public:
 
 	DECLARE_MESSAGE_MAP()
 
+public:
 	afx_msg void OnAppAbout();
 	afx_msg void OnFileNew();
 	afx_msg void OnFileOpenUsingOpenGL();

@@ -127,6 +127,7 @@
     <ClInclude Include="DlgHilbertAngle.h" />
     <ClInclude Include="DlgPanParameter.h" />
     <ClInclude Include="DlgProjectSettings.h" />
+    <ClInclude Include="DlgRawDataSize.h" />
     <ClInclude Include="DlgReconstructSettings.h" />
     <ClInclude Include="DlgRotateAngle.h" />
     <ClInclude Include="CUDA\Filter.h" />
@@ -155,6 +156,7 @@
     <ClCompile Include="DlgHilbertAngle.cpp" />
     <ClCompile Include="DlgPanParameter.cpp" />
     <ClCompile Include="DlgProjectSettings.cpp" />
+    <ClCompile Include="DlgRawDataSize.cpp" />
     <ClCompile Include="DlgReconstructSettings.cpp" />
     <ClCompile Include="DlgRotateAngle.cpp" />
     <ClCompile Include="Functions.cpp" />

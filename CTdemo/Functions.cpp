@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+#include "DlgRawDataSize.h"
 using namespace std;
 
 // 不显示数据截断警告
@@ -321,7 +322,8 @@ bool Write2Raw(float* pSrc, int nWidth, int nHeight, CString path)
 }
 
 
-bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path)
+// 读取专有的RAW裸数据
+bool ReadPropRaw(float* &pDst, int &nWidth, int &nHeight, CString path)
 {
 	std::ifstream fin(path, std::ios::binary);
 	if (fin)
@@ -353,6 +355,44 @@ bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path)
 			fin.close();
 			return false;
 		}
+		pDst = new float[nWidth * nHeight];
+		fin.read((char*)pDst, sizeof(float) * nWidth * nHeight);
+		fin.close();
+		return true;
+	}
+	return false;
+}
+
+
+// 读取一般的裸数据
+bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path)
+{
+	// 尝试用ReadPropRaw读取
+	if (ReadPropRaw(pDst, nWidth, nHeight, path))
+		return true;
+
+	std::ifstream fin(path, std::ios::binary);
+	if (fin)
+	{
+		CDlgRawDataSize dlg;
+		if (dlg.DoModal() != IDOK)
+		{
+			fin.close();
+			return false;
+		}
+		nWidth = dlg.m_nRawWidth;
+		nHeight = dlg.m_nRawHeight;
+		int temp1, temp2;
+		temp1 = fin.tellg();			// 记录下当前位置
+		fin.seekg(0, ios_base::end);	// 移动到文件尾
+		temp2 = fin.tellg();			// 取得当前位置的指针长度
+		fin.seekg(temp1);				// 移动到原来的位置
+		if (temp2 - temp1 - dlg.m_nRawHeader < sizeof(float) * nWidth * nHeight)
+		{
+			fin.close();
+			return false;
+		}
+		fin.seekg(dlg.m_nRawHeader);
 		pDst = new float[nWidth * nHeight];
 		fin.read((char*)pDst, sizeof(float) * nWidth * nHeight);
 		fin.close();

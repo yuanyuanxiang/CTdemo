@@ -243,7 +243,7 @@ HRESULT CyImage::Load(LPCTSTR pszFileName) throw()
 	else if (strFilePostfix == _T(".raw") || strFilePostfix == _T(".RAW"))
 	{
 		float* pDst;
-		int nWidth, nHeight;
+		int nWidth = 0, nHeight = 0;
 		if (ReadRaw(pDst, nWidth, nHeight, strFilePath))
 		{
 			Create(pDst, nWidth, nHeight, nWidth);

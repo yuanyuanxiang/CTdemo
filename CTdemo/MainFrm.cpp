@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_WM_SETTINGCHANGE()
 	ON_WM_TIMER()
 	ON_WM_CLOSE()
+	ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 
@@ -145,6 +146,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// 安装定时器，并将其时间间隔设为1000毫秒
 	SetTimer(indicators_clock, 1000, NULL);
 	
+	DragAcceptFiles(TRUE);//支持文件拖拽
+
 	return 0;
 }
 
@@ -298,4 +301,26 @@ void CMainFrame::OnClose()
 {
 	KillTimer(indicators_clock);
 	CMDIFrameWndEx::OnClose();
+}
+
+
+// 支持拖放文件
+void CMainFrame::OnDropFiles(HDROP hDropInfo)
+{
+	// 获取拖动的文件个数
+	const int fileCount = DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
+	ASSERT(fileCount >= 1);
+
+	CCTdemoApp* pApp = (CCTdemoApp*)AfxGetApp();
+	for (int i = 0; i < fileCount; i++)
+	{
+		TCHAR fileName[MAX_PATH] = { 0 };
+		DragQueryFile(hDropInfo, i, fileName, MAX_PATH);
+		CString str;
+		str.Format(_T("%s"), fileName);
+		// 最后执行你要执行的操作
+		pApp->m_pDocTemplate->OpenDocumentFile(str);
+	}
+
+	CMDIFrameWndEx::OnDropFiles(hDropInfo);
 }

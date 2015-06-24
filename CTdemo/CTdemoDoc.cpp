@@ -677,9 +677,11 @@ void CCTdemoDoc::ReconstructImage(CString path)
 
 
 // ÐÂ½¨¿Õ°×ÎÄµµ
-CCTdemoDoc* CCTdemoDoc::CreateNewDocument()
+CCTdemoDoc* CCTdemoDoc::CreateNewDocument(LPCTSTR lpszPathName)
 {
-	CCTdemoDoc* pDoc = (CCTdemoDoc *)GetDocTemplate()->OpenDocumentFile(NULL);
+	CCTdemoDoc* pDoc = (CCTdemoDoc *)GetDocTemplate()->OpenDocumentFile(lpszPathName);
+	if (lpszPathName != NULL)
+		return pDoc;
 	pDoc->m_pProject = new CyImage;
 	pDoc->m_pAfterFilter = new CyImage;
 	pDoc->m_pReconstruct = new CyImage;
