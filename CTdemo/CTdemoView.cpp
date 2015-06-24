@@ -792,6 +792,7 @@ void CCTdemoView::OnToolbarBackProject()
 	{
 		// 扇束重建的图像像素值不在[0, 255]之间，加权可能错误
 		pDoc->Popup(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
+		pDoc->m_pReconstruct->MemcpyFloatToByte();
 		return;
 	}
 	// 由导入的投影数据进行重建

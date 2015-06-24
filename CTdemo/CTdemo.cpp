@@ -153,6 +153,11 @@ BOOL CCTdemoApp::InitInstance()
 
 	m_bUsingOpenGL = false;
 
+	// MFC 0xC015000F 错误的解决办法
+	// http://blog.csdn.net/augusdi/article/details/8768173
+	// 已查明由于CCurveWnd中图像指针没有初始化导致该错误
+	// afxAmbientActCtx = FALSE;
+
 	return TRUE;
 }
 
@@ -245,18 +250,19 @@ CCTdemoDoc* CCTdemoApp::GetMainDoc()
 }
 
 
-CCTdemoView* CCTdemoApp::GetActiveView()
+CCTdemoView* CCTdemoApp::GetMainView()
 {
-	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
-	CChildFrame* pChildFrame = (CChildFrame*)pMainFrame->GetActiveFrame();
-	CCTdemoView* pView = (CCTdemoView*)pChildFrame->GetActiveView();
+	CCTdemoDoc* pDoc = GetMainDoc();
+	if (!pDoc)
+		return NULL;
+	CCTdemoView* pView = (CCTdemoView*)pDoc->GetView(RUNTIME_CLASS(CCTdemoView));
 	return pView;
 }
 
 
 void CCTdemoApp::OnEditCopy()
 {
-	CCTdemoView* pView = GetActiveView();
+	CCTdemoView* pView = GetMainView();
 	ASSERT(pView != NULL);
 	pView->CopyImage(pView->m_pCurrent);
 }
@@ -264,7 +270,7 @@ void CCTdemoApp::OnEditCopy()
 
 void CCTdemoApp::OnEditPaste()
 {
-	CCTdemoView* pView = GetActiveView();
+	CCTdemoView* pView = GetMainView();
 	ASSERT(pView != NULL);
 	pView->PasteImage();
 }
@@ -272,7 +278,7 @@ void CCTdemoApp::OnEditPaste()
 
 void CCTdemoApp::OnUpdateEditCopy(CCmdUI *pCmdUI)
 {
-	CCTdemoView* pView = GetActiveView();
+	CCTdemoView* pView = GetMainView();
 	if (!pView)
 		return;
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(pView->m_pCurrent));

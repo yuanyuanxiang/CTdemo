@@ -32,7 +32,7 @@ public:
 	bool		m_bUsingOpenGL;
 
 	CCTdemoDoc* GetMainDoc();
-	CCTdemoView* GetActiveView();
+	CCTdemoView* GetMainView();
 
 	CMultiDocTemplate * m_pDocTemplate;
 

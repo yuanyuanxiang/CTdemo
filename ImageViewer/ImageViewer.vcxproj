@@ -59,6 +59,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>.\ImageViewer.def</ModuleDefinitionFile>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -86,6 +88,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>.\ImageViewer.def</ModuleDefinitionFile>
+      <AdditionalDependencies />
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

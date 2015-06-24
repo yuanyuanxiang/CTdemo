@@ -791,17 +791,17 @@ BEGIN
     ID_TOOLBAR_INVERSE_HILBERT "对DBP图像进行希尔伯特逆变换\n2步Hilbert"
     ID_ART_METHOD           "代数重建算法\nART"
     ID_ART_RADON            "生成用于ART重建的投影数据\nART投影"
-    ID_TOOLBAR_ORIGIN_IMAGE "\n原始图像"
-    ID_TOOLBAR_PROJECT_IMAGE "\n投影图像"
-    ID_TOOLBAR_AFTER_PROJECT_IMAGE "\n滤波图像"
-    ID_TOOLBAR_RECONSTRUCT_IMAGE "\n重建图像"
+    ID_TOOLBAR_ORIGIN_IMAGE "切换显示原始图像\n原始图像"
+    ID_TOOLBAR_PROJECT_IMAGE "切换显示投影图像\n投影图像"
+    ID_TOOLBAR_AFTER_PROJECT_IMAGE "切换显示滤波图像\n滤波图像"
+    ID_TOOLBAR_RECONSTRUCT_IMAGE "切换显示重建图像\n重建图像"
 END
 
 STRINGTABLE
 BEGIN
     ID_TOOLBAR_IMAGE_TO_PROJECT "将当前图像标定为投影图像\n标定图像"
     ID_TOOLBAR_PROJECT_TO_IMAGE "将当前图像标定为原始图像\n标定图像"
-    ID_FILE_OPEN_USING_OPENGL "\n应用OpenGL"
+    ID_FILE_OPEN_USING_OPENGL "使用OpenGL绘图\n应用OpenGL"
 END
 
 #endif    // 中文(简体，中国) resources

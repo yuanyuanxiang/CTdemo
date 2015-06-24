@@ -66,6 +66,8 @@ CCurveWnd::CCurveWnd()
 	m_nNewRowlen = 0;
 	m_nNewChannel = 0;
 	m_nNewlenData = 0;
+	//初始化图像指针
+	m_pImage = NULL;
 }
 
 // 析构
