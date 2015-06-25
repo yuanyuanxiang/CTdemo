@@ -122,6 +122,9 @@ BEGIN
     BUTTON      ID_FILE_PRINT
     BUTTON      ID_APP_ABOUT
     SEPARATOR
+    BUTTON      ID_TOOLBAR_PREV_IMAGE
+    BUTTON      ID_TOOLBAR_NEXT_IMAGE
+    SEPARATOR
     BUTTON      ID_TOOLBAR_BPP
     BUTTON      ID_TOOLBAR_TRS
     BUTTON      ID_TOOLBAR_POPUP
@@ -241,9 +244,9 @@ BEGIN
             MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR
         END
         MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
-        MENUITEM "Next图像(&N)\tCtrl+->",         ID_CHANGE_IMAGE_SHOW
-        MENUITEM "Prev图像(&P)\tCtrl+<-",         ID_CHANGE_IMAGE_SHOW_PREV
-        MENUITEM "导数图像(&D)\tCTrl+D",            ID_DBP_IMAGE
+        MENUITEM "切换Next图像(&N)\tCtrl+->",       ID_CHANGE_IMAGE_SHOW
+        MENUITEM "切换Prev图像(&P)\tCtrl+<-",       ID_CHANGE_IMAGE_SHOW_PREV
+        MENUITEM "查看导数图像(&D)\tCTrl+D",          ID_DBP_IMAGE
     END
     POPUP "窗口(&W)"
     BEGIN
@@ -360,15 +363,16 @@ BEGIN
     LTEXT           "∈(0, 1]",IDC_STATIC,100,44,27,8
 END
 
-IDD_CONVOLUTE_W DIALOGEX 0, 0, 103, 65
+IDD_CONVOLUTE_W DIALOGEX 0, 0, 159, 86
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "截止频率"
+CAPTION "窗函数设置"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT1,41,14,40,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "确定",IDOK,15,39,33,14
-    PUSHBUTTON      "取消",IDCANCEL,56,38,32,14
-    LTEXT           "w = ",IDC_STATIC,23,17,13,9
+    EDITTEXT        IDC_EDIT1,97,16,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,21,59,33,14
+    PUSHBUTTON      "取消",IDCANCEL,104,59,32,14
+    LTEXT           "w = ",IDC_VAR,79,18,13,9
+    COMBOBOX        IDC_COMBO_CONV_KERNEL,19,16,53,55,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PAN_SCAN_SETTINGS DIALOGEX 0, 0, 249, 124
@@ -455,7 +459,7 @@ BEGIN
     PUSHBUTTON      "取消",IDCANCEL,111,110,50,14
     LTEXT           "宽    度 :",IDC_STATIC,33,23,30,8
     LTEXT           "高    度 :",IDC_STATIC,34,48,30,8
-    LTEXT           "注    意 : 必须是浮点型裸数据。",IDC_STATIC,34,92,112,8
+    LTEXT           "注    意 : 文件必须是浮点型的裸数据。",IDC_STATIC,34,92,136,8
     LTEXT           "文件头 :",IDC_STATIC,34,70,30,8
     EDITTEXT        IDC_RAW_HEADER,100,68,40,14,ES_AUTOHSCROLL
     LTEXT           "像素",IDC_STATIC,144,20,17,8
@@ -538,9 +542,9 @@ BEGIN
     IDD_CONVOLUTE_W, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 96
+        RIGHTMARGIN, 152
         TOPMARGIN, 7
-        BOTTOMMARGIN, 58
+        BOTTOMMARGIN, 79
     END
 
     IDD_PAN_SCAN_SETTINGS, DIALOG
@@ -831,6 +835,8 @@ BEGIN
     ID_TOOLBAR_PROJECT_TO_IMAGE "将当前图像标定为原始图像\n标定图像"
     ID_FILE_OPEN_USING_OPENGL "使用OpenGL绘图\n应用OpenGL"
     ID_IS_PAN_SCAN_DATA     "将投影数据标记为扇形束扫描数据\n标记为扇束数据"
+    ID_TOOLBAR_NEXT_IMAGE   "浏览下一张图像\n下一张"
+    ID_TOOLBAR_PREV_IMAGE   "浏览上一张图像\n上一张"
 END
 
 #endif    // 中文(简体，中国) resources

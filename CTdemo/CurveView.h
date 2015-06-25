@@ -15,7 +15,7 @@ protected:
 	virtual ~CCurveView();
 
 public:
-	void SetImage(CImage* pImage);		// 设置图像指针
+	void SetImage(CImage* pImage, BOOL bRePaint = FALSE);// 设置图像指针
 	CCurveDlg* m_pCurveDlg;				// 嵌入式对话框
 	CCTdemoDoc* GetMainDoc();			// 获取主窗口指针
 

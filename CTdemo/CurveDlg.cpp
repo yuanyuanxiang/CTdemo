@@ -86,7 +86,7 @@ void CCurveDlg::OnPaint()
 }
 
 
-void CCurveDlg::SetImage(CImage* pImage)
+void CCurveDlg::SetImage(CImage* pImage, BOOL bRePaint)
 {
-	m_pWndCurve->SetImage(pImage);;
+	m_pWndCurve->SetImage(pImage, bRePaint);
 }

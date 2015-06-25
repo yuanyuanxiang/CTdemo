@@ -108,7 +108,7 @@ BOOL CCurveView::OnEraseBkgnd(CDC* pDC)
 }
 
 
-void CCurveView::SetImage(CImage* pImage)
+void CCurveView::SetImage(CImage* pImage, BOOL bRePaint)
 {
-	m_pCurveDlg->SetImage(pImage);
+	m_pCurveDlg->SetImage(pImage, bRePaint);
 }

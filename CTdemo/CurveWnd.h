@@ -70,7 +70,7 @@ public:
 	CCTdemoView* GetView();								  /*获取视图指针*/
 	CCTdemoDoc* GetMainDoc();							  /*获取文档指针*/
 
-	void SetImage(CImage* pImage);						  //设置图像指针
+	void SetImage(CImage* pImage, BOOL bRePaint = FALSE); //设置图像指针
 	BOOL GetHistogram();                                  //取得直方图
 	void InitPegs();									  //初始化pegs
 	BOOL PegIsExist(CPoint& point);                       //看peg是否存在

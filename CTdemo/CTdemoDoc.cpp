@@ -81,6 +81,8 @@ CCTdemoDoc::CCTdemoDoc()
 	m_fPanSOD = 1.f;
 	// 导数图像
 	m_pfDBPImage = NULL;
+	m_nCurrentFile = -1;
+	m_nTotalFile = 0;
 }
 
 CCTdemoDoc::~CCTdemoDoc()
@@ -216,12 +218,6 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (!CDocument::OnOpenDocument(lpszPathName))
 		return FALSE;
 
-	m_strFilePath = lpszPathName;
-	CString temp = GetFileNameFromPath(m_strFilePath);
-	int num = temp.ReverseFind('.');
-	m_strFileName = temp.Left(num);
-	m_strFilePostfix = temp.Right(temp.GetLength() - num);
-
 	// 如果使用OpenGL
 	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
 	bool UsingOpenGL = pApp->m_bUsingOpenGL;
@@ -234,20 +230,100 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	m_pReconstruct = new CyImage;
 
 	m_pImage = new CyImage;
-	m_pImage->Load(m_strFilePath);
+	m_pImage->Load(lpszPathName);
 	if (m_pImage->IsNull())
 	{
 		return FALSE;
 	}
 	UpdateImageInfomation();
 	InitScanningParameters();
-	SetPathName(m_strFilePath);
+	SetPathName(lpszPathName);
 	SetModifiedFlag(FALSE);
 
 	CCTdemoView* pView = GetMainView();
 	pView->SetCurrentImage(m_pImage);
 
+	InitFileList(lpszPathName);
+
 	return TRUE;
+}
+
+
+void CCTdemoDoc::InitFileList(LPCTSTR lpszPathName)
+{
+	if (lpszPathName == NULL)
+		return;
+	m_strFilePath = lpszPathName;
+	CString temp = GetFileNameFromPath(m_strFilePath);
+	int num = temp.ReverseFind('.');
+	m_strFileName = temp.Left(num);
+	m_strFilePostfix = temp.Right(temp.GetLength() - num);
+	// 获取文件所在文件夹
+	int path_len = m_strFilePath.GetLength();
+	int file_len = temp.GetLength();
+	if (path_len - file_len >= 1)
+		m_strFolder = m_strFilePath.Left(path_len - file_len - 1);
+	m_vStrAllFiles = ScanDiskFile(m_strFolder);
+	m_nCurrentFile = FindCurrentFileId(m_vStrAllFiles, m_strFileName + m_strFilePostfix);
+	return;
+}
+
+
+int CCTdemoDoc::FindCurrentFileId(vector<CString>& vStrAllFiles, CString strFileName)
+{
+	m_nTotalFile = vStrAllFiles.size();
+	for (int i = 0; i < m_nTotalFile; ++i)
+	{
+		if (vStrAllFiles[i] == strFileName)
+			return i;
+	}
+	return -1;
+}
+
+
+void CCTdemoDoc::SetNextImage()
+{
+	m_nCurrentFile++;
+	if (m_nCurrentFile == m_nTotalFile)
+		m_nCurrentFile = 0;
+
+	m_strFilePath = m_strFolder + _T("\\") + m_vStrAllFiles[m_nCurrentFile];
+	CString temp = GetFileNameFromPath(m_strFilePath);
+	int num = temp.ReverseFind('.');
+	m_strFileName = temp.Left(num);
+	m_strFilePostfix = temp.Right(temp.GetLength() - num);
+
+	m_pImage->Load(m_strFolder + _T("\\") + m_vStrAllFiles[m_nCurrentFile]);
+	SetTitle(m_strFileName);
+	SetModifiedFlag(FALSE);
+	UpdateImageInfomation();
+	InitScanningParameters();
+	CCTdemoView* pView = GetMainView();
+	pView->SetCurrentImage(m_pImage, TRUE);
+	pView->Invalidate(TRUE);
+}
+
+
+void CCTdemoDoc::SetPrevImage()
+{
+	m_nCurrentFile--;
+	if (m_nCurrentFile == -1)
+		m_nCurrentFile = m_nTotalFile - 1;
+
+	m_strFilePath = m_strFolder + _T("\\") + m_vStrAllFiles[m_nCurrentFile];
+	CString temp = GetFileNameFromPath(m_strFilePath);
+	int num = temp.ReverseFind('.');
+	m_strFileName = temp.Left(num);
+	m_strFilePostfix = temp.Right(temp.GetLength() - num);
+
+	m_pImage->Load(m_strFilePath);
+	SetTitle(m_strFileName);
+	SetModifiedFlag(FALSE);
+	UpdateImageInfomation();
+	InitScanningParameters();
+	CCTdemoView* pView = GetMainView();
+	pView->SetCurrentImage(m_pImage, TRUE);
+	pView->Invalidate(TRUE);
 }
 
 
@@ -643,36 +719,6 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	m_pProject->MemcpyFloatToByte();
 
 	PopImageViewerDlg(m_pProject->m_pfFloat, angles, rays, angles);
-}
-
-
-void CCTdemoDoc::ReconstructImage(CString path)
-{
-	m_pProject->Load(path);
-	if (m_pProject->IsNull())
-		return;
-	if (m_pProject->GetBPP() != 8)
-		return;
-
-	int angles = m_pProject->GetWidth();
-	int rays = m_pProject->GetHeight();
-	int rowlen = abs(m_pProject->GetPitch());
-
-	BYTE* head = m_pProject->GetHeadAddress();
-
-	int rec_width = 256;
-	int rec_height = 256;
-
-	CDlgReconstructSettings dlg;
-	if (dlg.DoModal() == IDOK)
-	{
-		float delta_fai = dlg.m_fAnglesRange / angles;
-		float w0 = dlg.m_fConvoluteW;
-		m_pAfterFilter->Create(angles, rays, 8);
-		m_pReconstruct->Create(rec_width, rec_height, 8);
-		Convolute(m_pAfterFilter->m_pfFloat, m_pProject->m_pfFloat, angles, rays, m_fRaysDensity, w0);
-		BackProject(m_pReconstruct->m_pfFloat, m_pAfterFilter->m_pfFloat, rec_width, rec_height, angles, rays, m_fRaysDensity, delta_fai);
-	}
 }
 
 

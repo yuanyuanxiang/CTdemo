@@ -1,14 +1,14 @@
 #include "stdafx.h"
 #include "Functions.h"
 #include "IntSection.h"
-#include <vector>
 #include <algorithm>
 #include <limits>
 #include "DlgRawDataSize.h"
-using namespace std;
 
 // 不显示数据截断警告
 #pragma warning(disable: 4244)
+
+#define SUPPORTED_FORMATS_NUM 20
 
 float GetPositionValue(float *pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, int x, int y)
 {
@@ -120,31 +120,112 @@ int nHeight					高度，此处表示r
 float delta_r				离散化之后的dr
 float w0					高频截止
 */
-void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0)
+void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, int nConvKernel)
 {
 	int m, n, i;
 	float sum = 0.f;
 
-#pragma omp parallel for private(m, n, i) reduction(+ : sum)
-	for (m = 0; m < nHeight; ++m)
+	switch (nConvKernel)
 	{
-		for (n = 0; n < nWidth; ++n)
+	case CONVOLUTE_KERNEL_COSINE:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
 		{
-			sum = 0.f;
-			for (i = 0; i < nHeight; ++i)
-				sum += pSrc[n + i * nWidth] * ConvKernel(m - i, w0);
-			pDst[n + m * nWidth] = sum * delta_r;
+			for (n = 0; n < nWidth; ++n)
+			{
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+					sum += pSrc[n + i * nWidth] * CosineKernel(m - i, w0);
+				pDst[n + m * nWidth] = sum * delta_r;
+			}
 		}
+		break;
+	case CONVOLUTE_KERNEL_RL:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
+		{
+			for (n = 0; n < nWidth; ++n)
+			{
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+					sum += pSrc[n + i * nWidth] * R_LKernel(m - i, delta_r);
+				pDst[n + m * nWidth] = sum * delta_r;
+			}
+		}
+		break;
+	case CONVOLUTE_KERNEL_SL:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
+		{
+			for (n = 0; n < nWidth; ++n)
+			{
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+					sum += pSrc[n + i * nWidth] * S_LKernel(m - i, delta_r);
+				pDst[n + m * nWidth] = sum * delta_r;
+			}
+		}
+		break;
+	case CONVOLUTE_KERNEL_HAMMING:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
+		{
+			for (n = 0; n < nWidth; ++n)
+			{
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+					sum += pSrc[n + i * nWidth] * HammingKernel(m - i, delta_r, w0);
+				pDst[n + m * nWidth] = sum * delta_r;
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 
 
 // 卷积核：HW(r). w0 - 高频截止
-float ConvKernel(float x, float w0)
+float CosineKernel(float x, float w0)
 {
 	if(x == 0) return w0 * w0;
 	float theta = 2 * PI * w0 * x;
 	return (-1 + cos(theta) + theta * sin(theta)) / (2 * PI * PI * x * x);
+}
+
+
+// R_L窗函数:n-探测器编号；d-探测器间距
+float R_LKernel(int n, float d)
+{
+	if (n == 0)
+		return 1.f / (4 * d * d);
+	if (n % 2 == 0)
+		return 0.f;
+	else
+		return -1.f / (PI * PI * n * n * d * d);
+	return 0.f;
+}
+
+
+// S_L窗函数:n-探测器编号；d-探测器间距
+float S_LKernel(int n, float d)
+{
+	return 2.f / ((PI * PI * d * d) * (1 - 4 * n * n));
+}
+
+
+// Hamming窗函数:n-探测器编号；d-探测器间距
+float HammingKernel(int n, float d, float a)
+{
+	if (n == 0)
+		return -(4 + (-4 + PI * PI) * a) / (4 * d * d * PI * PI);
+	if (n == 1 || n == -1)
+		return (PI * PI * (-1 + a) - 8 * a) / (8 * d * d * PI * PI);
+	if (n % 2 == 0)
+		return (-a + n * n * (-(-3 * a + n * n + 1)) + (a + (2 * a - 1) * n * n * n * n - (a + 1) * n * n)) / (2 * PI * PI * d * d * n * n * (n * n - 1) * (n * n - 1));
+	else
+		return (-a + n * n * (-(-3 * a + n * n + 1)) - (a + (2 * a - 1) * n * n * n * n - (a + 1) * n * n)) / (2 * PI * PI * d * d * n * n * (n * n - 1) * (n * n - 1));
+	return 0.f;
 }
 
 
@@ -219,7 +300,7 @@ float LinearInterp(float* pPrj, int nWidth, int nHeight, int x, float y)
 }
 
 
-void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, float R, float D)
+void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, float R, float D, int nConvKernel)
 {
 	int m, n, i;
 	float sum = 0.f;
@@ -227,21 +308,82 @@ void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r,
 	float u0 = D / tan(theta_0);
 	float delta_u = (2.f * u0) / nHeight;
 
-#pragma omp parallel for private(m, n, i) reduction(+ : sum)
-	for (m = 0; m < nHeight; ++m)
+	switch (nConvKernel)
 	{
-		for (n = 0; n < nWidth; ++n)
+	case CONVOLUTE_KERNEL_COSINE:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
 		{
-			sum = 0.f;
-			for (i = 0; i < nHeight; ++i)
+			for (n = 0; n < nWidth; ++n)
 			{
-				// 加权做卷积
-				float u = -u0 + i * delta_u;
-				float alpha = D / sqrt(D * D + u * u);
-				sum += alpha * pSrc[n + i * nWidth] * ConvKernel(m - i, w0);
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+				{
+					// 加权做卷积
+					float u = -u0 + i * delta_u;
+					float alpha = D / sqrt(D * D + u * u);
+					sum += alpha * pSrc[n + i * nWidth] * CosineKernel(m - i, w0);
+				}
+				pDst[n + m * nWidth] = sum * delta_r;
 			}
-			pDst[n + m * nWidth] = sum * delta_r;
 		}
+		break;
+	case CONVOLUTE_KERNEL_RL:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
+		{
+			for (n = 0; n < nWidth; ++n)
+			{
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+				{
+					// 加权做卷积
+					float u = -u0 + i * delta_u;
+					float alpha = D / sqrt(D * D + u * u);
+					sum += alpha * pSrc[n + i * nWidth] * R_LKernel(m - i, delta_r);
+				}
+				pDst[n + m * nWidth] = sum * delta_r;
+			}
+		}
+		break;
+	case CONVOLUTE_KERNEL_SL:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
+		{
+			for (n = 0; n < nWidth; ++n)
+			{
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+				{
+					// 加权做卷积
+					float u = -u0 + i * delta_u;
+					float alpha = D / sqrt(D * D + u * u);
+					sum += alpha * pSrc[n + i * nWidth] * S_LKernel(m - i, delta_r);
+				}
+				pDst[n + m * nWidth] = sum * delta_r;
+			}
+		}
+		break;
+	case CONVOLUTE_KERNEL_HAMMING:
+#pragma omp parallel for private(m, n, i) reduction(+ : sum)
+		for (m = 0; m < nHeight; ++m)
+		{
+			for (n = 0; n < nWidth; ++n)
+			{
+				sum = 0.f;
+				for (i = 0; i < nHeight; ++i)
+				{
+					// 加权做卷积
+					float u = -u0 + i * delta_u;
+					float alpha = D / sqrt(D * D + u * u);
+					sum += alpha * pSrc[n + i * nWidth] * HammingKernel(m - i, delta_r, w0);
+				}
+				pDst[n + m * nWidth] = sum * delta_r;
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -966,4 +1108,41 @@ void *loadRawFile(CString filename, size_t size)
 		return data;
 	}
 	return NULL;
+}
+
+
+vector<CString> ScanDiskFile(const CString strPath)
+{
+	// 支持文件格式列表
+	CString Formats[SUPPORTED_FORMATS_NUM] = {_T("*.BMP"), _T("*.DIB"), _T("*.RLE"), 
+		_T("*.JPG"), _T("*.JPEG"), _T("*.JPE"), _T("*.JFIF"), 
+		_T("*.GIF"), _T("*.EMF"), _T("*.WMF"), _T("*.TIF"), _T("*.TIFF"), _T("*.PNG"), _T("*.ICO"),
+		_T("*.TXT"), _T("*.RAW")};
+	CFileFind find;
+	vector<CString> vStrAllFiles;
+	for (int i = 0; i < SUPPORTED_FORMATS_NUM; ++i)
+	{
+		ScanFormatFile(find, vStrAllFiles, strPath, Formats[i]);
+	}
+	find.Close();
+	return vStrAllFiles;
+}
+
+
+// 从文件夹扫描某一类型的文件，存放到容器中
+void ScanFormatFile(CFileFind &find, vector<CString> &vStrAllFiles, CString strPath, CString format)
+{
+	if (format == _T(""))
+		return;
+	BOOL IsFind = find.FindFile(strPath + _T("\\") + format);
+	while (IsFind)
+	{
+		IsFind = find.FindNextFile();
+		// 如果是"." 则不扫描
+		if(find.IsDots())
+			continue;
+		// 文件
+		else
+			vStrAllFiles.push_back(find.GetFileName());
+	}
 }

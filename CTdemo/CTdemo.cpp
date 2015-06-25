@@ -283,3 +283,11 @@ void CCTdemoApp::OnUpdateEditCopy(CCmdUI *pCmdUI)
 		return;
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(pView->m_pCurrent));
 }
+
+
+// 全局可调用函数
+CyImage* AfxGetImage()
+{
+	CCTdemoView* pDoc = theApp.GetMainView();
+	return pDoc->m_pCurrent;
+}

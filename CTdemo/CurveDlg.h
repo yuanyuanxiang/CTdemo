@@ -28,7 +28,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
-	void SetImage(CImage* pImage);	// 为子窗口设置指针
+	void SetImage(CImage* pImage, BOOL bRePaint = FALSE);	// 为子窗口设置指针
 	virtual BOOL OnInitDialog();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);

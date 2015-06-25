@@ -23,9 +23,13 @@ public:
 	// 投影类型
 	int					m_nProjectionType;	//投影类型
 	// 文件信息
+	CString				m_strFolder;		//文件夹
 	CString				m_strFilePath;		//文件路径
 	CString				m_strFileName;		//文件名称
 	CString				m_strFilePostfix;	//文件后缀
+	vector<CString>		m_vStrAllFiles;		//所有文件
+	int					m_nTotalFile;		//总文件数
+	int					m_nCurrentFile;		//当前文件
 	// 指针相关
 	CyImage*			m_pImage;			//原始图像
 	CyImage*			m_pProject;			//投影图像
@@ -64,7 +68,6 @@ public:
 	CCTdemoView*		GetMainView();										// 获取主视图
 	CChildFrame*		GetChildFrame();									// 获取子框架
 	CString				GetExeFilePath();									// 获取当前exe文件路径
-	void				ReconstructImage(CString path);						// 对数据进行重建
 	void				SetReconstructImageSize();							// 设置重建图像大小
 
 	// *** 平行束相关 ***
@@ -82,6 +85,16 @@ public:
 
 	/* 新建空白文档 */
 	CCTdemoDoc* CreateNewDocument(LPCTSTR lpszPathName = NULL);
+
+	/* 初始化文件列表 */
+	void InitFileList(LPCTSTR lpszPathName = NULL);
+
+	/* 寻找当前文件编号 */
+	int FindCurrentFileId(vector<CString>& vStrAllFiles, CString strFileName);
+
+	void SetNextImage();	//浏览下一张图像
+
+	void SetPrevImage();	//浏览上一张图像
 
 private:
 	CFrameWnd* CreateNewWindow(CDocTemplate* pTemplate,CDocument* pDocument);

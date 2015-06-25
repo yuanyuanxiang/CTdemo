@@ -289,10 +289,11 @@ CCTdemoDoc* CCurveWnd::GetMainDoc()
 }
 
 //设置图像指针,更新直方图
-void CCurveWnd::SetImage(CImage* pImage)
+void CCurveWnd::SetImage(CImage* pImage, BOOL bRePaint)
 {
 	// 如果图像指针没有变化，返回
-	if (m_pImage == pImage)
+	// 虽然指针没有变，但bRePaint仍可以强制更新直方图
+	if (m_pImage == pImage && bRePaint == FALSE)
 		return;
 	// 更换图像，默认不保存操作
 	OnCmdCurveCancel();

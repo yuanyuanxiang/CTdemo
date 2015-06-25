@@ -39,6 +39,8 @@ typedef unsigned char VolumeType;
 #define MAX_EPSILON_ERROR 5.00f
 #define THRESHOLD         0.30f
 
+#define ZOOM_RATE 1.1f	// 单次缩放比例
+
 class CCTdemoView : public CScrollView
 {
 protected: // 仅从序列化创建
@@ -92,8 +94,8 @@ public:
 	void		SetPaintRect(int left, int top, int right, int bottom);
 	bool		ZoomPaintRect(float xRate, float yRate);// 放大绘图区
 	void		MovePaintRect(int dx, int dy, CRect &rect);// 移动绘图区域
-	void		SetCurrentImage(CyImage* pImage);		// 设置当前图像
-	void		SetCurveWndImage(CImage* pImage);		// 设置曲线图像
+	void		SetCurrentImage(CyImage* pImage, BOOL bRePaint = FALSE);// 设置当前图像
+	void		SetCurveWndImage(CImage* pImage, BOOL bRePaint = FALSE);// 设置曲线图像
 	CPoint		DP2LP(const CPoint &point);				// 视图坐标转换为文档坐标
 	CRect		DP2LP(const CRect &rect);				// 视图坐标转换为文档坐标
 	CPoint		DP2LP(CDC* pDC, const CPoint &point);	// 视图坐标转换为文档坐标
@@ -101,6 +103,7 @@ public:
 
 	void CopyImage(CyImage* pImage);					// 拷贝图像
 	void PasteImage();									// 黏贴图像
+	void Invalidate(BOOL bErase = TRUE);				// 重绘图像
 
 // 重写
 public:
@@ -196,8 +199,8 @@ public:
 	afx_msg void OnUpdateToolbarOriginImage(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarProjectImage();
 	afx_msg void OnUpdateToolbarProjectImage(CCmdUI *pCmdUI);
-	afx_msg void OnToolbarAfterProjectImage();
-	afx_msg void OnUpdateToolbarAfterProjectImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarAfterFilterImage();
+	afx_msg void OnUpdateToolbarAfterFilterImage(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarReconstructImage();
 	afx_msg void OnUpdateToolbarReconstructImage(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarImageToProject();
@@ -209,6 +212,10 @@ public:
 	virtual void OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
 	afx_msg void OnIsPanScanData();
 	afx_msg void OnUpdateIsPanScanData(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarNextImage();
+	afx_msg void OnUpdateToolbarNextImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarPrevImage();
+	afx_msg void OnUpdateToolbarPrevImage(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

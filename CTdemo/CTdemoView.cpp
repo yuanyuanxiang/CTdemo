@@ -21,6 +21,7 @@
 #include "DlgReconstructSettings.h"
 #include "DlgHilbertAngle.h"
 #include "DlgArtSettings.h"
+#include "NewView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -105,8 +106,8 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_ORIGIN_IMAGE, &CCTdemoView::OnUpdateToolbarOriginImage)
 	ON_COMMAND(ID_TOOLBAR_PROJECT_IMAGE, &CCTdemoView::OnToolbarProjectImage)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PROJECT_IMAGE, &CCTdemoView::OnUpdateToolbarProjectImage)
-	ON_COMMAND(ID_TOOLBAR_AFTER_PROJECT_IMAGE, &CCTdemoView::OnToolbarAfterProjectImage)
-	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_AFTER_PROJECT_IMAGE, &CCTdemoView::OnUpdateToolbarAfterProjectImage)
+	ON_COMMAND(ID_TOOLBAR_AFTER_PROJECT_IMAGE, &CCTdemoView::OnToolbarAfterFilterImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_AFTER_PROJECT_IMAGE, &CCTdemoView::OnUpdateToolbarAfterFilterImage)
 	ON_COMMAND(ID_TOOLBAR_RECONSTRUCT_IMAGE, &CCTdemoView::OnToolbarReconstructImage)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_RECONSTRUCT_IMAGE, &CCTdemoView::OnUpdateToolbarReconstructImage)
 	ON_COMMAND(ID_TOOLBAR_IMAGE_TO_PROJECT, &CCTdemoView::OnToolbarImageToProject)
@@ -117,6 +118,10 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_WM_PAINT()
 	ON_COMMAND(ID_IS_PAN_SCAN_DATA, &CCTdemoView::OnIsPanScanData)
 	ON_UPDATE_COMMAND_UI(ID_IS_PAN_SCAN_DATA, &CCTdemoView::OnUpdateIsPanScanData)
+	ON_COMMAND(ID_TOOLBAR_NEXT_IMAGE, &CCTdemoView::OnToolbarNextImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_NEXT_IMAGE, &CCTdemoView::OnUpdateToolbarNextImage)
+	ON_COMMAND(ID_TOOLBAR_PREV_IMAGE, &CCTdemoView::OnToolbarPrevImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PREV_IMAGE, &CCTdemoView::OnUpdateToolbarPrevImage)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -460,6 +465,16 @@ void CCTdemoView::SetPaintRect(int left, int top, int right, int bottom)
 }
 
 
+// 重载重绘函数，使关联视图也得到刷新
+void CCTdemoView::Invalidate(BOOL bErase)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	CNewView* pView = (CNewView*)pDoc->GetView(RUNTIME_CLASS(CNewView));
+	pView->Invalidate(TRUE);
+	CScrollView::Invalidate(bErase);
+}
+
+
 // 移动绘图区域，沿着(dx, dy)
 void CCTdemoView::MovePaintRect(int dx, int dy, CRect &rect)
 {
@@ -718,10 +733,10 @@ void CCTdemoView::OnToolbarConvolute()
 			switch(pDoc->m_nProjectionType)
 			{
 			case PROJECT_TYPE_PAR:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW);
+				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, dlg.m_nConvKernel);
 				break;
 			case PROJECT_TYPE_PAN:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD, dlg.m_nConvKernel);
 				break;
 			default:
 				break;
@@ -797,14 +812,8 @@ void CCTdemoView::OnToolbarBackProject()
 		pDoc->m_pReconstruct->MemcpyFloatToByte();
 		return;
 	}
-	// 由导入的投影数据进行重建
-	if (CHECK_IMAGE_NULL(pDoc->m_pImage))
-		pDoc->m_pReconstruct->MemcpyFloatToByte();
-	// 不滤波直接进行重建
-	else if (CHECK_IMAGE_NULL(pDoc->m_pAfterFilter))
-		pDoc->m_pReconstruct->MemcpyFloatToByte();
-	else 
-		pDoc->m_pReconstruct->MemcpyFloatToByteBounded(0, 255);
+	// 将float数据拷贝到BYTE用以显示
+	pDoc->m_pReconstruct->MemcpyFloatToByte();
 	pDoc->OnWindowBackpro();
 }
 
@@ -922,11 +931,11 @@ void CCTdemoView::OnToolbarZoomIn()
 {
 	if (CHECK_IMAGE_NULL(m_pCurrent))
 		return;
-	m_fZoomRate *= 2.f;
+	m_fZoomRate *= ZOOM_RATE;
 	if (m_fZoomRate > 128.f)
 		m_fZoomRate = 128.f;
 	if (!ZoomPaintRect(m_fZoomRate, m_fZoomRate))
-		m_fZoomRate /= 2;
+		m_fZoomRate /= ZOOM_RATE;
 }
 
 
@@ -941,11 +950,11 @@ void CCTdemoView::OnToolbarZoomOut()
 {
 	if (CHECK_IMAGE_NULL(m_pCurrent))
 		return;
-	m_fZoomRate /= 2.f;
+	m_fZoomRate /= ZOOM_RATE;
 	if (m_fZoomRate < 1 / 128.f)
 		m_fZoomRate = 1 / 128.f;
 	if (!ZoomPaintRect(m_fZoomRate, m_fZoomRate))
-		m_fZoomRate *= 2;
+		m_fZoomRate *= ZOOM_RATE;
 }
 
 
@@ -1178,27 +1187,37 @@ void CCTdemoView::OnUpdateCudaPanProject(CCmdUI *pCmdUI)
 }
 
 
-void CCTdemoView::SetCurrentImage(CyImage* pImage)
+// bRePaint可以强制刷新图像
+void CCTdemoView::SetCurrentImage(CyImage* pImage, BOOL bRePaint)
 {
-	if (m_pCurrent == pImage)
+	// 如果指针没有变，并且没有指明重绘，则返回
+	if (m_pCurrent == pImage && bRePaint == FALSE)
 		return;
 	m_pCurrent = pImage;
-	SetCurveWndImage(m_pCurrent);
+	SetCurveWndImage(m_pCurrent, bRePaint);
 	m_fZoomRate = 1.f;
+	CCTdemoDoc* pDoc = GetDocument();
+	CNewView* pView = (CNewView*)pDoc->GetView(RUNTIME_CLASS(CNewView));
 	if (!CHECK_IMAGE_NULL(m_pCurrent))
+	{
+		pView->SetScrollSizes(MM_TEXT, CSize(m_pCurrent->GetWidth(), m_pCurrent->GetHeight()));
 		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->GetWidth(), m_PaintRect.top + m_pCurrent->GetHeight());
+	}
 	else 
+	{
+		pView->SetScrollSizes(MM_TEXT, CSize(0, 0));
 		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left, m_PaintRect.top);
+	}
 }
 
 
 
-void CCTdemoView::SetCurveWndImage(CImage* pImage)
+void CCTdemoView::SetCurveWndImage(CImage* pImage, BOOL bRePaint)
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	CCurveView* pView = (CCurveView*)pDoc->GetView(RUNTIME_CLASS(CCurveView));
 	if (pView != NULL)
-		pView->SetImage(pImage);
+		pView->SetImage(pImage, bRePaint);
 }
 
 
@@ -1427,7 +1446,7 @@ void CCTdemoView::OnUpdateToolbarProjectImage(CCmdUI *pCmdUI)
 }
 
 
-void CCTdemoView::OnToolbarAfterProjectImage()
+void CCTdemoView::OnToolbarAfterFilterImage()
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	if (m_pCurrent == pDoc->m_pAfterFilter)
@@ -1436,7 +1455,7 @@ void CCTdemoView::OnToolbarAfterProjectImage()
 }
 
 
-void CCTdemoView::OnUpdateToolbarAfterProjectImage(CCmdUI *pCmdUI)
+void CCTdemoView::OnUpdateToolbarAfterFilterImage(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pAfterFilter));
@@ -1728,4 +1747,36 @@ void CCTdemoView::OnUpdateIsPanScanData(CCmdUI *pCmdUI)
 	CCTdemoDoc* pDoc = GetDocument();
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 	pCmdUI->SetCheck(pDoc->m_nProjectionType == PROJECT_TYPE_PAN);
+}
+
+
+void CCTdemoView::OnToolbarNextImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	BeginWaitCursor();
+	pDoc->SetNextImage();
+	EndWaitCursor();
+}
+
+
+void CCTdemoView::OnUpdateToolbarNextImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->m_nCurrentFile != -1 && pDoc->m_nTotalFile > 0);
+}
+
+
+void CCTdemoView::OnToolbarPrevImage()
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	BeginWaitCursor();
+	pDoc->SetPrevImage();
+	EndWaitCursor();
+}
+
+
+void CCTdemoView::OnUpdateToolbarPrevImage(CCmdUI *pCmdUI)
+{
+	CCTdemoDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->m_nCurrentFile != -1 && pDoc->m_nTotalFile > 0);
 }

@@ -66,7 +66,10 @@
 #define IDC_EDIT_ART_IT_NUM             1011
 #define IDC_RAW_WIDTH                   1012
 #define IDC_RAW_HEIGHT                  1013
+#define IDC_VAR                         1013
 #define IDC_RAW_HEADER                  1014
+#define IDC_COMBO1                      1014
+#define IDC_COMBO_CONV_KERNEL           1014
 #define ID_TOOLBAR_BPP                  32771
 #define ID_HK_TOOBAR_BPP                32772
 #define ID_TOOBAR_BPP                   32772
@@ -163,14 +166,16 @@
 #define ID_FILE_OPEN_USING_OPENGL       32900
 #define ID_32904                        32904
 #define ID_IS_PAN_SCAN_DATA             32905
+#define ID_TOOLBAR_NEXT_IMAGE           32906
+#define ID_TOOLBAR_PREV_IMAGE           32907
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        328
-#define _APS_NEXT_COMMAND_VALUE         32906
-#define _APS_NEXT_CONTROL_VALUE         1013
+#define _APS_NEXT_RESOURCE_VALUE        329
+#define _APS_NEXT_COMMAND_VALUE         32908
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

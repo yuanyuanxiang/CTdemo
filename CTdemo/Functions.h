@@ -1,10 +1,16 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
-
 #include <cmath>
 #include <fstream>
+#include <vector>
 using namespace std;
+
+// 窗函数
+#define CONVOLUTE_KERNEL_COSINE		0
+#define CONVOLUTE_KERNEL_RL			1
+#define CONVOLUTE_KERNEL_SL			2
+#define CONVOLUTE_KERNEL_HAMMING	3
 
 // 获取坐标(x, y)处的值
 float GetPositionValue(float *pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, int x, int y);
@@ -37,10 +43,19 @@ float FindMaxBetween4Numbers(float x, float y, float z, float w);
 float FindMinBetween4Numbers(float x, float y, float z, float w);
 
 // 卷积核函数
-float ConvKernel(float x, float w0);
+float CosineKernel(float x, float w0);
+
+// R_L窗函数:n-探测器编号；d-探测器间距
+float R_LKernel(int n, float d);
+
+// S_L窗函数:n-探测器编号；d-探测器间距
+float S_LKernel(int n, float d);
+
+// Hamming窗函数:n-探测器编号；d-探测器间距
+float HammingKernel(int n, float d, float a);
 
 // 平行束卷积
-void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0);
+void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, int nConvKernel = CONVOLUTE_KERNEL_COSINE);
 
 // 一维线性插值
 float LinearInterp(float* pPrj, int nWidth, float x);
@@ -52,7 +67,7 @@ float LinearInterp(float* pPrj, int nWidth, int nHeight, int x, float y);
 void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai);
 
 // 扇形束卷积
-void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, float R, float D);
+void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, float R, float D, int nConvKernel = CONVOLUTE_KERNEL_COSINE);
 
 // 扇形束反投影
 void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai, float R, float D);
@@ -117,6 +132,12 @@ float HilbertKernel(float x);
 void InverseHilbert(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r);
 
 void *loadRawFile(CString filename, size_t size);
+
+// 扫描某个目录下面文件
+vector<CString> ScanDiskFile(const CString strPath);
+
+// 从文件夹扫描某一类型的文件，存放到容器中
+void ScanFormatFile(CFileFind &find, vector<CString> &vStrAllFiles, CString strPath, CString format);
 
 
 #endif

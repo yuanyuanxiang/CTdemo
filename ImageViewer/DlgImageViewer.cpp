@@ -10,6 +10,8 @@
 
 // CDlgImageViewer 对话框
 
+#define ZOOM_RATE 1.1f	// 单次缩放比例
+
 IMPLEMENT_DYNAMIC(CDlgImageViewer, CDialogEx)
 
 CDlgImageViewer::CDlgImageViewer(CWnd* pParent) : CDialogEx(CDlgImageViewer::IDD, pParent)
@@ -326,11 +328,11 @@ BOOL CDlgImageViewer::OnEraseBkgnd(CDC* pDC)
 void CDlgImageViewer::OnViewZoomIn()
 {
 	CHECK_NULL(m_pImage);
-	m_fZoomRate *= 2.f;
+	m_fZoomRate *= ZOOM_RATE;
 	if (m_fZoomRate > 128.f)
 		m_fZoomRate = 128.f;
 	if (!m_pScrollView->ZoomPaintRect(m_fZoomRate, m_fZoomRate))
-		m_fZoomRate /= 2.f;
+		m_fZoomRate /= ZOOM_RATE;
 }
 
 
@@ -343,11 +345,11 @@ void CDlgImageViewer::OnUpdateViewZoomIn(CCmdUI *pCmdUI)
 void CDlgImageViewer::OnViewZoomOut()
 {
 	CHECK_NULL(m_pImage);
-	m_fZoomRate /= 2.f;
+	m_fZoomRate /= ZOOM_RATE;
 	if (m_fZoomRate < 1 / 128.f)
 		m_fZoomRate = 1 / 128.f;
 	if (!m_pScrollView->ZoomPaintRect(m_fZoomRate, m_fZoomRate))
-		m_fZoomRate *= 2.f;
+		m_fZoomRate *= ZOOM_RATE;
 }
 
 

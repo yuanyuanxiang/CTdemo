@@ -31,7 +31,10 @@ public:
 	BOOL		m_bHiColorIcons;
 	bool		m_bUsingOpenGL;
 
+	// 获取主文档
 	CCTdemoDoc* GetMainDoc();
+
+	// 获取主视图
 	CCTdemoView* GetMainView();
 
 	CMultiDocTemplate * m_pDocTemplate;
@@ -51,4 +54,9 @@ public:
 	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
 };
 
+
 extern CCTdemoApp theApp;
+
+
+// 获取当前显示的图像指针
+CyImage* AfxGetImage();

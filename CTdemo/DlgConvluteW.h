@@ -22,4 +22,9 @@ protected:
 public:
 	CEdit m_EditW;
 	float m_fW;
+	CStatic m_StaticVar;
+	CComboBox m_EditConvKernel;
+	int m_nConvKernel;
+	virtual BOOL OnInitDialog();
+	afx_msg void OnCbnSelchangeComboConvKernel();
 };
