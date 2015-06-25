@@ -168,13 +168,15 @@
 #define ID_IS_PAN_SCAN_DATA             32905
 #define ID_TOOLBAR_NEXT_IMAGE           32906
 #define ID_TOOLBAR_PREV_IMAGE           32907
+#define ID_BUTTON32908                  32908
+#define ID_TOOLBAR_TRANSPOSE_IMAGE      32908
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        329
-#define _APS_NEXT_COMMAND_VALUE         32908
+#define _APS_NEXT_COMMAND_VALUE         32909
 #define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

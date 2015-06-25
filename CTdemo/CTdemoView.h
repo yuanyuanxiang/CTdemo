@@ -216,6 +216,8 @@ public:
 	afx_msg void OnUpdateToolbarNextImage(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarPrevImage();
 	afx_msg void OnUpdateToolbarPrevImage(CCmdUI *pCmdUI);
+	afx_msg void OnToolbarTransposeImage();
+	afx_msg void OnUpdateToolbarTransposeImage(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

@@ -122,6 +122,8 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_NEXT_IMAGE, &CCTdemoView::OnUpdateToolbarNextImage)
 	ON_COMMAND(ID_TOOLBAR_PREV_IMAGE, &CCTdemoView::OnToolbarPrevImage)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PREV_IMAGE, &CCTdemoView::OnUpdateToolbarPrevImage)
+	ON_COMMAND(ID_TOOLBAR_TRANSPOSE_IMAGE, &CCTdemoView::OnToolbarTransposeImage)
+	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_TRANSPOSE_IMAGE, &CCTdemoView::OnUpdateToolbarTransposeImage)
 END_MESSAGE_MAP()
 
 // CCTdemoView ¹¹Ôì/Îö¹¹
@@ -1566,7 +1568,7 @@ void CCTdemoView::OnDestroy()
 	m_hGLContext = ::wglGetCurrentContext();
 	if(::wglMakeCurrent (0,0) == FALSE)
 	{
-		TRACE("Warning : Could not make RC non-current!\n");
+		TRACE("Warning:Could not make RC non-current!\n");
 	}
 
 	if(m_hGLContext)
@@ -1779,4 +1781,17 @@ void CCTdemoView::OnUpdateToolbarPrevImage(CCmdUI *pCmdUI)
 {
 	CCTdemoDoc* pDoc = GetDocument();
 	pCmdUI->Enable(pDoc->m_nCurrentFile != -1 && pDoc->m_nTotalFile > 0);
+}
+
+
+void CCTdemoView::OnToolbarTransposeImage()
+{
+	m_pCurrent->Transpose();
+	SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->m_nyWidth, m_PaintRect.top + m_pCurrent->m_nyHeight);
+}
+
+
+void CCTdemoView::OnUpdateToolbarTransposeImage(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
 }

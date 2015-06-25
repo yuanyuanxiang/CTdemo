@@ -53,6 +53,7 @@ public:
 	// 图像几何变换
 	void FlipH();															//水平翻转图像
 	void FlipV();															//垂直翻转图像
+	void Transpose();														//转置图像
 	void Rotate(float degree);												//图像按角度旋转
 	void Zoom(float rate);													//图像按倍数缩放
 	void Zoom(int nNewWidth, int nNewHeight);								//图像按像素缩放

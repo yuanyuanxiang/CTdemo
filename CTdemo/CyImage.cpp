@@ -550,6 +550,31 @@ void CyImage::FlipV()
 }
 
 
+// 转置图像
+void CyImage::Transpose()
+{
+	int rowlen = m_nyRowlen2;
+	float* temp = new float[m_nyHeight * rowlen * sizeof(float)];
+	memcpy(temp, m_pfFloat, m_nyHeight * rowlen * sizeof(float));
+	this->Destroy();
+	Create(m_nyHeight, m_nyWidth, m_nyBpp, 0UL);
+
+#pragma omp parallel for
+	for (int i = 0; i < m_nyHeight; ++i)
+	{
+		for (int j = 0; j < m_nyWidth; ++j)
+		{
+			for (int k = 0; k < m_nyChannel; ++k)
+			{
+				m_pfFloat[k + j * m_nyChannel + i * m_nyRowlen2] = temp[k + i * m_nyChannel + j * rowlen];
+			}
+		}
+	}
+	SAFE_DELETE(temp);
+	MemcpyFloatToByte();
+}
+
+
 // 改变图像通道数, bpp：目标图像的位色.
 BOOL CyImage::ChangeBPP(UINT bpp)
 {

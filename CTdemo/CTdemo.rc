@@ -147,6 +147,7 @@ BEGIN
     SEPARATOR
     BUTTON      ID_TOOLBAR_FLIP_H
     BUTTON      ID_TOOLBAR_FLIP_V
+    BUTTON      ID_TOOLBAR_TRANSPOSE_IMAGE
     SEPARATOR
     BUTTON      ID_DBP_IMAGE
     BUTTON      ID_TOOLBAR_INVERSE_HILBERT
@@ -837,6 +838,7 @@ BEGIN
     ID_IS_PAN_SCAN_DATA     "将投影数据标记为扇形束扫描数据\n标记为扇束数据"
     ID_TOOLBAR_NEXT_IMAGE   "浏览下一张图像\n下一张"
     ID_TOOLBAR_PREV_IMAGE   "浏览上一张图像\n上一张"
+    ID_TOOLBAR_TRANSPOSE_IMAGE "转置当前图像\n转置"
 END
 
 #endif    // 中文(简体，中国) resources
