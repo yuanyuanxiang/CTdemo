@@ -99,7 +99,7 @@ public:
 	int m_nNewRowlen;
 	int m_nNewChannel;
 	int m_nNewlenData;
-	void ApplyToImage();								  //应用到图像
+	void ApplyToImage(BYTE* pSrc);						  //应用到图像
 	void MallocData();									  //分配内存
 	BYTE* MallocData(BYTE* pSrc);						  //分配缓存数据
 	bool DetectModified();								  //检查图像是否更新

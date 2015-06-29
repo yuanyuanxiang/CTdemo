@@ -321,6 +321,5 @@ void CMainFrame::OnDropFiles(HDROP hDropInfo)
 		// 最后执行你要执行的操作
 		pApp->m_pDocTemplate->OpenDocumentFile(str);
 	}
-
-	CMDIFrameWndEx::OnDropFiles(hDropInfo);
+	// CMDIFrameWndEx::OnDropFiles(hDropInfo);
 }

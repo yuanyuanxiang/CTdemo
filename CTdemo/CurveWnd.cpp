@@ -5,6 +5,7 @@
 #include "CurveWnd.h"
 #include "CurveDlg.h"
 #include "CTdemoView.h"
+#include "CTdemo.h"
 
 #define BUTTON_WIDTH       40
 #define BUTTON_HEIGHT      20
@@ -681,7 +682,7 @@ void CCurveWnd::ImshowImmediately()
 	GrayTransform();
 	// 应用到图像
 	m_nChannelSelected = Swap;
-	ApplyToImage();
+	ApplyToImage(m_curData);
 	// 刷新图像显示
 	CCTdemoView* pView = GetView();
 	pView->Invalidate();
@@ -931,7 +932,7 @@ void CCurveWnd::OnCmdCurveWndReset()
 	}
 	//更新视图
 	memcpy(m_curData, m_dataSrc, m_nNewlenData);
-	ApplyToImage();
+	ApplyToImage(m_curData);
 	CCTdemoView* pView = GetView();
 	pView->Invalidate(TRUE);
 	//更新直方图
@@ -1067,11 +1068,16 @@ void CCurveWnd::OnCmdExportCurve()
 void CCurveWnd::OnCmdCurveOk()
 {
 	CCTdemoView* pView = GetView();
+	CCTdemoDoc* pDoc = GetMainDoc();
 	memcpy(m_dataSrc, m_curData, m_nNewlenData);
 	InitPegs();
 	GetHistogram();
 	ImshowImmediately();
+	// 更新浮点数据
 	pView->m_pCurrent->MemcpyByteToFloat();
+	// 检查源图像是否更改
+	if (pView->m_pCurrent == pDoc->m_pImage)
+		pDoc->SetModifiedFlag(TRUE);
 }
 
 // 取消
@@ -1082,7 +1088,7 @@ void CCurveWnd::OnCmdCurveCancel()
 	{
 		CCTdemoView* pView = GetView();
 		//8位色图像不能直接调用memcpy
-		ApplyToImage();
+		ApplyToImage(m_dataSrc);
 		pView->Invalidate();
 	}
 }
@@ -1693,7 +1699,9 @@ void CCurveWnd::MallocData()
 	memcpy(m_curData, m_dataSrc, m_nNewlenData);
 }
 
-void CCurveWnd::ApplyToImage()
+
+// 将数据pSrc应用到图像
+void CCurveWnd::ApplyToImage(BYTE* pSrc)
 {
 	// 未检测到修改则返回
 	if (!DetectModified())
@@ -1704,22 +1712,23 @@ void CCurveWnd::ApplyToImage()
 	// 3、4通道图像可以直接调用memcpy
 	if (m_nChannel > 1)
 	{
-		memcpy(m_pBits, m_curData, m_nlenData);
+		memcpy(m_pBits, pSrc, m_nlenData);
 		return;
 	}
 	// 转换公式参考：http://www.cnblogs.com/carekee/articles/3629964.html
-//#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int i = 0; i < m_nImageHeight; ++i)
 	{
 		for (int j = 0; j < m_nImageWidth; ++j)
 		{
 			m_pBits[j * m_nChannel + i * m_nbytesWidth] = 
-				(299 * m_curData[ j * m_nNewChannel + i * m_nNewRowlen]
-			+ 587 * m_curData[1 + j * m_nNewChannel + i * m_nNewRowlen] 
-			+ 114 * m_curData[2 + j * m_nNewChannel + i * m_nNewRowlen]+ 500 ) / 1000;
+				(299 * pSrc[ j * m_nNewChannel + i * m_nNewRowlen]
+			+ 587 * pSrc[1 + j * m_nNewChannel + i * m_nNewRowlen] 
+			+ 114 * pSrc[2 + j * m_nNewChannel + i * m_nNewRowlen]+ 500 ) / 1000;
 		}
 	}
 }
+
 
 // 检查图像是否需要被更新,根据peg列表
 bool CCurveWnd::DetectModified()

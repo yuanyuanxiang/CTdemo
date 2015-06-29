@@ -22,6 +22,7 @@
 #include "DlgHilbertAngle.h"
 #include "DlgArtSettings.h"
 #include "NewView.h"
+#include "ChildFrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -375,9 +376,6 @@ void CCTdemoView::OnInitialUpdate()
 	}
 	// 设置绘图矩形
 	SetPaintRect(0, 0, width, height);
-	if (m_bUsingOpenGL)
-	{
-	}
 }
 
 
@@ -555,7 +553,11 @@ void CCTdemoView::OnToolbarChangeBpp()
 	pDllFunc(m_pCurrent);
 	m_pCurrent->UpdateInfomation();
 	if (m_pCurrent->m_nyBpp != pDoc->m_nBPP)
+	{
 		pDoc->UpdateImageInfomation();
+		if (m_pCurrent == pDoc->m_pImage)
+			pDoc->SetModifiedFlag(TRUE);
+	}
 	Invalidate(TRUE);
 }
 
@@ -598,6 +600,9 @@ void CCTdemoView::OnToolbarTransform()
 		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->GetWidth(), m_PaintRect.top + m_pCurrent->GetHeight());
 		SAFE_DELETE(pSrc);
 		Invalidate();
+		CCTdemoDoc* pDoc = GetDocument();
+		if (m_pCurrent == pDoc->m_pImage)
+			pDoc->SetModifiedFlag(TRUE);
 	}
 }
 
@@ -1058,6 +1063,10 @@ void CCTdemoView::ShowRGBValue(CPoint &point)
 
 void CCTdemoView::OnMouseMove(UINT nFlags, CPoint point)
 {
+	// 激活当前视图
+	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
+	CChildFrame* pChildFrame = (CChildFrame*)pMainFrame->GetActiveFrame();
+	pChildFrame->SetActiveView(this);
 	m_ptMouseMoving = point;
 	if (m_bMovingImage)
 	{

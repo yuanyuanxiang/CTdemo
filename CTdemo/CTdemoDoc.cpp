@@ -79,6 +79,9 @@ CCTdemoDoc::CCTdemoDoc()
 	// SO,SO'
 	m_fPanSOR = 1.f;
 	m_fPanSOD = 1.f;
+	m_fPan_u0 = 1.f;
+	m_fPan_delta_u = 1.f;
+	m_fPan_delta_fai = 0.f;
 	// 导数图像
 	m_pfDBPImage = NULL;
 	m_nCurrentFile = -1;
@@ -101,6 +104,10 @@ BOOL CCTdemoDoc::OnNewDocument()
 
 	// TODO: 在此添加重新初始化代码
 	// (SDI 文档将重用该文档)
+	m_pImage = new CyImage;
+	m_pProject = new CyImage;
+	m_pAfterFilter = new CyImage;
+	m_pReconstruct = new CyImage;
 
 	return TRUE;
 }
@@ -224,17 +231,22 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (UsingOpenGL)
 		return TRUE;
 
+	// 读取图像
+	m_pImage = new CyImage;
+	m_pImage->Load(lpszPathName);
+	if (m_pImage->IsNull())
+	{
+		CString strFilePath = lpszPathName;
+		AfxMessageBox(_T("读取文件\"") + strFilePath + _T("\"失败！"), MB_OK | MB_ICONERROR);
+		SAFE_DELETE(m_pImage);
+		return FALSE;
+	}
+
 	// 初始化图像指针
 	m_pProject = new CyImage;
 	m_pAfterFilter = new CyImage;
 	m_pReconstruct = new CyImage;
 
-	m_pImage = new CyImage;
-	m_pImage->Load(lpszPathName);
-	if (m_pImage->IsNull())
-	{
-		return FALSE;
-	}
 	UpdateImageInfomation();
 	InitScanningParameters();
 	SetPathName(lpszPathName);
@@ -283,6 +295,18 @@ int CCTdemoDoc::FindCurrentFileId(vector<CString>& vStrAllFiles, CString strFile
 
 void CCTdemoDoc::SetNextImage()
 {
+	// 检查当前文件是否更改并保存
+	if (this->IsModified())
+	{
+		switch (AfxMessageBox(_T("图像已更改，是否保存？"), MB_ICONQUESTION | MB_YESNOCANCEL))
+		{
+		case IDYES:OnSaveDocument(m_strFilePath);	break;
+		case IDNO:									break;
+		case IDCANCEL:return;						break;
+		default:break;
+		}
+	}
+
 	m_nCurrentFile++;
 	if (m_nCurrentFile == m_nTotalFile)
 		m_nCurrentFile = 0;
@@ -306,6 +330,18 @@ void CCTdemoDoc::SetNextImage()
 
 void CCTdemoDoc::SetPrevImage()
 {
+	// 检查当前文件是否更改并保存
+	if (this->IsModified())
+	{
+		switch (AfxMessageBox(_T("图像已更改，是否保存？"), MB_ICONQUESTION | MB_YESNOCANCEL))
+		{
+		case IDYES:OnSaveDocument(m_strFilePath);	break;
+		case IDNO:									break;
+		case IDCANCEL:return;						break;
+		default:break;
+		}
+	}
+
 	m_nCurrentFile--;
 	if (m_nCurrentFile == -1)
 		m_nCurrentFile = m_nTotalFile - 1;
@@ -447,7 +483,7 @@ void CCTdemoDoc::InitScanningParameters()
 	m_nRaysNum = ComputeRaysNum(m_nWidth, m_nHeight);		//射线条数
 	m_fRaysDensity = 1.0f;									//射线密度
 	m_nDetectorCenter = (m_nRaysNum + 1) / 2;				//探测器中心
-	m_fPanSOR = m_nImageDiag * 3;
+	m_fPanSOR = m_nImageDiag * 8;
 	m_fPanSOD = 2 * m_fPanSOR;
 }
 

@@ -23,6 +23,7 @@ CNewView::~CNewView()
 BEGIN_MESSAGE_MAP(CNewView, CScrollView)
 	ON_WM_SIZE()
 	ON_WM_ERASEBKGND()
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 
@@ -31,11 +32,6 @@ END_MESSAGE_MAP()
 void CNewView::OnInitialUpdate()
 {
 	CScrollView::OnInitialUpdate();
-
-	CSize sizeTotal;
-	// TODO: 计算此视图的合计大小
-	sizeTotal.cx = sizeTotal.cy = 100;
-	SetScrollSizes(MM_TEXT, sizeTotal);
 }
 
 void CNewView::OnDraw(CDC* pDC)
@@ -92,4 +88,16 @@ BOOL CNewView::OnEraseBkgnd(CDC* pDC)
 	CRect m_PaintRect(0, 0, pImage->GetWidth(), pImage->GetHeight());
 	pDC->PatBlt(m_PaintRect.right, 0, m_ClientRect.right - m_PaintRect.right, m_ClientRect.bottom, PATCOPY);	// 3 6 9	
 	pDC->PatBlt(0, m_PaintRect.bottom, m_ClientRect.right, m_ClientRect.bottom - m_PaintRect.bottom, PATCOPY);	// 7 8 9
+	return TRUE;
+}
+
+
+int CNewView::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CScrollView::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	SetScrollSizes(MM_TEXT, CSize(0, 0));
+
+	return 0;
 }

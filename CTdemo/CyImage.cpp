@@ -430,7 +430,7 @@ bool CyImage::Save(REFGUID guidFileType) const throw()
 bool CyImage::Save(CWnd* pParentWnd, REFGUID guidFileType) const throw()
 {
 	// 过滤器
-	CString strFilter = L"文本文档|*.TXT|所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|RAW文档|*.RAW|所有文件|*.*||";
+	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO;*.TXT;*.RAW|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|文本文档(*.TXT)|*.TXT|RAW文档(*.RAW)|*.RAW|所有文件|*.*||";
 
 	// 获取系统时间
 	SYSTEMTIME CurTime;
@@ -441,11 +441,11 @@ bool CyImage::Save(CWnd* pParentWnd, REFGUID guidFileType) const throw()
 
 	// 文件对话框
 	CFileDialog hFileDlg(FALSE, _T(".BMP"), strDate + strTime, OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_READONLY, strFilter, pParentWnd);
-	hFileDlg.m_ofn.nFilterIndex = 3;
+	hFileDlg.m_ofn.nFilterIndex = 1;
 	hFileDlg.m_ofn.lStructSize = sizeof(OPENFILENAME);
 	hFileDlg.m_ofn.lpstrTitle = TEXT("保存图像\0");
 	hFileDlg.m_ofn.nMaxFile = MAX_PATH;
-	if (hFileDlg.DoModal() != IDOK) return false;
+	if (hFileDlg.DoModal() != IDOK) return true;
 
 	// 获取保存路径
 	CString file = hFileDlg.GetFileName();

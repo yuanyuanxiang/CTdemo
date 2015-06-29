@@ -445,18 +445,53 @@ void SetColorTabFor8BitImage(CImage *pImage)
 
 bool Write2Raw(float* pSrc, int nWidth, int nHeight, CString path)
 {
+	CDlgRawDataSize dlg(FALSE);
+	dlg.m_nRawWidth = nWidth;
+	dlg.m_nRawHeight = nHeight;
+	if (dlg.DoModal() != IDOK)
+	{
+		// 用户取消保存，返回true
+		return true;
+	}
+
 	std::ofstream fout(path, std::ios::binary);
 
 	if(fout)
 	{
-		// 可以看作文件头
-		char* str = "# CTdemo";
-		fout.write(str, sizeof(char) * strlen(str));
-		// 将宽度、高度、数据以二进制写入RAW文件
-		// 宽度、高度作为文件头，占用8字节
-		fout.write((char*)&nWidth, sizeof(int));
-		fout.write((char*)&nHeight, sizeof(int));
-		fout.write((char*)pSrc, sizeof(float) * nWidth * nHeight);
+		switch (dlg.m_nRawHeader)
+		{
+		case -1://-1则保存成本程序自定义raw格式
+			{
+				// 可以看作文件头
+				char* str = "# CTdemo";
+				fout.write(str, sizeof(char) * strlen(str));
+				// 将宽度、高度、数据以二进制写入RAW文件
+				// 宽度、高度作为文件头，占用8字节
+				fout.write((char*)&nWidth, sizeof(int));
+				fout.write((char*)&nHeight, sizeof(int));
+				fout.write((char*)pSrc, sizeof(float) * nWidth * nHeight);
+			}
+			break;
+		case 0://保存成全裸数据（没有文件头）
+			{
+				fout.write((char*)pSrc, sizeof(float) * nWidth * nHeight);
+			}
+			break;
+		default:
+			{
+				// 用0填充文件头
+				int i = 0;
+				char* c = "0";
+				while (i < dlg.m_nRawHeader)
+				{
+					fout.write(c, sizeof(char));
+					i++;
+				}
+				fout.write((char*)pSrc, sizeof(float) * nWidth * nHeight);
+			}
+			break;
+		}
+
 		fout.close();
 		return true;
 	}
@@ -513,15 +548,17 @@ bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path)
 	if (ReadPropRaw(pDst, nWidth, nHeight, path))
 		return true;
 
+	CDlgRawDataSize dlg;
+	if (dlg.DoModal() != IDOK)
+	{
+		// 用户点击取消
+		return false;
+	}
+
+	// 魔眼的文件头大小为10816字节，约为10.6k
 	std::ifstream fin(path, std::ios::binary);
 	if (fin)
 	{
-		CDlgRawDataSize dlg;
-		if (dlg.DoModal() != IDOK)
-		{
-			fin.close();
-			return false;
-		}
 		nWidth = dlg.m_nRawWidth;
 		nHeight = dlg.m_nRawHeight;
 		int temp1, temp2;
@@ -596,7 +633,7 @@ bool ReadTxt(float* &pDst, int &nWidth, int &nHeight, CString path)
 			nHeight++;
 		}
 		int Total = TxtData.size();
-		if (Total % nHeight != 0)
+		if (nHeight == 0 || Total % nHeight != 0)
 		{
 			file.Close();
 			return false;
