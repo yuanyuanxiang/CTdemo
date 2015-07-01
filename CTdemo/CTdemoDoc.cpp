@@ -104,10 +104,10 @@ BOOL CCTdemoDoc::OnNewDocument()
 
 	// TODO: 在此添加重新初始化代码
 	// (SDI 文档将重用该文档)
-	m_pImage = new CyImage;
-	m_pProject = new CyImage;
-	m_pAfterFilter = new CyImage;
-	m_pReconstruct = new CyImage;
+	SAFE_NEW(CyImage, m_pImage);
+	SAFE_NEW(CyImage, m_pProject);
+	SAFE_NEW(CyImage, m_pAfterFilter);
+	SAFE_NEW(CyImage, m_pReconstruct);
 
 	return TRUE;
 }
@@ -232,7 +232,7 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 		return TRUE;
 
 	// 读取图像
-	m_pImage = new CyImage;
+	SAFE_NEW(CyImage, m_pImage);
 	m_pImage->Load(lpszPathName);
 	if (m_pImage->IsNull())
 	{
@@ -243,9 +243,9 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	}
 
 	// 初始化图像指针
-	m_pProject = new CyImage;
-	m_pAfterFilter = new CyImage;
-	m_pReconstruct = new CyImage;
+	SAFE_NEW(CyImage, m_pProject);
+	SAFE_NEW(CyImage, m_pAfterFilter);
+	SAFE_NEW(CyImage, m_pReconstruct);
 
 	UpdateImageInfomation();
 	InitScanningParameters();
@@ -762,11 +762,5 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 CCTdemoDoc* CCTdemoDoc::CreateNewDocument(LPCTSTR lpszPathName)
 {
 	CCTdemoDoc* pDoc = (CCTdemoDoc *)GetDocTemplate()->OpenDocumentFile(lpszPathName);
-	if (lpszPathName != NULL)
-		return pDoc;
-	pDoc->m_pProject = new CyImage;
-	pDoc->m_pAfterFilter = new CyImage;
-	pDoc->m_pReconstruct = new CyImage;
-	pDoc->m_pImage = new CyImage;
 	return pDoc;
 }

@@ -125,6 +125,12 @@ BEGIN_MESSAGE_MAP(CCTdemoView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_PREV_IMAGE, &CCTdemoView::OnUpdateToolbarPrevImage)
 	ON_COMMAND(ID_TOOLBAR_TRANSPOSE_IMAGE, &CCTdemoView::OnToolbarTransposeImage)
 	ON_UPDATE_COMMAND_UI(ID_TOOLBAR_TRANSPOSE_IMAGE, &CCTdemoView::OnUpdateToolbarTransposeImage)
+	ON_COMMAND(ID_EDIT_COPY, &CCTdemoView::OnEditCopy)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CCTdemoView::OnUpdateEditCopy)
+	ON_COMMAND(ID_EDIT_PASTE, &CCTdemoView::OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &CCTdemoView::OnUpdateEditPaste)
+	ON_COMMAND(ID_EDIT_CLEAR, &CCTdemoView::OnEditClear)
+	ON_COMMAND(ID_APP_EXIT, &CCTdemoView::OnAppExit)
 END_MESSAGE_MAP()
 
 // CCTdemoView 构造/析构
@@ -313,12 +319,27 @@ void CCTdemoView::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 
 void CCTdemoView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
-	// TODO: 添加打印后进行的清理过程
+
 }
 
+// 右键弹出菜单
 void CCTdemoView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 {
+	CMenu popMenu;
+	popMenu.LoadMenu(IDR_POPUP_MENU);
+	CMenu *pPopup;
+	pPopup = popMenu.GetSubMenu(0); //获得子菜单指针
 
+	// 允许菜单项使用
+	pPopup->EnableMenuItem(ID_FILE_CLOSE, MF_BYCOMMAND | MF_ENABLED);
+	pPopup->EnableMenuItem(ID_EDIT_COPY, MF_BYCOMMAND | MF_ENABLED);
+	pPopup->EnableMenuItem(ID_EDIT_PASTE, MF_BYCOMMAND | MF_ENABLED);
+	pPopup->EnableMenuItem(ID_APP_EXIT, MF_BYCOMMAND | MF_ENABLED);
+
+	// 显示弹出菜单，参数依次为:鼠标在菜单左边,跟踪右键,x,y,this
+	pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
+	pPopup->Detach();
+	popMenu.DestroyMenu();
 }
 
 
@@ -1577,7 +1598,7 @@ void CCTdemoView::OnDestroy()
 	m_hGLContext = ::wglGetCurrentContext();
 	if(::wglMakeCurrent (0,0) == FALSE)
 	{
-		TRACE("Warning:Could not make RC non-current!\n");
+		TRACE("Warning: Could not make RC non-current!\n");
 	}
 
 	if(m_hGLContext)
@@ -1803,4 +1824,46 @@ void CCTdemoView::OnToolbarTransposeImage()
 void CCTdemoView::OnUpdateToolbarTransposeImage(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
+}
+
+
+void CCTdemoView::OnEditCopy()
+{
+	CopyImage(m_pCurrent);
+}
+
+
+void CCTdemoView::OnUpdateEditCopy(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pCurrent));
+}
+
+
+void CCTdemoView::OnEditPaste()
+{
+	PasteImage();
+}
+
+
+void CCTdemoView::OnUpdateEditPaste(CCmdUI *pCmdUI)
+{
+	OpenClipboard();
+	int num = EnumClipboardFormats(0);
+	CloseClipboard();
+	pCmdUI->Enable(num);
+}
+
+
+// 清空剪切板
+void CCTdemoView::OnEditClear()
+{
+	OpenClipboard();
+	EmptyClipboard();
+	CloseClipboard();
+}
+
+
+void CCTdemoView::OnAppExit()
+{
+	theApp.OnAppExit();
 }

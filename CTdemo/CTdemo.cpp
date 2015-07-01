@@ -27,9 +27,7 @@ BEGIN_MESSAGE_MAP(CCTdemoApp, CWinAppEx)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 	ON_COMMAND(ID_FILE_OPEN_USING_OPENGL, &CCTdemoApp::OnFileOpenUsingOpenGL)
-	ON_COMMAND(ID_EDIT_COPY, &CCTdemoApp::OnEditCopy)
-	ON_COMMAND(ID_EDIT_PASTE, &CCTdemoApp::OnEditPaste)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CCTdemoApp::OnUpdateEditCopy)
+	ON_COMMAND(ID_APP_EXIT, &CCTdemoApp::OnAppExit)
 END_MESSAGE_MAP()
 
 
@@ -158,6 +156,11 @@ BOOL CCTdemoApp::InitInstance()
 	// 已查明由于CCurveWnd中图像指针没有初始化导致该错误
 	// afxAmbientActCtx = FALSE;
 
+	// 清空剪切板
+	m_pMainWnd->OpenClipboard();
+	EmptyClipboard();
+	CloseClipboard();
+
 	return TRUE;
 }
 
@@ -188,8 +191,6 @@ protected:
 // 实现
 protected:
 	DECLARE_MESSAGE_MAP()
-public:
-	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
@@ -263,31 +264,6 @@ CCTdemoView* CCTdemoApp::GetMainView()
 }
 
 
-void CCTdemoApp::OnEditCopy()
-{
-	CCTdemoView* pView = GetMainView();
-	if (pView != NULL)
-		pView->CopyImage(pView->m_pCurrent);
-}
-
-
-void CCTdemoApp::OnEditPaste()
-{
-	CCTdemoView* pView = GetMainView();
-	if (pView != NULL)
-		pView->PasteImage();
-}
-
-
-void CCTdemoApp::OnUpdateEditCopy(CCmdUI *pCmdUI)
-{
-	CCTdemoView* pView = GetMainView();
-	if (!pView)
-		return;
-	pCmdUI->Enable(!CHECK_IMAGE_NULL(pView->m_pCurrent));
-}
-
-
 // 全局可调用函数
 CyImage* AfxGetImage()
 {
@@ -295,9 +271,8 @@ CyImage* AfxGetImage()
 	return pDoc->m_pCurrent;
 }
 
-void CAboutDlg::OnMouseMove(UINT nFlags, CPoint point)
-{
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
 
-	CDialogEx::OnMouseMove(nFlags, point);
+void CCTdemoApp::OnAppExit()
+{
+	CWinAppEx::OnAppExit();
 }

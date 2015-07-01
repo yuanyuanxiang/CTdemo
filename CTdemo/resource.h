@@ -51,6 +51,7 @@
 #define IDD_HILBERT_ANGLE               325
 #define IDD_ART_IT_NUM                  326
 #define IDD_RAW_DATA_SIZE               327
+#define IDR_POPUP_MENU                  329
 #define IDC_ROTATE_ANGLE                1000
 #define IDC_EDIT_RAYSNUM                1001
 #define IDC_EDIT_ANGLESNUM              1002
@@ -170,13 +171,19 @@
 #define ID_TOOLBAR_PREV_IMAGE           32907
 #define ID_BUTTON32908                  32908
 #define ID_TOOLBAR_TRANSPOSE_IMAGE      32908
+#define ID_32909                        32909
+#define ID_32910                        32910
+#define ID_32911                        32911
+#define ID_32912                        32912
+#define ID_32913                        32913
+#define ID_32914                        32914
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        329
-#define _APS_NEXT_COMMAND_VALUE         32909
+#define _APS_NEXT_RESOURCE_VALUE        330
+#define _APS_NEXT_COMMAND_VALUE         32915
 #define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

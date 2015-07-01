@@ -265,6 +265,18 @@ BEGIN
     END
 END
 
+IDR_POPUP_MENU MENU
+BEGIN
+    POPUP "ÓÒ¼ü²Ëµ¥(&M)"
+    BEGIN
+        MENUITEM "¹Ø±Õ(&W)\tCtrl+W",              ID_FILE_CLOSE
+        MENUITEM "¸´ÖÆ(&C)\tCtrl+C",              ID_EDIT_COPY
+        MENUITEM "ð¤Ìù(&V)\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "Çå¿Õ",                          ID_EDIT_CLEAR
+        MENUITEM "ÍË³ö(&Q)\tCtrl+Q",              ID_APP_EXIT
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

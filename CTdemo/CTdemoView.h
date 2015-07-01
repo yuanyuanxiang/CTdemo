@@ -218,6 +218,12 @@ public:
 	afx_msg void OnUpdateToolbarPrevImage(CCmdUI *pCmdUI);
 	afx_msg void OnToolbarTransposeImage();
 	afx_msg void OnUpdateToolbarTransposeImage(CCmdUI *pCmdUI);
+	afx_msg void OnEditCopy();
+	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
+	afx_msg void OnEditPaste();
+	afx_msg void OnUpdateEditPaste(CCmdUI *pCmdUI);
+	afx_msg void OnEditClear();
+	afx_msg void OnAppExit();
 };
 
 #ifndef _DEBUG  // CTdemoView.cpp 中的调试版本

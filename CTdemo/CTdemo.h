@@ -49,9 +49,7 @@ public:
 	afx_msg void OnAppAbout();
 	afx_msg void OnFileNew();
 	afx_msg void OnFileOpenUsingOpenGL();
-	afx_msg void OnEditCopy();
-	afx_msg void OnEditPaste();
-	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
+	afx_msg void OnAppExit();
 };
 
 

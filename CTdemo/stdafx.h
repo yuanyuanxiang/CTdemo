@@ -37,6 +37,8 @@
 
 #define SAFE_DELETE(p) if((p) != NULL){ delete [] (p); (p) = NULL; }	//安全删除指针p
 
+#define SAFE_NEW(type, p) if ((p) == NULL) { (p) = new type; }		//仅当p为空时候分配内存
+
 #define WIDTHBYTES(bits)    (((bits) + 31) / 32 * 4)				//计算每行字节数
 
 #define PI 3.141592653f
