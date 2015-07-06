@@ -6,6 +6,7 @@
 #include "CTdemo.h"
 
 #include "MainFrm.h"
+#include "ChildFrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -28,6 +29,11 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_WM_TIMER()
 	ON_WM_CLOSE()
 	ON_WM_DROPFILES()
+	ON_COMMAND(ID_MINIMIZED_APP, &CMainFrame::OnMinimizedApp)
+	ON_WM_SIZE()
+	ON_WM_DESTROY()
+	ON_COMMAND(ID_SHOWWINDOW, &CMainFrame::OnShowwindow)
+	ON_UPDATE_COMMAND_UI(ID_SHOWWINDOW, &CMainFrame::OnUpdateShowwindow)
 END_MESSAGE_MAP()
 
 
@@ -47,7 +53,6 @@ static UINT indicators[] =
 
 CMainFrame::CMainFrame()
 {
-	// TODO: 在此添加成员初始化代码
 }
 
 CMainFrame::~CMainFrame()
@@ -147,6 +152,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	SetTimer(indicators_clock, 1000, NULL);
 	
 	DragAcceptFiles(TRUE);//支持文件拖拽
+
+	m_salver.LoadMenu(IDR_SALVER_MENU);
 
 	return 0;
 }
@@ -293,6 +300,12 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		//显示信息
 		m_wndStatusBar.SetPaneText(m_wndStatusBar.CommandToIndex(ID_COPYRIGHT_STRING), _T("CTdemo"));
 	}
+	else if (nIDEvent == SalverMenuPopup)
+	{
+		this->ActivateTopParent();
+		KillTimer(SalverMenuPopup);
+	}
+
 	CMDIFrameWndEx::OnTimer(nIDEvent);
 }
 
@@ -322,4 +335,90 @@ void CMainFrame::OnDropFiles(HDROP hDropInfo)
 		pApp->m_pDocTemplate->OpenDocumentFile(str);
 	}
 	// CMDIFrameWndEx::OnDropFiles(hDropInfo);
+}
+
+
+void CMainFrame::OnMinimizedApp()
+{
+	m_tnid.cbSize = (DWORD)sizeof(NOTIFYICONDATA);   
+	m_tnid.hWnd = GetSafeHwnd();   
+	m_tnid.uID = IDR_MAINFRAME;   
+	m_tnid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP ;   
+	m_tnid.uCallbackMessage = WM_SHOWTASK;
+	m_tnid.hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	CString sText = _T("CTdemo\n模拟CT扫描与重建");
+	wcscpy(m_tnid.szTip, CT2CW(sText));				//提示信息
+	Shell_NotifyIcon(NIM_ADD, &m_tnid);				//在托盘区添加图标
+	ShowWindow(SW_HIDE);							//隐藏主窗口
+}
+
+
+LRESULT CMainFrame::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch(message)
+	{
+	case WM_SHOWTASK:
+		// 如果是用户定义的消息
+		if(lParam == WM_LBUTTONDOWN)
+		{
+			OnShowwindow();
+		}
+		else if(lParam == WM_RBUTTONDOWN)
+		{
+			// 鼠标右键单击弹出选单
+			LPPOINT lpoint = new tagPOINT;
+			::GetCursorPos(lpoint); // 得到鼠标位置
+			CMenu *pMenu = m_salver.GetSubMenu(0);   // 弹出IDR_SALVER_MENU菜单的第0个菜单项
+			SetTimer(SalverMenuPopup, 3000, NULL);
+			pMenu->TrackPopupMenu(TPM_RIGHTALIGN | TPM_RIGHTBUTTON, lpoint->x ,lpoint->y, this);
+			delete lpoint;        
+		}
+		break;
+	default:
+		break;
+	} 
+	return CMDIFrameWndEx::WindowProc(message, wParam, lParam);
+}
+
+
+void CMainFrame::OnSize(UINT nType, int cx, int cy)
+{
+	CMDIFrameWndEx::OnSize(nType, cx, cy);
+
+	if(nType == SIZE_MINIMIZED)
+	{
+
+		OnMinimizedApp(); // 当最小化时，隐藏主窗口
+	}
+}
+
+
+void CMainFrame::OnDestroy()
+{
+	CMDIFrameWndEx::OnDestroy();
+
+	// 在托盘区删除图标
+	Shell_NotifyIcon(NIM_DELETE, &m_tnid);
+}
+
+
+// 显示程序窗口，使窗口在最前面
+void CMainFrame::OnShowwindow()
+{
+	if (!IsWindowVisible())
+	{
+		ShowWindow(SW_SHOWNORMAL);
+		SetWindowPos(&this->wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+		SetWindowPos(&this->wndNoTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+	}
+	else
+	{
+		ShowWindow(SW_HIDE);
+	}
+}
+
+
+void CMainFrame::OnUpdateShowwindow(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!IsWindowVisible());
 }

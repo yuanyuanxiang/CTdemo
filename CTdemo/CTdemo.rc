@@ -258,6 +258,7 @@ BEGIN
         MENUITEM "滤波结果(&2)\tCtrl+2",            ID_WINDOW_AFTER_FILTER
         MENUITEM "查看重建(&3)\tCtrl+3",            ID_WINDOW_BACKPRO
         MENUITEM SEPARATOR
+        MENUITEM "最小化",                         ID_MINIMIZED_APP
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -273,6 +274,15 @@ BEGIN
         MENUITEM "复制(&C)\tCtrl+C",              ID_EDIT_COPY
         MENUITEM "黏贴(&V)\tCtrl+V",              ID_EDIT_PASTE
         MENUITEM "清空",                          ID_EDIT_CLEAR
+        MENUITEM "退出(&Q)\tCtrl+Q",              ID_APP_EXIT
+    END
+END
+
+IDR_SALVER_MENU MENU
+BEGIN
+    POPUP "托盘菜单(&S)"
+    BEGIN
+        MENUITEM "显示",                          ID_SHOWWINDOW
         MENUITEM "退出(&Q)\tCtrl+Q",              ID_APP_EXIT
     END
 END
@@ -852,6 +862,12 @@ BEGIN
     ID_TOOLBAR_NEXT_IMAGE   "浏览下一张图像\n下一张"
     ID_TOOLBAR_PREV_IMAGE   "浏览上一张图像\n上一张"
     ID_TOOLBAR_TRANSPOSE_IMAGE "转置当前图像\n转置"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MINIMIZED_APP        "使应用程序最小化\n最小化"
+    ID_SHOWWINDOW           "显示程序窗口\n显示"
 END
 
 #endif    // 中文(简体，中国) resources

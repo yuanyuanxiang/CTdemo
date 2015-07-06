@@ -13,6 +13,9 @@
 #define ID_ABOUT 10290
 #define ID_QUIT 10300
 #define indicators_clock 0
+#define SalverMenuPopup 1
+
+#define WM_SHOWTASK (WM_USER + 1)	// 自定义的消息名称
 
 class CMainFrame : public CMDIFrameWndEx
 {
@@ -45,6 +48,10 @@ protected:  // 控件条嵌入成员
 	CMFCStatusBar		m_wndStatusBar;		//状态栏
 
 public:
+	NOTIFYICONDATA		m_tnid;				//托盘相关
+	CMenu				m_salver;			//托盘菜单
+
+public:
 	// 获得状态栏指针
 	CMFCStatusBar *GetStatusBar() { return &m_wndStatusBar; }
 
@@ -63,4 +70,10 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnClose();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
+	afx_msg void OnMinimizedApp();
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnDestroy();
+	afx_msg void OnShowwindow();
+	afx_msg void OnUpdateShowwindow(CCmdUI *pCmdUI);
 };

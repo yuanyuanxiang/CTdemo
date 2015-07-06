@@ -11,7 +11,6 @@
 #include "CTdemoDoc.h"
 #include "CTdemoView.h"
 
-
 // CCTdemoApp:
 // 有关此类的实现，请参阅 CTdemo.cpp
 //
