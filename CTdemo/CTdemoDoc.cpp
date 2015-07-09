@@ -551,7 +551,7 @@ void CCTdemoDoc::OnWindowProject()
 void CCTdemoDoc::OnUpdateWindowProject(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
-	pCmdUI->Enable(m_pProject != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pProject));
 }
 
 extern const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float pixel_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen);
@@ -605,7 +605,7 @@ void CCTdemoDoc::OnWindowBackpro()
 void CCTdemoDoc::OnUpdateWindowBackpro(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
-	pCmdUI->Enable(m_pReconstruct != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pReconstruct));
 }
 
 
@@ -618,7 +618,7 @@ void CCTdemoDoc::OnWindowAfterFilter()
 void CCTdemoDoc::OnUpdateWindowAfterFilter(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
-	pCmdUI->Enable(m_pAfterFilter != NULL);
+	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pAfterFilter));
 }
 
 

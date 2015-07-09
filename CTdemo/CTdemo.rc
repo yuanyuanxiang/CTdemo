@@ -258,7 +258,8 @@ BEGIN
         MENUITEM "滤波结果(&2)\tCtrl+2",            ID_WINDOW_AFTER_FILTER
         MENUITEM "查看重建(&3)\tCtrl+3",            ID_WINDOW_BACKPRO
         MENUITEM SEPARATOR
-        MENUITEM "最小化",                         ID_MINIMIZED_APP
+        MENUITEM "最小化(&M)",                     ID_MINIMIZED_APP
+        MENUITEM SEPARATOR
     END
     POPUP "帮助(&H)"
     BEGIN
