@@ -10,8 +10,6 @@
 
 // CDlgImageViewer 对话框
 
-#define ZOOM_RATE 1.1f	// 单次缩放比例
-
 IMPLEMENT_DYNAMIC(CDlgImageViewer, CDialogEx)
 
 CDlgImageViewer::CDlgImageViewer(CWnd* pParent) : CDialogEx(CDlgImageViewer::IDD, pParent)
@@ -19,7 +17,7 @@ CDlgImageViewer::CDlgImageViewer(CWnd* pParent) : CDialogEx(CDlgImageViewer::IDD
 	m_pScrollView = NULL;
 	m_pImage = NULL;
 	m_fZoomRate = 1.f;
-	m_nType = 0;
+	m_nPassType = PASS_TYPE_DEFAULT;
 }
 
 CDlgImageViewer::CDlgImageViewer(CImage* pImage, CWnd* pParent) : CDialogEx(CDlgImageViewer::IDD, pParent)
@@ -27,39 +25,48 @@ CDlgImageViewer::CDlgImageViewer(CImage* pImage, CWnd* pParent) : CDialogEx(CDlg
 	m_pScrollView = NULL;
 	m_pImage = pImage;
 	m_fZoomRate = 1.f;
-	m_nType = 0;
+	m_nPassType = PASS_TYPE_IMAGE;
 }
 
-template <typename T> void CDlgImageViewer::Initialize(T* ptr, int width, int height, int rowlen)
+template <typename Type> void CDlgImageViewer::Initialize(Type* ptr, int width, int height, int rowlen)
 {
 	m_pScrollView = NULL;
 	CreateImage(ptr, width, height, rowlen);
 	m_fZoomRate = 1.f;
-	// 传进dll的不是CImage指针
-	m_nType = 1;
 }
 
 CDlgImageViewer::CDlgImageViewer(BYTE* ptr, int width, int height, int rowlen, CWnd* pParent) 
 	: CDialogEx(CDlgImageViewer::IDD, pParent)
 {
+	m_nPassType = PASS_TYPE_BYTE;
+	Initialize(ptr, width, height, rowlen);
+}
+
+CDlgImageViewer::CDlgImageViewer(char* ptr, int width, int height, int rowlen, CWnd* pParent) 
+	: CDialogEx(CDlgImageViewer::IDD, pParent)
+{
+	m_nPassType = PASS_TYPE_CHAR;
 	Initialize(ptr, width, height, rowlen);
 }
 
 CDlgImageViewer::CDlgImageViewer(int* ptr, int width, int height, int rowlen, CWnd* pParent) 
 	: CDialogEx(CDlgImageViewer::IDD, pParent)
 {
+	m_nPassType = PASS_TYPE_INT;
 	Initialize(ptr, width, height, rowlen);
 }
 
 CDlgImageViewer::CDlgImageViewer(float* ptr, int width, int height, int rowlen, CWnd* pParent) 
 	: CDialogEx(CDlgImageViewer::IDD, pParent)
 {
+	m_nPassType = PASS_TYPE_FLOAT;
 	Initialize(ptr, width, height, rowlen);
 }
 
 CDlgImageViewer::CDlgImageViewer(double* ptr, int width, int height, int rowlen, CWnd* pParent) 
 	: CDialogEx(CDlgImageViewer::IDD, pParent)
 {
+	m_nPassType = PASS_TYPE_DOUBLE;
 	Initialize(ptr, width, height, rowlen);
 }
 
@@ -68,9 +75,11 @@ CDlgImageViewer::~CDlgImageViewer()
 }
 
 
-template <typename T> float CDlgImageViewer::FindMaxData(T* ptr, int width, int height)
+template <typename Type> float CDlgImageViewer::FindMaxData(Type* ptr, int width, int height)
 {
-	if (sizeof(T) == 1) return 255.f;
+	if (sizeof(Type) == 1)
+		return 255.f;
+
 	float MAX = *ptr;
 	for (int i = 0; i < height; ++i)
 	{
@@ -86,9 +95,11 @@ template <typename T> float CDlgImageViewer::FindMaxData(T* ptr, int width, int 
 }
 
 
-template <typename T> float CDlgImageViewer::FindMinData(T* ptr, int width, int height)
+template <typename Type> float CDlgImageViewer::FindMinData(Type* ptr, int width, int height)
 {
-	if (sizeof(T) == 1) return 0.f;
+	if (sizeof(Type) == 1)
+		return 0.f;
+
 	float MIN = *ptr;
 	for (int i = 0; i < height; ++i)
 	{
@@ -104,11 +115,13 @@ template <typename T> float CDlgImageViewer::FindMinData(T* ptr, int width, int 
 }
 
 
-template <typename T> void CDlgImageViewer::CopyData(BYTE* pDst, T* ptr, int width, int height, int rowlen)
+template <typename Type> void CDlgImageViewer::CopyData(BYTE* pDst, Type* ptr, int width, int height, int rowlen)
 {
 	float MAX = FindMaxData(ptr, width, height);
 	float MIN = FindMinData(ptr, width, height);
-	if (MAX == MIN) return;
+	if (MAX == MIN)
+		return;
+
 	int ImageRowlen = abs( m_pImage->GetPitch() );
 	int channel = m_pImage->GetBPP() / 8;
 	if (channel == 1)
@@ -134,7 +147,7 @@ template <typename T> void CDlgImageViewer::CopyData(BYTE* pDst, T* ptr, int wid
 }
 
 
-template <typename T> void CDlgImageViewer::CreateImage(T* ptr, int width, int height, int rowlen)
+template <typename Type> void CDlgImageViewer::CreateImage(Type* ptr, int width, int height, int rowlen)
 {
 	int channel = rowlen / width;
 	int bpp = channel * 8;
@@ -306,7 +319,7 @@ void CDlgImageViewer::OnDestroy()
 		m_pScrollView = NULL;
 	}
 	// 如果m_pImage是当前dll创建的
-	if (m_nType != 0)
+	if (m_nPassType != 0)
 	{
 		SAFE_DELETE(m_pImage);
 	}
@@ -396,14 +409,7 @@ void CDlgImageViewer::GetImageInfomation(int &width, int &height, int &rowlen, i
 	bpp = m_pImage->GetBPP();
 }
 
-// 获取图像的基本信息
-/*
-int &width		宽度
-int &height		高度
-int &rowlen		每行字节数
-int &bpp		位深度
-int &channel	通道个数
-*/
+
 void CDlgImageViewer::GetImageInfomation(int &width, int &height, int &rowlen, int &bpp, int &channel)
 {
 	width = m_pImage->GetWidth();
@@ -552,15 +558,12 @@ BYTE* CDlgImageViewer::GetImageLineAddress(int LineID)
 
 void CDlgImageViewer::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-
 	CDialogEx::OnTimer(nIDEvent);
 }
 
 
 BOOL CDlgImageViewer::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	if (zDelta > 0)
 	{
 		OnViewZoomIn();
@@ -586,11 +589,11 @@ BOOL CDlgImageViewer::ContinueModal()
 	CCmdUI cmdUI;
 	if (pMainMenu != NULL)
 	{
-		for (UINT n = 0; n < pMainMenu->GetMenuItemCount(); ++n)
+		for (int n = 0; n < pMainMenu->GetMenuItemCount(); ++n)
 		{
 			CMenu* pSubMenu = pMainMenu->GetSubMenu(n);
 			cmdUI.m_nIndexMax = pSubMenu->GetMenuItemCount();
-			for (UINT i = 0; i < cmdUI.m_nIndexMax; ++i)
+			for (int i = 0; i < cmdUI.m_nIndexMax; ++i)
 			{
 				cmdUI.m_nIndex = i;
 				cmdUI.m_nID = pSubMenu->GetMenuItemID(i);
@@ -612,7 +615,8 @@ BOOL CDlgImageViewer::PreTranslateMessage(MSG* pMsg)
 BOOL CDlgImageViewer::OnToolTipText(UINT, NMHDR* pNMHDR, LRESULT* pResult)
 {
 	TOOLTIPTEXT *pTTT=(TOOLTIPTEXT*)pNMHDR;
-	// 相当于原WM_COMMAND传递方式的wParam（low-order）, 在wParam中放的则是控件的ID。
+	// 相当于原WM_COMMAND传递方式的wParam（low-order）
+	// 在wParam中放的则是控件的ID。
 	UINT  uID=pNMHDR->idFrom;
 
 	if(pTTT->uFlags & TTF_IDISHWND)

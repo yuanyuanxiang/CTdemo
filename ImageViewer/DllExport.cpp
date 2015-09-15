@@ -23,6 +23,13 @@ extern "C" __declspec(dllexport) void BYTEViewer(BYTE* ptr, int width, int heigh
 }
 
 
+extern "C" __declspec(dllexport) void CharViewer(char* ptr, int width, int height, int rowlen)
+{
+	CDlgImageViewer dlg(ptr, width, height, rowlen);
+	dlg.DoModal();
+}
+
+
 extern "C" __declspec(dllexport) void IntViewer(int* ptr, int width, int height, int rowlen)
 {
 	CDlgImageViewer dlg(ptr, width, height, rowlen);

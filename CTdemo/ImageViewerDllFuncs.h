@@ -47,6 +47,17 @@ bool FindImageViewerFun(HINSTANCE &hDll, BYTE*)
 	return true;
 }
 
+// char*
+typedef void (*lpCharViewer)(char*, int, int, int);
+lpCharViewer CharViewer;
+bool FindImageViewerFun(HINSTANCE &hDll, char*)
+{
+	CharViewer = (lpCharViewer)GetProcAddress(hDll, "BYTEViewer");
+	if (CharViewer == NULL)
+		return false;
+	return true;
+}
+
 // 3 int*
 typedef void (*lpIntViewer)(int*, int, int, int);
 lpIntViewer IntViewer;
@@ -93,13 +104,14 @@ bool FindImageViewerFun(HINSTANCE &hDll, CImage*)
 
 // 为了方便使用而进行重载：ptr - 被显示的数据, width - 宽度, height - 高度, rowlen - 每行字节数。
 void ImageViewerProc(BYTE* ptr, int width, int height, int rowlen)	{	BYTEViewer(ptr, width, height, rowlen);}
+void ImageViewerProc(char* ptr, int width, int height, int rowlen)	{	CharViewer(ptr, width, height, rowlen);}
 void ImageViewerProc(int* ptr, int width, int height, int rowlen)	{	IntViewer(ptr, width, height, rowlen);}
 void ImageViewerProc(float* ptr, int width, int height, int rowlen)	{	FloatViewer(ptr, width, height, rowlen);}
 void ImageViewerProc(double* ptr, int width, int height, int rowlen){	DoubleViewer(ptr, width, height, rowlen);}
 void ImageViewerProc(CImage* ptr, int width, int height, int rowlen){	CImageViewer(ptr, width, height, rowlen);}
 
 // 弹出图像浏览对话框：ptr - 被显示的数据, width - 宽度, height - 高度, rowlen - 每行字节数。
-template <typename T> void PopImageViewerDlg(T* ptr, int width, int height, int rowlen)
+template <typename Type> void PopImageViewerDlg(Type* ptr, int width, int height, int rowlen)
 {
 	HINSTANCE hDll = NULL;
 	if (LoadImageViewerDll(hDll) == false)
@@ -113,6 +125,9 @@ template <typename T> void PopImageViewerDlg(T* ptr, int width, int height, int 
 		FreeLibrary(hDll);
 		return;
 	}
-	else ImageViewerProc(ptr, width, height, rowlen);
+	else
+	{
+		ImageViewerProc(ptr, width, height, rowlen);
+	}
 	FreeLibrary(hDll);
 }

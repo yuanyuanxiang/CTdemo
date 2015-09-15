@@ -22,11 +22,24 @@
 #define ID_ABOUT 1033
 #define ID_QUIT 1034
 
+// 单次缩放比例
+#define ZOOM_RATE 1.1f
+
 // 检测p为NULL则返回
 #define CHECK_NULL(p) 	if ( (p) == NULL ) return;
 
 // 安全删除指针
 #define SAFE_DELETE(p) if ( (p) != NULL ) { delete [] (p); (p) = NULL; }
+
+// 传入数据类型
+
+#define PASS_TYPE_DEFAULT	-1
+#define PASS_TYPE_IMAGE		0
+#define PASS_TYPE_BYTE		1
+#define PASS_TYPE_CHAR		2
+#define PASS_TYPE_INT		3
+#define PASS_TYPE_FLOAT		4
+#define PASS_TYPE_DOUBLE	5
 
 class CDlgImageViewer : public CDialogEx
 {
@@ -38,20 +51,21 @@ public:
 	CImageList			m_ImageList;			// 图标列表
 	CToolBar			m_ToolBar;				// 工具栏
 	float				m_fZoomRate;			// 放大倍率
-	int					m_nType;				// 传入数据类型
+	int					m_nPassType;			// 传入数据类型
 
 	CDlgImageViewer(CImage* pImage, CWnd* pParent = NULL);
-	template <typename T> void Initialize(T* ptr, int width, int height, int rowlen);
-	template <typename T> float FindMaxData(T* ptr, int width, int height);
-	template <typename T> float FindMinData(T* ptr, int width, int height);
-	template <typename T> void CopyData(BYTE* pDst, T* ptr, int width, int height, int rowlen);
+	template <typename Type> void Initialize(Type* ptr, int width, int height, int rowlen);
+	template <typename Type> float FindMaxData(Type* ptr, int width, int height);
+	template <typename Type> float FindMinData(Type* ptr, int width, int height);
+	template <typename Type> void CopyData(BYTE* pDst, Type* ptr, int width, int height, int rowlen);
 	CDlgImageViewer(BYTE* ptr, int width, int height, int rowlen, CWnd* pParent = NULL);
+	CDlgImageViewer(char* ptr, int width, int height, int rowlen, CWnd* pParent = NULL);
 	CDlgImageViewer(int* ptr, int width, int height, int rowlen, CWnd* pParent = NULL);
 	CDlgImageViewer(float* ptr, int width, int height, int rowlen, CWnd* pParent = NULL);
 	CDlgImageViewer(double* ptr, int width, int height, int rowlen, CWnd* pParent = NULL);
 	CDlgImageViewer(CWnd* pParent = NULL);		// 标准构造函数
-	virtual ~CDlgImageViewer();
-	void SetImage(CImage *pImage);				// 设置用来显示的图像
+	virtual ~CDlgImageViewer();					// 析构函数
+	void SetImage(CImage *pImage);				// 设置显示的图像
 	BYTE* GetImageHeadAddress();				// 获取图像首地址
 	BYTE* GetImageHeadAddress(CImage* pImage);	// 获取图像首地址
 	BYTE* GetImageLineAddress(int LineID);		// 获取图像某行地址
@@ -59,10 +73,10 @@ public:
 	void GetImageInfomation(int &width, int &height, int &rowlen);
 	void GetImageInfomation(int &width, int &height, int &rowlen, int &bpp);
 	void GetImageInfomation(int &width, int &height, int &rowlen, int &bpp, int &channel);
-	template <typename T> void CreateImage(T* ptr, int width, int height, int rowlen);
+	template <typename Type> void CreateImage(Type* ptr, int width, int height, int rowlen);
 	void SetColorTableForImage();
 
-// 对话框数据
+	// 对话框数据
 	enum { IDD = IDD_DLG_IMAGE_VIEWER };
 
 protected:
