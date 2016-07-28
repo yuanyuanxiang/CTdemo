@@ -225,12 +225,6 @@ BOOL CCTdemoDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (!CDocument::OnOpenDocument(lpszPathName))
 		return FALSE;
 
-	// 如果使用OpenGL
-	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
-	bool UsingOpenGL = pApp->m_bUsingOpenGL;
-	if (UsingOpenGL)
-		return TRUE;
-
 	// 读取图像
 	SAFE_NEW(CyImage, m_pImage);
 	m_pImage->Load(lpszPathName);

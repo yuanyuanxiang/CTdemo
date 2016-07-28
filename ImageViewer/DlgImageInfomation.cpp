@@ -9,6 +9,7 @@
 
 // CDlgImageInfomation ¶Ô»°¿ò
 
+
 IMPLEMENT_DYNAMIC(CDlgImageInfomation, CDialogEx)
 
 CDlgImageInfomation::CDlgImageInfomation(CWnd* pParent) : CDialogEx(CDlgImageInfomation::IDD, pParent)
@@ -16,9 +17,11 @@ CDlgImageInfomation::CDlgImageInfomation(CWnd* pParent) : CDialogEx(CDlgImageInf
 	m_pImage = NULL;
 }
 
+
 CDlgImageInfomation::~CDlgImageInfomation()
 {
 }
+
 
 void CDlgImageInfomation::DoDataExchange(CDataExchange* pDX)
 {
@@ -35,6 +38,10 @@ END_MESSAGE_MAP()
 
 void CDlgImageInfomation::SetImage(CImage* pImage)
 {
+	if (NULL == pImage)
+	{
+		TRACE("Set null pointer!\n");
+	}
 	m_pImage = pImage;
 }
 

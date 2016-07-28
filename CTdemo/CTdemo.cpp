@@ -149,8 +149,6 @@ BOOL CCTdemoApp::InitInstance()
 	pMainFrame->ShowWindow(m_nCmdShow);
 	pMainFrame->UpdateWindow();
 
-	m_bUsingOpenGL = false;
-
 	// MFC 0xC015000F 错误的解决办法
 	// http://blog.csdn.net/augusdi/article/details/8768173
 	// 已查明由于CCurveWnd中图像指针没有初始化导致该错误
@@ -239,9 +237,7 @@ void CCTdemoApp::OnFileNew()
 
 void CCTdemoApp::OnFileOpenUsingOpenGL()
 {
-	m_bUsingOpenGL = true;
 	CWinAppEx::OnFileOpen();
-	m_bUsingOpenGL = false;
 }
 
 

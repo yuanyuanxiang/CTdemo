@@ -43,6 +43,8 @@
 *.opensdf
 *.vsps
 *.res
+*.suo
+*.aps
 
 # ignored dirs
 Debug/*

@@ -4,6 +4,7 @@
 
 // CDlgHistogram 对话框
 
+
 class CDlgHistogram : public CDialogEx
 {
 	DECLARE_DYNAMIC(CDlgHistogram)
@@ -19,18 +20,19 @@ protected:
 	int                 m_nHeight;                  //绘图区高度
 	double              m_fWidthRatio;              //宽度伸缩比
 	double              m_fHeightRatio;             //高度伸缩比
-	bool                m_bInitialStatus;           //直方图是否成功
+	BOOL                m_bInitialStatus;           //直方图是否成功
 	int                 m_nChannelSelected;         //当前选择的通道
 
 public:
-	// new members
 	void SetImage(CImage* pImage);					//设置图像指针
-	bool GetHistogram();                            //获得直方图数据
-	void ColorSetting(COLORREF &ref, int Channel, int Strength, int WhereUse = 0);
+	CImage* GetImage();								//获取图像指针
+	BOOL GetHistogram();                            //获得直方图数据
+	void SetColorBarColor(COLORREF &ref, int Channel, int Strength);
+	void SetHistgramColor(COLORREF &ref, int Channel, int Strength);
 
 private:
-	HACCEL				m_hAccel;	//快捷键
-	CImage*				m_pImage;	//图像指针
+	HACCEL				m_hAccel;					//快捷键
+	CImage*				m_pImage;					//图像指针
 
 public:
 	CDlgHistogram(CWnd* pParent = NULL);   // 标准构造函数

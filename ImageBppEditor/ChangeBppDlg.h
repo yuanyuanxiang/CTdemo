@@ -15,7 +15,7 @@
 // 这样 FindResource 就从 dll 中寻找资源，否则从 exe 中寻找资源  //
 // ****************** 2015年3月24日 备注 *********************** //
 
-// 在计算图像大小时，采用公式：biSizeImage = biWidth' × biHeight。
+// 在计算图像大小时，采用公式：biSizeImage = biWidth' × biHeight
 // 是biWidth'，而不是biWidth，这里的biWidth'必须是4的整倍数，表示
 // 大于或等于biWidth的，离4最近的整倍数。WIDTHBYTES就是用来计算
 // biWidth'

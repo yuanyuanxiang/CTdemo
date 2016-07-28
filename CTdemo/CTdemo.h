@@ -28,7 +28,6 @@ public:
 
 // 实现
 	BOOL		m_bHiColorIcons;
-	bool		m_bUsingOpenGL;
 
 	// 获取主文档
 	CCTdemoDoc* GetMainDoc();

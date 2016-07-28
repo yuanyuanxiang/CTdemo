@@ -3,6 +3,7 @@
 
 // CDlgImageInfomation ¶Ô»°¿ò
 
+
 class CDlgImageInfomation : public CDialogEx
 {
 	DECLARE_DYNAMIC(CDlgImageInfomation)

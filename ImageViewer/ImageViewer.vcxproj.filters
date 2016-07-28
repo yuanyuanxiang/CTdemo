@@ -134,9 +134,6 @@
     <Image Include="res\ImageInfo.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\icon1.ico">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="res\Copy.ico">
       <Filter>资源文件</Filter>
     </Image>

@@ -61,12 +61,6 @@ void CChildFrame::Dump(CDumpContext& dc) const
 
 BOOL CChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 {
-	// 如果使用OpenGL
-	CCTdemoApp* pApp = (CCTdemoApp* )AfxGetApp();
-	bool UsingOpenGL = pApp->m_bUsingOpenGL;
-	if (UsingOpenGL)
-		return CMDIChildWndEx::OnCreateClient(lpcs, pContext);
-
 	if(m_ImageView.CreateStatic(this, 1, 2) == NULL) 
 		return FALSE; 
 

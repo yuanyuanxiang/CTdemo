@@ -166,7 +166,6 @@ BEGIN
         MENUITEM "新建(&N)\tCtrl+N",              ID_FILE_NEW
         MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN
         MENUITEM "关闭(&W)\tCtrl+W",              ID_FILE_CLOSE
-        MENUITEM "OpenGL",                      ID_FILE_OPEN_USING_OPENGL
         MENUITEM SEPARATOR
         MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP
         MENUITEM SEPARATOR

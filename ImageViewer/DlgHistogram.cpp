@@ -21,7 +21,7 @@ CDlgHistogram::CDlgHistogram(CWnd* pParent) : CDialogEx(CDlgHistogram::IDD, pPar
 
 CDlgHistogram::~CDlgHistogram()
 {
-
+	// CImage指针来自外部，无需删除
 }
 
 
@@ -33,9 +33,18 @@ void CDlgHistogram::DoDataExchange(CDataExchange* pDX)
 
 void CDlgHistogram::SetImage(CImage* pImage)
 {
+	if (NULL == pImage)
+	{
+		TRACE("Set null pointer!\n");
+	}
 	m_pImage = pImage;
 }
 
+
+CImage* CDlgHistogram::GetImage()
+{
+	return m_pImage;
+}
 
 BEGIN_MESSAGE_MAP(CDlgHistogram, CDialogEx)
 	ON_WM_PAINT()
@@ -58,31 +67,29 @@ END_MESSAGE_MAP()
 // CDlgHistogram 消息处理程序
 
 
-bool CDlgHistogram::GetHistogram()
+// 获取图像直方图
+BOOL CDlgHistogram::GetHistogram()
 {
 	if (m_pImage == NULL)
-		return false;
+		return FALSE;
 
 	for (int i = 0; i < 4; ++i)
 	{
-		for (int j = 0; j < 256; ++j)
-		{
-			m_pfHistogram[i][j] = 0;
-			m_pfTotalHist[i][j] = 0;
-			m_V4Transform[i][j] = 0;
-		}
+		memset(m_pfHistogram[i], 0, 256 * sizeof(double));
+		memset(m_pfTotalHist[i], 0, 256 * sizeof(double));
+		memset(m_V4Transform[i], 0, 256 * sizeof(int));
 	}
-	//计算直方图
+	// 计算直方图
 	int nWidth, nHeight, nRowLen, nBpp, nChannel;
 	BYTE *header = (BYTE *)m_pImage->GetBits() + m_pImage->GetPitch() * (m_pImage->GetHeight() - 1);
 
 	nWidth = m_pImage->GetWidth();
 	nHeight = m_pImage->GetHeight();
-	nRowLen = abs( m_pImage->GetPitch() );
+	nRowLen = abs(m_pImage->GetPitch());
 	nBpp = m_pImage->GetBPP();
 	nChannel = nBpp / 8;
 
-	//彩色图像
+	// 彩色图像
 	if (nChannel >= 3)
 	{
 		for (int i = 0; i < nHeight; i++)
@@ -90,18 +97,21 @@ bool CDlgHistogram::GetHistogram()
 			for (int j = 0; j < nWidth; j++)
 			{
 				BYTE* pixel = header + j * nChannel + i * nRowLen;
-				m_pfHistogram[3][int(*pixel)]++;                                              //Blue
+				m_pfHistogram[3][int(* pixel)]++;                                             //Blue
 				m_pfHistogram[2][int(*(pixel+1))]++;                                          //Green
 				m_pfHistogram[1][int(*(pixel+2))]++;                                          //Red
 				if (*pixel == *(pixel+1) && *(pixel+1) == *(pixel+2))
 				{
 					m_pfHistogram[0][int(*pixel)]++;
 				}
-				else m_pfHistogram[0][int(*pixel*0.299 + *(pixel+1)*0.587 + *(pixel+2)*0.114)]++;  //RGB
+				else
+				{
+					m_pfHistogram[0][int(*pixel*0.299 + *(pixel+1)*0.587 + *(pixel+2)*0.114)]++;  //RGB
+				}
 			}
 		}
 	}
-	//灰度图像
+	// 灰度图像
 	else if(nChannel == 1)
 	{
 		for (int i = 0; i < nHeight; i++)
@@ -118,16 +128,16 @@ bool CDlgHistogram::GetHistogram()
 	}
 	else
 	{
-		MessageBox(_T("系统提示"), _T("图像不被支持!"), MB_OK);
-		return true;
+		MessageBox(_T("图像格式不被支持!"), _T("提示"), MB_OK);
+		return FALSE;
 	}
 
-	//归一化
+	// 归一化
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 256; j++)
 		{
-			//计算每个灰度级的概率
+			// 计算每个灰度级的概率
 			m_pfHistogram[i][j] /= (nWidth * nHeight);
 			if (j != 0)
 			{
@@ -137,12 +147,12 @@ bool CDlgHistogram::GetHistogram()
 			{
 				m_pfTotalHist[i][j] = m_pfHistogram[i][j];
 			}
-			//计算HE映射表
-			m_V4Transform[i][j] = 255*m_pfTotalHist[i][j] + 0.5;
+			// 计算HE映射表
+			m_V4Transform[i][j] = 255 * m_pfTotalHist[i][j] + 0.5;
 		}
 	}
 
-	return true;
+	return TRUE;
 }
 
 
@@ -151,8 +161,8 @@ BOOL CDlgHistogram::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	m_bInitialStatus = GetHistogram();
-	if (m_bInitialStatus == false)
-		MessageBox(_T("系统提示"), _T("直方图初始化失败!"), MB_OK);
+	if (m_bInitialStatus == FALSE)
+		MessageBox(_T("直方图初始化失败!"), _T("提示"), MB_OK);
 
 	GetClientRect(&m_ClientRect);
 	m_nWidth = m_ClientRect.Width()- 20;
@@ -161,11 +171,10 @@ BOOL CDlgHistogram::OnInitDialog()
 	m_PaintRect.top = 10;
 	m_PaintRect.right = 10 + m_nWidth;
 	m_PaintRect.bottom = m_ClientRect.bottom - 30;
-	Invalidate(TRUE);
 
 	SetIcon(AfxGetApp()->LoadIconW(IDI_HISTOGRAM), TRUE);
 	::SetWindowPos(GetSafeHwnd(), HWND_NOTOPMOST, 0, 0, 278, 278, SWP_SHOWWINDOW);
-	this->CenterWindow();
+	CenterWindow();
 
 	m_hAccel = ::LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_HT_HISTOGRAM_DLG));
 
@@ -173,20 +182,42 @@ BOOL CDlgHistogram::OnInitDialog()
 }
 
 
-/*本来是设置通道颜色,为了使颜色条也能使用这个函数
-	WhereUse此参数仅仅为了节省代码量
+/* 设置颜色条的颜色
 	Channel		通道
 	Strength	颜色强度
 */
-void CDlgHistogram::ColorSetting(COLORREF &ref, int Channel, int Strength, int WhereUse)
+void CDlgHistogram::SetColorBarColor(COLORREF &ref, int Channel, int Strength)
 {
 	switch(Channel)
 	{
 	case 0:
-		if (WhereUse)
-		{
-			Strength = 255 - Strength;
-		}
+		Strength = 255 - Strength;
+		ref = RGB(255 - Strength, 255 - Strength, 255 - Strength);
+		break;
+	case 1:
+		ref = RGB(Strength, 0, 0);
+		break;
+	case 2:
+		ref = RGB(0, Strength, 0);
+		break;
+	case 3:
+		ref = RGB(0, 0, Strength);
+		break;
+	default:
+		break;
+	}
+}
+
+
+/* 设置直方图的颜色
+	Channel		通道
+	Strength	颜色强度
+*/
+void CDlgHistogram::SetHistgramColor(COLORREF &ref, int Channel, int Strength)
+{
+	switch(Channel)
+	{
+	case 0:
 		ref = RGB(255 - Strength, 255 - Strength, 255 - Strength);
 		break;
 	case 1:
@@ -211,10 +242,10 @@ void CDlgHistogram::OnPaint()
 	CPen *pOldPen, newPen;
 	COLORREF LineColor;
 
-	//水平方向颜色条
+	// 水平方向颜色条
 	for (int i = m_PaintRect.left, k = 0; i < m_PaintRect.right; i++, k++)
 	{
-		ColorSetting(LineColor, m_nChannelSelected, int(k/m_fWidthRatio), 1);
+		SetColorBarColor(LineColor, m_nChannelSelected, int(k/m_fWidthRatio));
 		newPen.CreatePen(PS_SOLID, 1, LineColor);
 		pOldPen = dc.SelectObject(&newPen);
 		dc.MoveTo(i, m_PaintRect.bottom + 10);
@@ -227,11 +258,11 @@ void CDlgHistogram::OnPaint()
 	dc.Rectangle(m_PaintRect);
 
 	// 如果直方图没有初始化，返回
-	if (m_bInitialStatus == false)
+	if (m_bInitialStatus == FALSE)
 		return;
 
 	// 直方图
-	ColorSetting(LineColor, m_nChannelSelected, 255);
+	SetHistgramColor(LineColor, m_nChannelSelected, 255);
 	newPen.CreatePen(PS_SOLID, 1, LineColor);
 	pOldPen = dc.SelectObject(&newPen);
 	double rate = m_nWidth * m_nHeight * 0.2 / m_fWidthRatio;

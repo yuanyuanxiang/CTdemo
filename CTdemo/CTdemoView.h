@@ -73,18 +73,6 @@ public:
 	int			m_nPointSize;							// 绘制点的大小
 	int			m_nCpuMaxImageSize;						// 用CPU处理的最大尺寸
 
-	/*OpenGL*/
-	bool		m_bUsingOpenGL;							//使用OpenGL
-	int			m_nViewportWidth;						//视口宽度
-	int			m_nViewportHeight;						//视口高度
-	PIXELFORMATDESCRIPTOR *m_pfd;						//像素格式
-	int			m_nGLPixelIndex;						//像素索引
-	HGLRC		m_hGLContext;							//Rendering Context着色描述表
-	BOOL		InitializeOpenGL(HDC hDC);				//初始化 OpenGL
-	void		RenderScene();							//绘制场景
-	BOOL		SetWindowPixelFormat(HDC hDC);			//设置像素格式
-	BOOL		CreateViewGLContext(HDC hDC);			//创建OpenGL上下文
-
 	void		RePaint();								// 重绘图像
 	void		PaintSinglePoint(CDC* pDC, CPoint &point, int nSize = 3);
 	void		PaintSelectedRect(CDC* pDC, CPoint &LeftTop, CPoint &RightBottom);

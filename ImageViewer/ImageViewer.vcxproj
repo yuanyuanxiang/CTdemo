@@ -142,7 +142,6 @@
     <Image Include="res\FlipH.ico" />
     <Image Include="res\FlipV.ico" />
     <Image Include="res\Histogram.ico" />
-    <Image Include="res\icon1.ico" />
     <Image Include="res\ImageInfo.ico" />
     <Image Include="res\ImageViewer.ico" />
     <Image Include="res\Qiut.ico" />
