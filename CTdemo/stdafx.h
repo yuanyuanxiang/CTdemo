@@ -45,12 +45,12 @@
 
 #define RAD(i) (PI * (i) / 180.0f)	//½Ç¶È×ª»¡¶È
 
-#include <GL\glew.h>
-
-#include <GL\glaux.h>
-
-#include <GL\glut.h>
-
+// USING CUDA, 2016-12-4
+#ifdef CUDA
+#pragma comment(lib, "cublas.lib")
+#pragma comment(lib, "cuda.lib")
+#pragma comment(lib, "cudart.lib")
+#endif // CUDA
 
 #ifdef _UNICODE
 #if defined _M_IX86

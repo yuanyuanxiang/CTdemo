@@ -631,6 +631,7 @@ void CCTdemoView::OnToolbarConvolute()
 		pDoc->m_pAfterFilter->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
 		if (m_bUsingGpu)
 		{
+#ifdef CUDA
 			const char* result = cudaConvolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, dlg.m_fW);
 			if (result != NULL)
 			{
@@ -640,6 +641,7 @@ void CCTdemoView::OnToolbarConvolute()
 				m_bUsingGpu = false;
 				return;
 			}
+#endif
 			m_bUsingGpu = false;
 		}
 		else 
@@ -693,6 +695,8 @@ void CCTdemoView::OnToolbarBackProject()
 	}
 	if (m_bUsingGpu)
 	{
+#ifdef CUDA
+
 		const char* result = cudaBackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 		if (result != NULL)
 		{
@@ -702,6 +706,8 @@ void CCTdemoView::OnToolbarBackProject()
 			EndWaitCursor();
 			return;
 		}
+
+#endif // CUDA
 		m_bUsingGpu = false;
 	}
 	else

@@ -45,6 +45,8 @@
 *.res
 *.suo
 *.aps
+*.db
+*.opendb
 
 # ignored dirs
 Debug/*

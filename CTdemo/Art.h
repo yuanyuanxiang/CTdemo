@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#ifdef CUDA
+
 // CUDA runtime
 #include <cuda_runtime.h>
 
@@ -13,6 +15,19 @@
 #include <helper_functions.h>
 
 #include "cuda_runtime_api.h"
+
+#else 
+
+struct float3 
+{
+	float x, y, z;
+	float3(): x(0), y(0), z(0){ }
+	float3(float x0, float y0, float z0): x(x0), y(y0), z(z0) { }
+};
+
+float3 make_float3(float x0, float y0, float z0);
+
+#endif // CUDA
 
 #include <iostream>
 #include <vector>

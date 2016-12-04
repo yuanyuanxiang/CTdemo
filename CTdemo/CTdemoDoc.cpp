@@ -553,6 +553,8 @@ extern const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float pi
 // 使用CUDA加速投影
 void CCTdemoDoc::OnProjectUsingGpu()
 {
+#ifdef CUDA
+
 	// TODO: 在此添加命令处理程序代码
 	if (m_nBPP == 0)
 		return;
@@ -576,6 +578,8 @@ void CCTdemoDoc::OnProjectUsingGpu()
 	EndWaitCursor();
 
 	OnWindowProject();
+
+#endif // CUDA
 }
 
 
@@ -707,6 +711,8 @@ extern const char* cudaPanRadon(float* pSrc, int src_width, int src_height, floa
 
 void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 {
+#ifdef CUDA
+
 	m_nProjectionType = PROJECT_TYPE_PAN;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
 	float *pZoom = NULL;
@@ -749,6 +755,8 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	m_pProject->MemcpyFloatToByte();
 
 	PopImageViewerDlg(m_pProject->m_pfFloat, angles, rays, angles);
+
+#endif // CUDA
 }
 
 
