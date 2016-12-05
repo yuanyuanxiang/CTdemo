@@ -26,20 +26,22 @@
 #define ZOOM_RATE 1.1f
 
 // 检测p为NULL则返回
-#define CHECK_NULL(p) 	if ( (p) == NULL ) return;
+#define CHECK_NULL(p) 	if ( (p) == NULL || (p)->IsNull() ) return;
 
 // 安全删除指针
 #define SAFE_DELETE(p) if ( (p) != NULL ) { delete [] (p); (p) = NULL; }
 
 // 传入数据类型
-
-#define PASS_TYPE_DEFAULT	-1
-#define PASS_TYPE_IMAGE		0
-#define PASS_TYPE_BYTE		1
-#define PASS_TYPE_CHAR		2
-#define PASS_TYPE_INT		3
-#define PASS_TYPE_FLOAT		4
-#define PASS_TYPE_DOUBLE	5
+enum
+{
+	PASS_TYPE_DEFAULT = -1, 
+	PASS_TYPE_IMAGE = 0, 
+	PASS_TYPE_BYTE = 1, 
+	PASS_TYPE_CHAR = 2, 
+	PASS_TYPE_INT = 3, 
+	PASS_TYPE_FLOAT = 4, 
+	PASS_TYPE_DOUBLE = 5, 
+};
 
 class CDlgImageViewer : public CDialogEx
 {
@@ -80,8 +82,6 @@ public:
 	enum { IDD = IDD_DLG_IMAGE_VIEWER };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
-
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
@@ -102,7 +102,6 @@ public:
 	afx_msg void OnSaveImage();
 	afx_msg void OnAbout();
 	afx_msg void OnQuit();
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	virtual BOOL ContinueModal();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);

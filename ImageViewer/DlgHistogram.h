@@ -10,6 +10,7 @@ class CDlgHistogram : public CDialogEx
 	DECLARE_DYNAMIC(CDlgHistogram)
 
 protected:
+	// 下述三个变量占用20K
 	// 新增成员
 	double              m_pfHistogram[4][256];      //直方图:4*256
 	double              m_pfTotalHist[4][256];      //累计直方图
@@ -25,7 +26,7 @@ protected:
 
 public:
 	void SetImage(CImage* pImage);					//设置图像指针
-	CImage* GetImage();								//获取图像指针
+	CImage* GetImage() const;						//获取图像指针
 	BOOL GetHistogram();                            //获得直方图数据
 	void SetColorBarColor(COLORREF &ref, int Channel, int Strength);
 	void SetHistgramColor(COLORREF &ref, int Channel, int Strength);
@@ -35,14 +36,13 @@ private:
 	CImage*				m_pImage;					//图像指针
 
 public:
-	CDlgHistogram(CWnd* pParent = NULL);   // 标准构造函数
+	CDlgHistogram(CWnd* pParent = NULL);			// 标准构造函数
 	virtual ~CDlgHistogram();
 
 	// 对话框数据
 	enum { IDD = IDD_DLG_HISTOGRAM };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 	DECLARE_MESSAGE_MAP()
 public:

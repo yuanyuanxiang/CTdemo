@@ -16,7 +16,7 @@ CDlgImageViewer::CDlgImageViewer(CWnd* pParent) : CDialogEx(CDlgImageViewer::IDD
 {
 	m_pScrollView = NULL;
 	m_pImage = NULL;
-	m_fZoomRate = 1.f;
+	m_fZoomRate = 1.0f;
 	m_nPassType = PASS_TYPE_DEFAULT;
 }
 
@@ -161,14 +161,14 @@ template <typename Type> void CDlgImageViewer::CreateImage(Type* ptr, int width,
 
 void  CDlgImageViewer::SetColorTableForImage()
 {
-	if (m_pImage == NULL)
-		return;
+	CHECK_NULL(m_pImage);
 	if (m_pImage->GetBPP() != 8)
 		return;
 	RGBQUAD ColorTab[256];
 	for(int i = 0; i<256; i++)
 	{
 		ColorTab[i].rgbBlue = ColorTab[i].rgbGreen = ColorTab[i].rgbRed = i;
+		ColorTab[i].rgbReserved = 0;
 	}
 	m_pImage->SetColorTable(0, 256, ColorTab);
 }
@@ -179,11 +179,6 @@ void  CDlgImageViewer::SetImage(CImage *pImage)
 	m_pScrollView->m_pImage = pImage;
 	CHECK_NULL(pImage);
 	m_pScrollView->SetPaintRect(0, 0, pImage->GetWidth(), pImage->GetHeight());
-}
-
-void CDlgImageViewer::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
 }
 
 
@@ -205,7 +200,6 @@ BEGIN_MESSAGE_MAP(CDlgImageViewer, CDialogEx)
 	ON_COMMAND(ID_SAVE_IMAGE, &CDlgImageViewer::OnSaveImage)
 	ON_COMMAND(ID_ABOUT, &CDlgImageViewer::OnAbout)
 	ON_COMMAND(ID_QUIT, &CDlgImageViewer::OnQuit)
-	ON_WM_TIMER()
 	ON_WM_MOUSEWHEEL()
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXT, 0, 0xffff, OnToolTipText)
 END_MESSAGE_MAP()
@@ -319,7 +313,7 @@ void CDlgImageViewer::OnDestroy()
 		m_pScrollView = NULL;
 	}
 	// 如果m_pImage是当前dll创建的
-	if (m_nPassType != 0)
+	if (m_nPassType != PASS_TYPE_IMAGE)
 	{
 		SAFE_DELETE(m_pImage);
 	}
@@ -481,7 +475,9 @@ void CDlgImageViewer::OnCopyImage()
 void CDlgImageViewer::OnSaveImage()
 {
 	// 过滤器
-	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
+	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|"\
+		"BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"\
+		"GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
 
 	// 获取系统时间
 	SYSTEMTIME CurTime;
@@ -554,11 +550,6 @@ BYTE* CDlgImageViewer::GetImageLineAddress(int LineID)
 	if ( temp == NULL )
 		return NULL;
 	return temp + LineID * abs( m_pImage->GetPitch() );
-}
-
-void CDlgImageViewer::OnTimer(UINT_PTR nIDEvent)
-{
-	CDialogEx::OnTimer(nIDEvent);
 }
 
 

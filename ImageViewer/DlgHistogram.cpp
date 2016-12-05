@@ -25,12 +25,6 @@ CDlgHistogram::~CDlgHistogram()
 }
 
 
-void CDlgHistogram::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-
 void CDlgHistogram::SetImage(CImage* pImage)
 {
 	if (NULL == pImage)
@@ -41,10 +35,11 @@ void CDlgHistogram::SetImage(CImage* pImage)
 }
 
 
-CImage* CDlgHistogram::GetImage()
+CImage* CDlgHistogram::GetImage() const
 {
 	return m_pImage;
 }
+
 
 BEGIN_MESSAGE_MAP(CDlgHistogram, CDialogEx)
 	ON_WM_PAINT()
@@ -70,15 +65,17 @@ END_MESSAGE_MAP()
 // 获取图像直方图
 BOOL CDlgHistogram::GetHistogram()
 {
-	if (m_pImage == NULL)
+	if (m_pImage == NULL || m_pImage->IsNull())
 		return FALSE;
 
+	// 内存置零
 	for (int i = 0; i < 4; ++i)
 	{
 		memset(m_pfHistogram[i], 0, 256 * sizeof(double));
 		memset(m_pfTotalHist[i], 0, 256 * sizeof(double));
 		memset(m_V4Transform[i], 0, 256 * sizeof(int));
 	}
+
 	// 计算直方图
 	int nWidth, nHeight, nRowLen, nBpp, nChannel;
 	BYTE *header = (BYTE *)m_pImage->GetBits() + m_pImage->GetPitch() * (m_pImage->GetHeight() - 1);
@@ -106,7 +103,7 @@ BOOL CDlgHistogram::GetHistogram()
 				}
 				else
 				{
-					m_pfHistogram[0][int(*pixel*0.299 + *(pixel+1)*0.587 + *(pixel+2)*0.114)]++;  //RGB
+					m_pfHistogram[0][int((pixel[0]*299 + pixel[1]*587 + pixel[2]*114) / 1000.0)]++;  //RGB
 				}
 			}
 		}
