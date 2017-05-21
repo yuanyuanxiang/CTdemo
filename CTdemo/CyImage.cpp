@@ -1,163 +1,320 @@
 #include "stdafx.h"
 #include "CyImage.h"
-#include "IntSection.h"
-#include <vector>
+#include <new>
+#include <math.h>
+
 #include <algorithm>
 using namespace std;
 
-// 不显示数据截断警告
-#pragma warning(disable: 4244)
+#include "FileIO.h"
+#include "ImageTransform.h"
 
-CyImage::CyImage()
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/** - swap 交换int型元素的次序 - */
+void swap(int &nElem1, int &nElem2)
 {
-	CImage::CImage();
-	m_pfFloat = NULL;
-	m_fMaximum = 0;
-	m_fMinimum = 0;
-	m_pyBits = NULL;
-	m_nyWidth = 0;
-	m_nyHeight = 0;
-	m_nyRowlen = 0;
-	m_nyRowlen2 = 0;
-	m_nyBpp = 0;
-	m_nyChannel = 0;
+	int temp(nElem1);
+	nElem1 = nElem2;
+	nElem2 = temp;
 }
 
 
+/** - 为8位色图像设置颜色表 - */
+void SetColorTabFor8BitImage(CImage *pImage)
+{
+	ASSERT(pImage && !pImage->IsNull() && 8 == pImage->GetBPP());
+	if (8 != pImage->GetBPP())
+		return;
+	RGBQUAD ColorTab[256];
+	for (int i = 0; i < 256; i++)
+	{
+		ColorTab[i].rgbBlue = ColorTab[i].rgbGreen = ColorTab[i].rgbRed = i;
+		ColorTab[i].rgbReserved = 0;
+	}
+	pImage->SetColorTable(0, 256, ColorTab);
+}
+
+
+// 从file path获取file name(默认带后缀)
+CString GetFileName(CString strFilePath, BOOL bHasPostfix)
+{
+	int nLength = strFilePath.GetLength();
+	int nPos = strFilePath.ReverseFind('\\');
+	CString name = strFilePath.Right(nLength - nPos - 1);
+	// 获取没有后缀的文件名
+	if (bHasPostfix == FALSE)
+	{
+		int nDotPos = name.ReverseFind('.');
+		name = name.Left(nDotPos);
+	}
+	return name;
+}
+
+
+// 从file path获取file ext
+CString GetFileExt(CString strFilePath)
+{
+	int nLength = strFilePath.GetLength();
+	int nPos = strFilePath.ReverseFind('.');
+	CString ext = strFilePath.Right(nLength - nPos - 1);
+	return ext;
+}
+
+
+// 数字转为CString
+CString Num2String(int nNum)
+{
+	CString str;
+	str.Format(_T("%d"), nNum);
+	return str;
+}
+
+
+/** 在目标图像挖出一块矩形用源图像替换，LOGO必须为3通道 */
+void ReplacedLogo(CyImage* pDstImage, CyImage* pSrcImage, CLogoRect LogoRect)
+{
+	// 当中一个为空就返回
+	if (pSrcImage->IsNull() || pSrcImage->GetWidth() < 23 || pDstImage->IsNull())
+		return;
+	// 当Logo太大时返回
+	if (LogoRect.Width() > pDstImage->GetWidth() || LogoRect.Height() > pDstImage->GetHeight())
+		return;
+	float *pDst = pDstImage->GetFloatDataHead();
+	float *pSrc = pSrcImage->Zoom(LogoRect.Width(), LogoRect.Height(), TRUE);
+	int nDstRowlen = pDstImage->GetFloatDataRowlen();
+	int nSrcRowlen = LogoRect.Width() * 3;
+	int nLogoHeight = LogoRect.Height();
+	for (int i = 0; i < nLogoHeight; ++i)
+	{
+		float* pCur = pDst + LogoRect.left * 3 + (i + LogoRect.top) * nDstRowlen;
+		memcpy(pCur, pSrc + i * nSrcRowlen, nSrcRowlen * sizeof(float));
+	}
+	SAFE_DELETE(pSrc);
+	pDstImage->MemcpyFloatToByte();
+	return;
+}
+
+
+/** 在目标图像挖出一块矩形与源图像混合，dst_rate指明DstImage所占比例 */
+void MixedLogo(CyImage* pDstImage, CyImage* pSrcImage, CLogoRect LogoRect, float dst_rate)
+{
+	// 当中一个为空就返回
+	if (pDstImage->IsNull() || pSrcImage->IsNull())
+		return;
+	if (LogoRect.Width() > pDstImage->GetWidth() || LogoRect.Height() > pDstImage->GetHeight())
+		return;
+	float *pDst = pDstImage->GetFloatDataHead();
+	float *pSrc = pSrcImage->Zoom(LogoRect.Width(), LogoRect.Height(), TRUE);
+	int src_width, src_height;
+	pSrcImage->GetInfomation(src_width, src_height);
+	int nDstRowlen = pDstImage->GetFloatDataRowlen();
+	int nSrcRowlen = LogoRect.Width() * 3;
+	int nLogoWidth = LogoRect.Width();
+	int nLogoHeight = LogoRect.Height();
+	for (int i = 0; i < nLogoHeight; ++i)
+	{
+		int y = i * nSrcRowlen, y0 = (i + LogoRect.top) * nDstRowlen;
+		for (int j = 0; j < nLogoWidth; ++j)
+		{
+			int x = 3 * j;
+			float* pCur = pDst + (j + LogoRect.left) * 3 + y0;
+			pCur[0] = dst_rate * pCur[0] + (1 - dst_rate) * pSrc[0 + x + y];
+			pCur[1] = dst_rate * pCur[1] + (1 - dst_rate) * pSrc[1 + x + y];
+			pCur[2] = dst_rate * pCur[2] + (1 - dst_rate) * pSrc[2 + x + y];
+		}
+	}
+	SAFE_DELETE(pSrc);
+	pDstImage->MemcpyFloatToByte();
+	return;
+}
+
+
+/** - 默认的构造函数 - */
+CyImage::CyImage()
+{
+	CImage::CImage();
+	m_pFloatData = NULL;
+	m_fMaximum = 0;
+	m_fMinimum = 0;
+}
+
+
+/** - 析构函数 - */
 CyImage::~CyImage()
 {
-	SAFE_DELETE(m_pfFloat);
+	SAFE_DELETE(m_pFloatData);
 	CImage::~CImage();
 }
 
 
-void CyImage::UpdateInfomation()
+/** - 拷贝构造函数 - */
+CyImage::CyImage(const CyImage &pImage)
 {
-	if (CHECK_IMAGE_NULL(this))
-		return;
-	if (!BitMapModified())
-		return;
-	GetInfomation(m_nyWidth, m_nyHeight, m_nyRowlen, m_nyBpp, m_nyChannel);
-	m_nyRowlen2 = m_nyChannel * m_nyWidth;
-	m_pyBits = GetHeadAddress();
-	InitFloatData();
-	MemcpyByteToFloat();
+	m_pFloatData = NULL;
+	m_fMaximum = 0;
+	m_fMinimum = 0;
+	BOOL nRet = Create(pImage.GetWidth(), pImage.GetHeight(), pImage.GetBPP(), 0);
+	ASSERT(nRet);
+	float *pDst = GetFloatDataHead();
+	float *pSrc = pImage.GetFloatDataHead();
+	memcpy(pDst, pSrc, GetHeight() * GetFloatDataRowlen() * sizeof(float));
+	MemcpyFloatToByte();
 }
 
 
-float* CyImage::GetFloatData()
+/** - 赋值操作运算 - */
+CyImage CyImage::operator = (const CyImage &pImage)
 {
-	return m_pfFloat;
+	// 自己给自己赋值
+	if (&pImage == this)
+		return *this;
+	Destroy();
+	m_pFloatData = NULL;
+	m_fMaximum = 0;
+	m_fMinimum = 0;
+	BOOL nRet = Create(pImage.GetWidth(), pImage.GetHeight(), pImage.GetBPP(), 0);
+	ASSERT(nRet);
+	float *pDst = GetFloatDataHead();
+	float *pSrc = pImage.GetFloatDataHead();
+	memcpy(pDst, pSrc, GetHeight() * GetFloatDataRowlen() * sizeof(float));
+	MemcpyFloatToByte();
+	return *this;
 }
 
 
-bool CyImage::SetFloatData(float* pSrc, int nRowlen, int nHeight)
+/** - 获取浮点数据的头指针 - */
+float* CyImage::GetFloatDataHead() const
 {
-	if (m_pfFloat == NULL || nRowlen != m_nyRowlen2 || nHeight != m_nyHeight)
-		return false;
-
-	memcpy(m_pfFloat, pSrc, nRowlen * nHeight * sizeof(float));
-
-	return true;
+	return m_pFloatData;
 }
 
 
-float CyImage::GetMaximum()
+/** - 获取图像每行浮点数据个数 - */
+int CyImage::GetFloatDataRowlen() const
+{
+	return GetWidth() * GetChannel();
+}
+
+
+/** - 为图像拷贝浮点数据 - 
+* @param[in] *pSrc 数据源
+* @param[in] nRowlen 数据源每行浮点个数
+* @param[in] nHeight 数据源的高度
+* @return 真或假
+*/
+BOOL CyImage::SetFloatData(float* pSrc, int nRowlen, int nHeight)
+{
+	if (m_pFloatData == NULL || nRowlen != GetFloatDataRowlen() || nHeight != GetHeight())
+		return FALSE;
+
+	memcpy(m_pFloatData, pSrc, nRowlen * nHeight * sizeof(float));
+
+	return TRUE;
+}
+
+
+/** - 获取浮点数据的最大值 - */
+float CyImage::GetMaximum() const
 {
 	return m_fMaximum;
 }
 
 
-float CyImage::GetMinimum()
+/** - 获取浮点数据的最小值 - */
+float CyImage::GetMinimum() const
 {
 	return m_fMinimum;
 }
 
 
+/** - 计算浮点数据的最大、最小值 - */
 void CyImage::ComputeMinMax()
 {
-	m_fMaximum = *m_pfFloat;
-	m_fMinimum = *m_pfFloat;
+	// 寻找最大最小值
+	pair<float*, float*> minmax_pair = minmax_element(m_pFloatData, 
+		m_pFloatData + GetHeight() * GetFloatDataRowlen());
 
-	for (int j = 0; j < m_nyHeight; ++j)
-	{
-		for (int i = 0; i < m_nyRowlen2; ++i)
-		{
-			if (m_pfFloat[i + j * m_nyRowlen2] > m_fMaximum)
-				m_fMaximum = m_pfFloat[i + j * m_nyRowlen2];
-			if (m_pfFloat[i + j * m_nyRowlen2] < m_fMinimum)
-				m_fMinimum = m_pfFloat[i + j * m_nyRowlen2];
-		}
-	}
+	m_fMinimum = *minmax_pair.first;
+	m_fMaximum = *minmax_pair.second;
 }
 
 
-BYTE* CyImage::GetHeadAddress()
+/** - 获得图像数据块的首地址 - */
+BYTE* CyImage::GetHeadAddress() const
 {
-	return (BYTE*) this->GetBits() + GetPitch() * (GetHeight() - 1);
+	return (BYTE*) GetBits() + GetPitch() * (GetHeight() - 1);
 }
 
 
-BYTE* CyImage::GetLineAddress(int LineID)
+/** - 获得图像某一行的首地址 - */
+BYTE* CyImage::GetLineAddress(int nLineID) const
 {
-	return GetHeadAddress() + LineID * abs(GetPitch());
+	return GetHeadAddress() + nLineID * abs(GetPitch());
 }
 
 
-int CyImage::GetChannel()
+/** - 获得图像的通道个数 - */
+int CyImage::GetChannel() const
 {
-	return m_nyChannel;
+	return GetBPP() / 8;
 }
 
 
-int CyImage::GetRowlen()
+/** - 获得图像数据每行的字节数 - */
+int CyImage::GetRowlen() const
 {
-	return m_nyRowlen;
+	return abs(GetPitch());
 }
 
 
-int CyImage::GetDiagLength()
+/** - 获得图像数据总的字节数 - */
+int CyImage::GetLength() const
 {
-	return (int)ceil(sqrt(1.0f * m_nyWidth * m_nyWidth + m_nyHeight * m_nyHeight));
+	return GetHeight() * abs(GetPitch());
 }
 
 
-void CyImage::GetInfomation(int &nWidth, int &nHeight)
+/** - 获得图像的对角线的长度 - */
+int CyImage::GetDiagLength() const
 {
-	nWidth = m_nyWidth;
-	nHeight = m_nyHeight;
+	return (int)ceil(sqrt(1.0f * GetWidth() * GetWidth() + GetHeight() * GetHeight()));
 }
 
 
-void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen)
+/** - 获得图像的宽度、高度 - */
+void CyImage::GetInfomation(int &nWidth, int &nHeight) const
 {
-	nWidth = m_nyWidth;
-	nHeight = m_nyHeight;
-	nRowlen = m_nyRowlen;
+	nWidth = GetWidth();
+	nHeight = GetHeight();
 }
 
 
-void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP)
+/** - 获得图像的宽度、高度、每行字节数 - */
+void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen) const
 {
-	nWidth = m_nyWidth;
-	nHeight = m_nyHeight;
-	nRowlen = m_nyRowlen;
-	nBPP = m_nyBpp;
+	nWidth = GetWidth();
+	nHeight = GetHeight();
+	nRowlen = abs(GetPitch());
 }
 
 
-bool CyImage::BitMapModified()
+/** - 获得图像的宽度、高度、每行字节数、每像素字节数 - */
+void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP) const
 {
-	BYTE* pBits = GetHeadAddress();
-	if (m_nyWidth != GetWidth() || m_nyHeight != GetHeight() || m_nyBpp != GetBPP() || m_pyBits != pBits)
-		return true;
-	if (strcmp((char*)m_pyBits, (char*)pBits) != 0)
-		return true;
-	return false;
+	nWidth = GetWidth();
+	nHeight = GetHeight();
+	nRowlen = abs(GetPitch());
+	nBPP = GetBPP();
 }
 
 
-void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP, int &nChannel)
+/** - 获得图像的宽度、高度、每行字节数、每像素字节数、通道个数 - */
+void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP, int &nChannel) const
 {
 	nWidth = GetWidth();
 	nHeight = GetHeight();
@@ -167,270 +324,427 @@ void CyImage::GetInfomation(int &nWidth, int &nHeight, int &nRowlen, int &nBPP, 
 }
 
 
-bool CyImage::InitFloatData()
+/** - 初始化浮点数据 - */
+BOOL CyImage::InitFloatData()
 {
-	SAFE_DELETE(m_pfFloat);
+	SAFE_DELETE(m_pFloatData);
+	int nHeight = GetHeight();
+	int nRowlen = GetFloatDataRowlen();
 	try
 	{
-		m_pfFloat = new float[m_nyHeight * m_nyRowlen2];
+		m_pFloatData = new float[nHeight * nRowlen];
 	}
-	catch (const std::bad_alloc &e)
+	catch (const std::bad_alloc)
 	{
-		return false;
+		return FALSE;
 	}
-	ZeroMemory(m_pfFloat, m_nyHeight * m_nyRowlen2 * sizeof(float));
-	return true;
+	memset(m_pFloatData, 0, nHeight * nRowlen * sizeof(float));
+	return TRUE;
 }
 
 
+/** - 拷贝数据源创建图像 - 
+* @param[in] *pSrc 源数据
+* @param[in] nWidth 图像宽度
+* @param[in] nHeight 图像高度
+* @param[in] nBPP 位深度
+* @return 成功或失败
+* @note pSrc的数据长度务必与所创建图像字节数一致，即:
+		length(pSrc) = 所创建的图像总的字节数
+*/
+BOOL CyImage::Create(const BYTE* pSrc, int nWidth, int nHeight, int nBPP) throw()
+{
+	Destroy();// 先销毁图像数据
+	if (FALSE == CImage::Create(nWidth, nHeight, nBPP, 0UL))
+		return FALSE;
+	if (nBPP == 8)
+		SetColorTabFor8BitImage(this);
+	memcpy(GetHeadAddress(), pSrc, GetLength() * sizeof(BYTE));
+	InitFloatData();
+	MemcpyByteToFloat();
+	return TRUE;
+}
+
+
+/** - 创建图像 - 
+* @param[in] nWidth 图像宽度
+* @param[in] nHeight 图像高度
+* @param[in] nBPP 图像位深度
+* @param[in] dwFlags 图像初值
+* @return 成功或失败
+*/
 BOOL CyImage::Create(int nWidth, int nHeight, int nBPP, DWORD dwFlags) throw()
 {
-	this->Destroy();
-	BOOL result = CImage::Create(nWidth, nHeight, nBPP, dwFlags);
-	if (result == 0)
-		return result;
+	Destroy();
+	if (FALSE == CImage::Create(nWidth, nHeight, nBPP, dwFlags))
+		return FALSE;
 	if (nBPP == 8)
 		SetColorTabFor8BitImage(this);
-	UpdateInfomation();
-	if (dwFlags != 0)
-	{
-		MemcpyByteToFloat();
-		m_fMaximum = m_fMinimum = dwFlags;
-	}
-	return result;
+	InitFloatData();
+	MemcpyByteToFloat();
+	return TRUE;
 }
 
 
-BOOL CyImage::Create(float* pSrc, int nWidth, int nHeight, int nRowlen) throw()
+/** - 从数据源创建图像 - 
+* @param[in] *pSrc 数据源
+* @param[in] nWidth 图像宽度
+* @param[in] nHeight 图像高度
+* @param[in] nRowlen 数据源每行数据个数
+* @return 成功或失败
+*/
+BOOL CyImage::Create(const float* pSrc, int nWidth, int nHeight, int nRowlen) throw()
 {
-	this->Destroy();
+	Destroy();
 	int nBPP = 8 * nRowlen / nWidth;
-	BOOL result = CImage::Create(nWidth, nHeight, nBPP);
-	if (result == 0)
-		return result;
+	if (FALSE == CImage::Create(nWidth, nHeight, nBPP))
+		return FALSE;
 	if (nBPP == 8)
 		SetColorTabFor8BitImage(this);
-	UpdateInfomation();
-	memcpy(m_pfFloat, pSrc, m_nyHeight * m_nyRowlen2 * sizeof(float));
+	InitFloatData();
+	memcpy(m_pFloatData, pSrc, nHeight * nRowlen * sizeof(float));
 	MemcpyFloatToByte();
-	return result;
+	return TRUE;
 }
 
 
+/** - 从ImageSrc创建图像 - */
+BOOL CyImage::Create(const ImageSrc *pSrc) throw()
+{
+	Destroy();// 先销毁图像数据
+	if (FALSE == CImage::Create(pSrc->GetWidth(), pSrc->GetHeight(), pSrc->GetBPP(), 0UL))
+		return FALSE;
+	if (pSrc->GetBPP() == 8)
+		SetColorTabFor8BitImage(this);
+	memcpy(GetHeadAddress(), pSrc->GetHeadAddress(), GetLength() * sizeof(BYTE));
+	InitFloatData();
+	MemcpyByteToFloat();
+	return TRUE;
+}
+
+
+/** - 加载图像 - */
 HRESULT CyImage::Load(LPCTSTR pszFileName) throw()
 {
-	this->Destroy();
-
-	// 获取文件后缀
-	CString strFilePath = pszFileName;
-	int last = strFilePath.ReverseFind('\\');
-	CString temp = strFilePath.Right(strFilePath.GetLength() - last - 1);
-	int num = temp.ReverseFind('.');
-	CString strFilePostfix = temp.Right(temp.GetLength() - num);
-	// 读取文本文档
-	if (strFilePostfix == _T(".txt") || strFilePostfix == _T(".TXT"))
+	// 如果文件为TXT
+	CString strPathName(pszFileName);
+	CString strExt = GetFileExt(strPathName);
+	strExt.MakeUpper();
+	if (strExt == _T("TXT"))
 	{
-		float* pDst;
-		int nWidth, nHeight;
-		if (ReadTxt(pDst, nWidth, nHeight, strFilePath))
-		{
-			Create(pDst, nWidth, nHeight, nWidth);
-			SAFE_DELETE(pDst);
-			return S_OK;
-		}
+		int nWidth = 0, nHeight = 0, nRowlen = 0, nChannel = 0;
+		USES_CONVERSION;
+		BYTE *pSrc = ReadTxt(W2A(strPathName), nWidth, nHeight, nRowlen, nChannel);
+		if (pSrc == NULL)
+			return E_FAIL;
+		Create(nWidth, nHeight, 8 * nChannel, 0UL);
+		memcpy(GetHeadAddress(), pSrc, nRowlen * nHeight);
+		MemcpyByteToFloat();
+		SAFE_DELETE(pSrc);
+		return S_OK;
 	}
-	// 读取RAW文档
-	else if (strFilePostfix == _T(".raw") || strFilePostfix == _T(".RAW"))
-	{
-		float* pDst;
-		int nWidth = 0, nHeight = 0;
-		if (ReadRaw(pDst, nWidth, nHeight, strFilePath))
-		{
-			Create(pDst, nWidth, nHeight, nWidth);
-			SAFE_DELETE(pDst);
-			return S_OK;
-		}
-	}
-
+	// 摧毁当前图像
+	Destroy();
 	// 加载进图像
-	HRESULT hr = FAILED(CImage::Load(pszFileName));
+	HRESULT hr = CImage::Load(pszFileName);
 	if (hr != S_OK)
 		return hr;
-	UpdateInfomation();
+	InitFloatData();
 	MemcpyByteToFloat();
-	return hr;
+	return S_OK;
 }
 
 
+/** - 同步数据 - */
 void CyImage::MemcpyByteToFloat()
 {
-	BYTE* head = GetHeadAddress();
-	float rate = (m_fMaximum - m_fMinimum) / 255.f;
-	float minimum = m_fMinimum;
+	BYTE* pHead = GetHeadAddress();
+	float fRate = (m_fMaximum - m_fMinimum) / 255.f;
+	float fMinimum = m_fMinimum;
 	if (m_fMaximum == m_fMinimum)
 	{
-		rate = 1.f;
-		minimum = 0.f;
+		fRate = 1.f;
+		fMinimum = 0.f;
 	}
 
-#pragma omp parallel for
-	for (int i = 0; i < m_nyWidth; ++i)
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nChannel = GetChannel();
+	int nRowlen = GetRowlen();
+	int nFloatRowlen = GetFloatDataRowlen();
+	if (NULL == m_pFloatData)
 	{
-		for (int j = 0; j < m_nyHeight; ++j)
+		m_pFloatData = new float[nHeight * nFloatRowlen];
+	}
+	for (int i = 0; i < nWidth; ++i)
+	{
+		int x = i * nChannel;
+		for (int j = 0; j < nHeight; ++j)
 		{
-			for (int k = 0; k < m_nyChannel; ++k)
-				m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2] = rate * head[k + i * m_nyChannel + j * m_nyRowlen] + minimum;
+			int y = j * nRowlen, z = j * nFloatRowlen;
+			for (int k = 0; k < nChannel; ++k)
+				m_pFloatData[k + x + z] = fRate * pHead[k + x + y] + fMinimum;
 		}
 	}
 	ComputeMinMax();
 }
 
 
+/** - 同步数据 - */
 void CyImage::MemcpyFloatToByte()
 {
 	ComputeMinMax();
-	BYTE* head = GetHeadAddress();
+	BYTE* pHead = GetHeadAddress();
+	// 如果浮点数据是常量
 	if (m_fMaximum == m_fMinimum)
 	{
-		ZeroMemory(head, m_nyHeight * m_nyRowlen * sizeof(BYTE));
+		TRACE(" * 警告：浮点数据全部是一样的!\n");
+		BYTE val = 0;
+		if (0 <= m_fMinimum && m_fMinimum <= 255)
+		{
+			val = (BYTE)m_fMinimum;
+		}
+		memset(pHead, val, GetHeight() * GetRowlen() * sizeof(BYTE));
 		return;
 	}
 
-	float rate = 255.f / (m_fMaximum - m_fMinimum);
-#pragma omp parallel for
-	for (int i = 0; i < m_nyWidth; ++i)
+	float fRate = 255.f / (m_fMaximum - m_fMinimum);
+
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nChannel = GetChannel();
+	int nRowlen = GetRowlen();
+	int nFloatRowlen = GetFloatDataRowlen();
+
+	for (int i = 0; i < nWidth; ++i)
 	{
-		for (int j = 0; j < m_nyHeight; ++j)
+		int x = i * nChannel;
+		for (int j = 0; j < nHeight; ++j)
 		{
-			for (int k = 0; k < m_nyChannel; ++k)
-				head[k + i * m_nyChannel + j * m_nyRowlen] = rate * (m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2] - m_fMinimum);
+			int y = j * nRowlen, z = j * nFloatRowlen;
+			for (int k = 0; k < nChannel; ++k)
+				pHead[k + x + y] = BYTE(fRate * (m_pFloatData[k + x + z] - m_fMinimum));
 		}
 	}
 }
 
 
+/** - 同步数据 - 
+* @param[in] lower 下限
+* @param[in] upper 上限
+* @return 无
+* @note 该函数会将超界的元素设为边界值
+*/
 void CyImage::MemcpyFloatToByteBounded(float lower, float upper)
 {
-	BYTE* head = GetHeadAddress();
+	BYTE* pHead = GetHeadAddress();
 
-#pragma omp parallel for
-	for (int i = 0; i < m_nyWidth; ++i)
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nChannel = GetChannel();
+	int nRowlen = GetRowlen();
+	int nFloatRowlen = GetFloatDataRowlen();
+
+	for (int i = 0; i < nWidth; ++i)
 	{
-		for (int j = 0; j < m_nyHeight; ++j)
+		int x = i * nChannel;
+		for (int j = 0; j < nHeight; ++j)
 		{
-			for (int k = 0; k < m_nyChannel; ++k)
+			int y = j * nRowlen, z = j * nFloatRowlen;
+			for (int k = 0; k < nChannel; ++k)
 			{
-				if (m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2] < lower)
-					head[k + i * m_nyChannel + j * m_nyRowlen] = lower;
-				else if (m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2] > upper)
-					head[k + i * m_nyChannel + j * m_nyRowlen] = upper;
+				if (m_pFloatData[k + x + z] < lower)
+					pHead[k + x + j * nRowlen] = (BYTE)lower;
+				else if (m_pFloatData[k + x + z] > upper)
+					pHead[k + x + y] = (BYTE)upper;
 				else
-					head[k + i * m_nyChannel + j * m_nyRowlen] = m_pfFloat[k + i * m_nyChannel + j * m_nyRowlen2];
+					pHead[k + x + y] = (BYTE)m_pFloatData[k + x + z];
 			}
 		}
 	}
 }
 
 
-float CyImage::GetAt(int x, int y, int nCurChannel)
-{
-	return GetPositionValue(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, x, y);
-}
-
-
-float CyImage::GetAt(float x, float y, int nCurChannel)
-{
-	return biLinearInterp(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, x, y);
-}
-
-
-// 对图像旋转一个角度
+/** - 对图像旋转一个角度 - */
 void CyImage::Rotate(float degree)
 {
 	float angle = RAD(degree);
 	int NewWidth = 0;
 	int NewHeight = 0;
 	int NewRowlen = 0;
-	float *pDst = ImageRotate(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, angle,NewWidth, NewHeight, NewRowlen);
+	InitFloatData();
+	MemcpyByteToFloat();
+	float *pDst = ImageRotate(m_pFloatData, GetWidth(), GetHeight(), 
+		GetFloatDataRowlen(), GetChannel(), angle,NewWidth, NewHeight, NewRowlen);
 	Create(pDst, NewWidth, NewHeight, NewRowlen);
 	SAFE_DELETE(pDst);
 }
 
 
-// 图像旋转angle角度之后图像每个像素的值。Width和Height描述了像素块宽和高。
+/** - 旋转图像，并返回旋转得到的图像数据 - 
+* @param[in] angle 旋转角度
+* @param[out] &NewWidth 新图像宽度
+* @param[out] &NewHeight 新图像高度
+* @param[out] &NewRowlen 新图像每行浮点元素个数
+* @return 新图像数据块头指针
+*/
 float* CyImage::Rotate(float angle, int &NewWidth, int &NewHeight, int &NewRowlen)
 {
-	return ImageRotate(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, angle, NewWidth, NewHeight, NewRowlen);
+	return ImageRotate(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), 
+		GetChannel(), angle, NewWidth, NewHeight, NewRowlen);
 }
 
 
+/** - 旋转图像，并返回旋转得到的图像数据 -
+* @param[in] angle 旋转角度
+* @param[in] x0 旋转中心
+* @param[in] y0 旋转中心
+* @param[out] &NewWidth 新图像宽度
+* @param[out] &NewHeight 新图像高度
+* @param[out] &NewRowlen 新图像每行浮点元素个数
+* @return 新图像数据块头指针
+*/
 float* CyImage::Rotate(float angle, float x0, float y0, int &NewWidth, int &NewHeight, int &NewRowlen)
 {
-	return ImageRotate(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, angle, x0, y0, NewWidth, NewHeight, NewRowlen);
+	return ImageRotate(m_pFloatData, GetWidth(), GetHeight(), 
+		GetFloatDataRowlen(), GetChannel(), angle, x0, y0, NewWidth, NewHeight, NewRowlen);
 }
 
 
-float* CyImage::Rotate(float angle, float x0, float y0, int &Xmin, int &Ymin, int &Xmax, int &Ymax, int &NewWidth, int &NewHeight, int &NewRowlen)
+/** - 旋转图像，并返回旋转得到的图像数据 -
+* @param[in] angle 旋转角度
+* @param[in] x0 旋转中心
+* @param[in] y0 旋转中心
+* @param[in] Xmin 图像边界
+* @param[in] Xmax 图像边界
+* @param[in] Ymin 图像边界
+* @param[in] YMax 图像边界
+* @param[out] &NewWidth 新图像宽度
+* @param[out] &NewHeight 新图像高度
+* @param[out] &NewRowlen 新图像每行浮点元素个数
+* @return 新图像数据块头指针
+*/
+float* CyImage::Rotate(float angle, float x0, float y0, int &Xmin, int &Ymin, int &Xmax, int &Ymax, 
+					   int &NewWidth, int &NewHeight, int &NewRowlen)
 {
-	return ImageRotate(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, angle, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+	return ImageRotate(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), GetChannel(), 
+		angle, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
 }
 
 
-// 缩放图像，缩放后宽度与高度由参数指定.
-float* CyImage::Zoom(int NewWidth, int NewHeight, int Reserved)
+/** - 缩放图像 -
+* @param[in] NewWidth 新图像宽度
+* @param[in] NewHeight 新图像高度
+* @param[in] bNeededReturn 需要返回新图像数据块头指针
+* @return 新图像数据块头指针
+*/
+float* CyImage::Zoom(int NewWidth, int NewHeight, int bNeededReturn)
 {
-	int NewRowlen = m_nyChannel * NewWidth;
-	float* pDst = new float[NewRowlen * NewHeight];
-	float wRatio = 1.f * m_nyWidth / NewWidth;
-	float hRatio = 1.f * m_nyHeight / NewHeight;
-
-#pragma omp parallel for
-	for (int i = 0; i < NewWidth; ++i)
-	{
-		for (int j = 0; j < NewHeight; ++j)
-		{
-			for (int nChannel = 0; nChannel < m_nyChannel; ++nChannel)
-				pDst[nChannel + i * m_nyChannel + j * NewRowlen] = GetAt(i * wRatio, j * hRatio, nChannel);
-		}
-	}
-
-	return pDst;
+	return ImageZoom(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), 
+		GetChannel(), NewWidth, NewHeight);
 }
 
 
+/** - 缩放图像 -
+* @param[in] rate 缩放比例
+* @return 无
+*/
 void CyImage::Zoom(float rate)
 {
-	int NewWidth = m_nyWidth * rate;
-	int NewHeight = m_nyHeight * rate;
+	int NewWidth = int(GetWidth() * rate);
+	int NewHeight = int(GetHeight() * rate);
 	Zoom(NewWidth, NewHeight);
 }
 
 
+/** - 缩放图像 -
+* @param[in] NewWidth 新图像宽度
+* @param[in] NewHeight 新图像高度
+* @return 无
+*/
 void CyImage::Zoom(int nNewWidth, int nNewHeight)
 {
-	float *pDst = ImageZoom(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nNewWidth, nNewHeight);
-	Create(pDst, nNewWidth, nNewHeight, nNewWidth * m_nyChannel);
+	if (nNewWidth == GetWidth() && nNewHeight == GetHeight())
+		return;
+	float *pDst = ImageZoom(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), 
+		GetChannel(), nNewWidth, nNewHeight);
+	Create(pDst, nNewWidth, nNewHeight, nNewWidth * GetChannel());
 	SAFE_DELETE(pDst);
 }
 
 
+/** - 图像将转换为8位灰度图 - */
+void CyImage::ToGray()
+{
+	ChangeBPP(8);
+}
+
+
+/** - 保存图像 - */
 HRESULT CyImage::Save(LPCTSTR pszFileName, REFGUID guidFileType) const throw()
 {
+	// 尝试保存为txt文件
+	if (GetFileExt(pszFileName).CompareNoCase(_T("txt")) == 0)
+	{
+		USES_CONVERSION;
+		if (WriteTxt(W2A(pszFileName), GetHeadAddress(), GetWidth(), GetHeight(), GetChannel()))
+			return S_OK;
+	}
 	HRESULT hr = CImage::Save(pszFileName, guidFileType);
 	return hr;
 }
 
 
-bool CyImage::Save(REFGUID guidFileType) const throw()
+#ifdef _AFX // MFC 环境下编译
+
+
+/** - 加载图像 - 弹出选择文件对话框 */
+HRESULT CyImage::Load(CWnd* pParentWnd) throw()
+{
+	// 过滤器
+	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;"\
+		L"*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;"	\
+		L"*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
+
+	// 文件对话框
+	CFileDialog hFileDlg(TRUE, NULL, NULL, OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST, strFilter, pParentWnd);
+	hFileDlg.m_ofn.nFilterIndex = 1;
+	hFileDlg.m_ofn.lStructSize = sizeof(OPENFILENAME);
+	hFileDlg.m_ofn.lpstrTitle = TEXT("打开图像\0");
+	hFileDlg.m_ofn.nMaxFile = MAX_PATH;
+	if (hFileDlg.DoModal() != IDOK)
+		return E_FAIL;
+
+	// 调用其他Load函数
+	CString strFilePath = hFileDlg.GetPathName();
+	return Load(strFilePath);
+}
+
+
+/** - 保存图像 - */
+BOOL CyImage::Save(REFGUID guidFileType) const throw()
 {
 	return Save((CWnd*)NULL, guidFileType);
 }
 
 
-bool CyImage::Save(CWnd* pParentWnd, REFGUID guidFileType) const throw()
+/** - 保存图像 - 
+* @details 
+guidFileType
+The file type to save the image as. Can be one of the following:
+ImageFormatBMP   An uncompressed bitmap image.
+ImageFormatPNG   A Portable Network Graphic (PNG) compressed image.
+ImageFormatJPEG   A JPEG compressed image.
+ImageFormatGIF   A GIF compressed image.
+Note   For a complete list of constants, see Image File Format Constants in the Platform SDK.
+*/
+BOOL CyImage::Save(CWnd* pParentWnd, REFGUID guidFileType) const throw()
 {
 	// 过滤器
-	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO;*.TXT;*.RAW|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|文本文档(*.TXT)|*.TXT|RAW文档(*.RAW)|*.RAW|所有文件|*.*||";
+	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*."	\
+		L"JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;"\
+		L"*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;"	\
+		L"*.JFIF|GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
 
 	// 获取系统时间
 	SYSTEMTIME CurTime;
@@ -440,149 +754,256 @@ bool CyImage::Save(CWnd* pParentWnd, REFGUID guidFileType) const throw()
 	strTime.Format(_T("%2d时%2d分%2d秒"), CurTime.wHour, CurTime.wMinute, CurTime.wSecond);
 
 	// 文件对话框
-	CFileDialog hFileDlg(FALSE, _T(".BMP"), strDate + strTime, OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_READONLY, strFilter, pParentWnd);
+	CFileDialog hFileDlg(FALSE, _T(".BMP"), strDate + strTime, OFN_FILEMUSTEXIST 
+		| OFN_PATHMUSTEXIST | OFN_READONLY, strFilter, pParentWnd);
 	hFileDlg.m_ofn.nFilterIndex = 1;
 	hFileDlg.m_ofn.lStructSize = sizeof(OPENFILENAME);
 	hFileDlg.m_ofn.lpstrTitle = TEXT("保存图像\0");
 	hFileDlg.m_ofn.nMaxFile = MAX_PATH;
-	if (hFileDlg.DoModal() != IDOK) return true;
+	if (hFileDlg.DoModal() != IDOK)
+		return TRUE;
 
 	// 获取保存路径
-	CString file = hFileDlg.GetFileName();
-	CString path = hFileDlg.GetPathName();
-	CString ext = hFileDlg.GetFileExt();
-	if (file == _T(""))
-		path = path + strDate + strTime;
-	if (ext == _T(""))
+	CString strFile = hFileDlg.GetFileName();
+	CString strPath = hFileDlg.GetPathName();
+	CString strExt = hFileDlg.GetFileExt();
+	if (strFile.IsEmpty())
+		strPath = strPath + strDate + strTime;
+	if (strExt.IsEmpty())
 	{
 		switch (hFileDlg.m_ofn.nFilterIndex)
 		{
-		case 1 :ext = _T("BMP"); break;
-		case 2 :ext = _T("TXT"); break;
-		case 3 :ext = _T("BMP"); break;
-		case 4 :ext = _T("JPG"); break;
-		case 5 :ext = _T("GIF"); break;
-		case 6 :ext = _T("ICO"); break;
-		case 7 :ext = _T("JPG"); break;
-		case 8 :ext = _T("RAW"); break;
-		default:ext = _T("JPG"); break;
+		case 1 :strExt = _T("BMP"); break;
+		case 2 :strExt = _T("BMP"); break;
+		case 3 :strExt = _T("JPG"); break;
+		case 4 :strExt = _T("GIF"); break;
+		case 5 :strExt = _T("ICO"); break;
+		case 6 :strExt = _T("JPG"); break;
+		default:strExt = _T("JPG"); break;
 		}
-		path = path + _T(".") + ext;
+		strPath = strPath + _T(".") + strExt;
 	}
-	if (ext == _T("TXT") || ext == _T("txt"))
-		return Write2Txt(m_pfFloat, m_nyRowlen2, m_nyHeight, path);
-	else if (ext == _T("RAW") || ext == _T("raw"))
-		return Write2Raw(m_pfFloat, m_nyRowlen2, m_nyHeight, path);
-	else
-		return SUCCEEDED(CImage::Save(path, guidFileType));
+	
+	return SUCCEEDED(Save(strPath, guidFileType));
 }
 
 
-/*
-原点是图像左下角顶点
-float &k		直线斜率
-float &c		直接与y轴截距
-*/
-float CyImage::Integrate(float &k, float &c, int nCurChannel) 
-{
-	return LineIntegrate(m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, 0, 0, m_nyWidth, m_nyHeight, k, c);
-}
+#endif // _AFX
 
 
-// 沿着各个方向投影，即计算投影图像
-float* CyImage::Radon(float angles_separation, int nAnglesNum, float pixels_separation, int nRaysNum, int nCurChannel)
-{
-	float* pDst = new float[nAnglesNum * nRaysNum];
-	ImageRadon(pDst, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angles_separation, nAnglesNum, pixels_separation, nRaysNum);
-	return pDst;
-}
-
-
-// 沿单个方向线积分，单个方向的radon变换
-float* CyImage::DirIntegrate(float angle, int nCurChannel)
-{
-	int nLength = ComputeRaysNum(m_nyWidth, m_nyHeight);
-	float* pDst = new float[nLength];
-	ZeroMemory(pDst, nLength * sizeof(float));
-	ImageIntegrate(pDst, m_pfFloat, m_nyWidth, m_nyHeight, m_nyRowlen2, m_nyChannel, nCurChannel, angle, nLength);
-	return pDst;
-}
-
-
-// 安全销毁所关联的位图
+/** - 安全销毁所关联的位图 - */
 void CyImage::Destroy() throw()
 {
-	if (this != NULL && !this->IsNull())
+	if (!IsNull())
 	{
 		CImage::Destroy();
+		SAFE_DELETE(m_pFloatData);
 	}
 }
 
 
+/** - 水平翻转图像 - */
 void CyImage::FlipH()
 {
-	BYTE* temp = new BYTE[m_nyHeight * m_nyRowlen];
-	memcpy(temp, m_pyBits, m_nyHeight * m_nyRowlen * sizeof(BYTE));
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nChannel = GetChannel();
+	int nRowlen = GetRowlen();
 
-#pragma omp parallel for
-	for (int r = 0; r < m_nyHeight; ++r)
+	BYTE* temp = new BYTE[nHeight * nRowlen];
+	BYTE* head = GetHeadAddress();
+	memcpy(temp, head, nHeight * nRowlen * sizeof(BYTE));
+
+	for (int r = 0; r < nHeight; ++r)
 	{
-		for (int c = 0; c < m_nyWidth; ++c)
+		int y = r * nRowlen;
+		for (int c = 0; c < nWidth; ++c)
 		{
-			memcpy(m_pyBits + c * m_nyChannel + r * m_nyRowlen, temp + ( m_nyWidth - 1 - c ) * m_nyChannel + r * m_nyRowlen, m_nyChannel * sizeof(BYTE));
+			memcpy(head + c *nChannel + y, temp + (nWidth - 1 - c) * nChannel + y, 
+				nChannel * sizeof(BYTE));
 		}
 	}
 	SAFE_DELETE(temp);
 }
 
 
+/** - 垂直翻转图像 - */
 void CyImage::FlipV()
 {
-	BYTE* temp = new BYTE[m_nyHeight * m_nyRowlen * sizeof(BYTE)];
-	memcpy(temp, m_pyBits, m_nyHeight * m_nyRowlen * sizeof(BYTE));
+	int nHeight = GetHeight();
+	int nRowlen = GetRowlen();
 
-#pragma omp parallel for
-	for (int r = 0; r < m_nyHeight; ++r)
+	BYTE* temp = new BYTE[nHeight * nRowlen * sizeof(BYTE)];
+	BYTE* head = GetHeadAddress();
+	memcpy(temp, head, nHeight * nRowlen * sizeof(BYTE));
+
+	for (int r = 0; r < nHeight; ++r)
 	{
-		memcpy(m_pyBits + r * m_nyRowlen, temp + (m_nyHeight - 1 - r) * m_nyRowlen, m_nyRowlen * sizeof(BYTE));
+		memcpy(head + r * nRowlen, temp + (nHeight - 1 - r) * nRowlen, nRowlen * sizeof(BYTE));
 	}
 	SAFE_DELETE(temp);
 }
 
 
-// 转置图像
+/** - 转置图像 - */
 void CyImage::Transpose()
 {
-	int rowlen = m_nyRowlen2;
-	float* temp = new float[m_nyHeight * rowlen * sizeof(float)];
-	memcpy(temp, m_pfFloat, m_nyHeight * rowlen * sizeof(float));
-	this->Destroy();
-	Create(m_nyHeight, m_nyWidth, m_nyBpp, 0UL);
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nRowlen = GetRowlen();
+	int nChannel = GetChannel();
+	InitFloatData();
+	MemcpyByteToFloat();
+	int nFloatRowlen = GetFloatDataRowlen();
 
-#pragma omp parallel for
-	for (int i = 0; i < m_nyHeight; ++i)
+	float* temp = new float[nHeight * nFloatRowlen];
+	memcpy(temp, m_pFloatData, nHeight * nFloatRowlen * sizeof(float));
+	BYTE* temp2 = new BYTE[nHeight * nRowlen];
+	memcpy(temp2, GetHeadAddress(), nHeight * nRowlen * sizeof(BYTE));
+	Create(nHeight, nWidth, nChannel * 8, 0UL);
+
+	int nNewWidth = GetWidth();
+	int nNewHeight = GetHeight();
+	int nNewFloatRowlen = GetFloatDataRowlen();
+	BYTE *pHead = GetHeadAddress();
+	int nNewRowlen = GetRowlen();
+	for (int i = 0; i < nNewHeight; ++i)
 	{
-		for (int j = 0; j < m_nyWidth; ++j)
+		int y = i * nNewRowlen, z = i * nNewFloatRowlen;
+		for (int j = 0; j < nNewWidth; ++j)
 		{
-			for (int k = 0; k < m_nyChannel; ++k)
+			int x = j * nChannel, x0 = i * nChannel;
+			int y0 = j * nRowlen, z0 = j * nFloatRowlen;
+			for (int k = 0; k < nChannel; ++k)
 			{
-				m_pfFloat[k + j * m_nyChannel + i * m_nyRowlen2] = temp[k + i * m_nyChannel + j * rowlen];
+				m_pFloatData[k + x + z] = temp[k + x0 + z0];
+				pHead[k + x + y] = temp2[k + x0 + y0];
 			}
 		}
 	}
 	SAFE_DELETE(temp);
-	MemcpyFloatToByte();
+	SAFE_DELETE(temp2);
 }
 
 
-// 改变图像通道数, bpp：目标图像的位色.
+/** - 对直方图进行排序 - */
+void CyImage::GetCluster(int cluster[256]) const
+{
+	int hist[256];
+	GetGrayHist(hist);
+
+	for (int i = 0; i < 256; ++i)
+	{
+		cluster[i] = i;
+	}
+
+	for (int i = 0; i < 256; i++)
+	{
+		for (int j = i; j < 256; ++j)
+		{
+			if (hist[j] > hist[i])
+			{
+				// 交换次序
+				swap(hist[j], hist[i]);
+				swap(cluster[j], cluster[i]);
+			}
+		}
+	}
+}
+
+
+/** - 获取灰度直方图 - */
+BOOL CyImage::GetGrayHist(int hist[256]) const
+{
+	ZeroMemory(hist, 256 * sizeof(int));
+	int nChannel = GetChannel();
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nRowlen = GetRowlen();
+
+	BYTE *pSrc = GetHeadAddress();
+	if (nChannel == 1)
+	{
+		for (int i = 0; i < nHeight; ++i)
+		{
+			int y = i * nRowlen;
+			for (int j = 0; j < nWidth; ++j)
+			{
+				hist[pSrc[j * nChannel + y]]++;
+			}
+		}
+	}
+	else if (nChannel == 3 || nChannel == 4)
+	{
+		for (int i = 0; i < nHeight; ++i)
+		{
+			int y = i * nRowlen;
+			for (int j = 0; j < nWidth; ++j)
+			{
+				int index = RGB2GRAY (pSrc[2 + j * nChannel + y], 
+					pSrc[1 + j * nChannel + y], pSrc[j * nChannel + y]);
+				hist[index]++;
+			}
+		}
+	}
+	return TRUE;
+}
+
+
+/** - 获取图像直方图 - */
+BOOL CyImage::GetHistogram(int hist[4][256]) const
+{
+	ZeroMemory(hist, 4 * 256 * sizeof(int));
+	int nChannel = GetChannel();
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nRowlen = GetRowlen();
+
+	BYTE *pSrc = GetHeadAddress();
+	if (nChannel == 1)
+	{
+		for (int i = 0; i < nHeight; ++i)
+		{
+			int y = i * nRowlen;
+			for (int j = 0; j < nWidth; ++j)
+			{
+				hist[0][pSrc[j * nChannel + y]]++;
+				hist[1][pSrc[j * nChannel + y]]++;
+				hist[2][pSrc[j * nChannel + y]]++;
+				hist[3][pSrc[j * nChannel + y]]++;
+			}
+		}
+	}
+	else if (nChannel == 3 || nChannel == 4)
+	{
+		for (int i = 0; i < nHeight; ++i)
+		{
+			int y = i * nRowlen;
+			for (int j = 0; j < nWidth; ++j)
+			{
+				int x = j * nChannel;
+				hist[2][pSrc[x + y]]++;
+				hist[1][pSrc[1 + x + y]]++;
+				hist[0][pSrc[2 + x + y]]++;
+				int index = RGB2GRAY(pSrc[2 + x + y], pSrc[1 + x + y], pSrc[x + y]);
+				hist[3][index]++;
+			}
+		}
+	}
+	return TRUE;
+}
+
+
+/** - 改变图像通道数 -  bpp：目标图像的位色 - 
+修改成功返回TRUE，未修改返回FALSE。
+*/
 BOOL CyImage::ChangeBPP(UINT bpp)
 {
 	if(bpp != 8 && bpp != 24 && bpp != 32)
 		return FALSE;
 
 	int nBitCount = GetBPP();
-	if (nBitCount == bpp) return TRUE;
+	if (nBitCount == bpp) return FALSE;
 
 	switch (nBitCount)
 	{
@@ -612,7 +1033,8 @@ BOOL CyImage::ChangeBPP(UINT bpp)
 	return TRUE;
 }
 
-// 8位色转24位色
+
+/// 8位色转24位色
 void CyImage::Bpp8To24()
 {
 	LONG lWidth = GetWidth();
@@ -624,23 +1046,23 @@ void CyImage::Bpp8To24()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 24);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
-			BYTE *pSrcTemp = pSrc + nChannel * j + i * lRowLen;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pSrcTemp = pSrc + nChannel * j + y1;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			*(pDstTemp + 2) = *(pDstTemp + 1) = *pDstTemp = *pSrcTemp;
 		}
 	}
 	SAFE_DELETE(pSrc);
 }
 
-// 8位色转32位色
+/// 8位色转32位色
 void CyImage::Bpp8To32()
 {
 	LONG lWidth = GetWidth();
@@ -652,23 +1074,23 @@ void CyImage::Bpp8To32()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 32);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
-			BYTE *pSrcTemp = pSrc + nChannel * j + i * lRowLen;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pSrcTemp = pSrc + nChannel * j + y1;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			*(pDstTemp + 2) = *(pDstTemp + 1) = *pDstTemp = *pSrcTemp;
 		}
 	}
 	SAFE_DELETE(pSrc);
 }
 
-// 24位色转8位色
+/// 24位色转8位色
 void CyImage::Bpp24To8()
 {
 	LONG lWidth = GetWidth();
@@ -680,32 +1102,26 @@ void CyImage::Bpp24To8()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 8);
-	RGBQUAD ColorTab[256];
-	for(int i = 0; i<256; i++)
-	{
-		ColorTab[i].rgbBlue = ColorTab[i].rgbGreen = ColorTab[i].rgbRed = i;
-	}
-	SetColorTable(0, 256, ColorTab);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
-			BYTE *pSrcTemp = pSrc + nChannel * j + i * lRowLen;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pSrcTemp = pSrc + nChannel * j + y1;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			BYTE R = *(pSrcTemp + 2);
 			BYTE G = *(pSrcTemp + 1);
 			BYTE B = *pSrcTemp;
-			*pDstTemp = (9798 * R + 19235 * G + 3735 * B) / 32768;
+			*pDstTemp = RGB2GRAY(R, G, B);
 		}
 	}
 	SAFE_DELETE(pSrc);
 }
 
-// 24位色转32位色
+/// 24位色转32位色
 void CyImage::Bpp24To32()
 {
 	LONG lWidth = GetWidth();
@@ -717,17 +1133,16 @@ void CyImage::Bpp24To32()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 32);
-
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
-			BYTE *pSrcTemp = pSrc + nChannel * j + i * lRowLen;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pSrcTemp = pSrc + nChannel * j + y1;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			*(pDstTemp + 2) = *(pSrcTemp + 2);
 			*(pDstTemp + 1) = *(pSrcTemp + 1);
 			*pDstTemp = *pSrcTemp;
@@ -736,7 +1151,7 @@ void CyImage::Bpp24To32()
 	SAFE_DELETE(pSrc);
 }
 
-// 32位色转8位色
+/// 32位色转8位色
 void CyImage::Bpp32To8()
 {
 	LONG lWidth = GetWidth();
@@ -748,33 +1163,26 @@ void CyImage::Bpp32To8()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 8);
-
-	RGBQUAD ColorTab[256];
-	for(int i = 0; i<256; i++)
-	{
-		ColorTab[i].rgbBlue = ColorTab[i].rgbGreen = ColorTab[i].rgbRed = i;
-	}
-	SetColorTable(0, 256, ColorTab);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
-			BYTE *pSrcTemp = pSrc + nChannel * j + i * lRowLen;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pSrcTemp = pSrc + nChannel * j + y1;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			BYTE R = *(pSrcTemp + 2);
 			BYTE G = *(pSrcTemp + 1);
 			BYTE B = *pSrcTemp;
-			*pDstTemp = (9798 * R + 19235 * G + 3735 * B) / 32768;
+			*pDstTemp = RGB2GRAY(R, G, B);
 		}
 	}
 	SAFE_DELETE(pSrc);
 }
 
-// 32位色转24位色
+/// 32位色转24位色
 void CyImage::Bpp32To24()
 {
 	LONG lWidth = GetWidth();
@@ -786,16 +1194,16 @@ void CyImage::Bpp32To24()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 24);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
-			BYTE *pSrcTemp = pSrc + nChannel * j + i * lRowLen;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pSrcTemp = pSrc + nChannel * j + y1;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			*(pDstTemp + 2) = *(pSrcTemp + 2);
 			*(pDstTemp + 1) = *(pSrcTemp + 1);
 			*pDstTemp = *pSrcTemp;
@@ -804,7 +1212,7 @@ void CyImage::Bpp32To24()
 	SAFE_DELETE(pSrc);
 }
 
-// 将二进制图像转换为8位色图像
+/// 将二进制图像转换为8位色图像
 void CyImage::Bpp1To8()
 {
 	LONG lWidth = GetWidth();
@@ -816,33 +1224,26 @@ void CyImage::Bpp1To8()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 8);
-
-	RGBQUAD ColorTab[256];
-	for(int i = 0; i<256; i++)
-	{
-		ColorTab[i].rgbBlue = ColorTab[i].rgbGreen = ColorTab[i].rgbRed = i;
-	}
-	SetColorTable(0, 256, ColorTab);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
 			int mod = j % 8;
-			BYTE *pSrcTemp = pSrc + int(j / 8.f) + i * lRowLen;
+			BYTE *pSrcTemp = pSrc + int(j / 8.f) + y1;
 			// *pSrcTemp的第mod二进制位
 			BYTE temp = ( *pSrcTemp>>(7 - mod) ) & 1;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			*pDstTemp = 255 * temp;
 		}
 	}
 	SAFE_DELETE(pSrc);
 }
 
-// 将二进制图像转换为24位色图像
+/// 将二进制图像转换为24位色图像
 void CyImage::Bpp1To24()
 {
 	LONG lWidth = GetWidth();
@@ -854,26 +1255,26 @@ void CyImage::Bpp1To24()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 24);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
 			int mod = j % 8;
-			BYTE *pSrcTemp = pSrc + int(j / 8.f) + i * lRowLen;
+			BYTE *pSrcTemp = pSrc + int(j / 8.f) + y1;
 			// *pSrcTemp的第mod二进制位
 			BYTE temp = ( *pSrcTemp>>(7 - mod) ) & 1;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			*pDstTemp = *(pDstTemp + 1) = *(pDstTemp + 2) = 255 * temp;
 		}
 	}
 	SAFE_DELETE(pSrc);
 }
 
-// 将二进制图像转换为32位色图像
+/// 将二进制图像转换为32位色图像
 void CyImage::Bpp1To32()
 {
 	LONG lWidth = GetWidth();
@@ -885,21 +1286,144 @@ void CyImage::Bpp1To32()
 	BYTE *temp = (BYTE*)GetBits() + (GetPitch() * (GetHeight() - 1));
 	memcpy(pSrc, temp, lHeight * lRowLen);
 
-	Destroy();
 	Create(lWidth, lHeight, 32);
 
 	BYTE *pDst = (BYTE*)GetBits() + (GetPitch()*(lHeight - 1));
 	for (int i = 0; i < lHeight; i++)
 	{
+		int y1 = i * lRowLen, y2 = i * lRowLenNew;
 		for (int j = 0; j < lWidth; j++)
 		{
 			int mod = j % 8;
-			BYTE *pSrcTemp = pSrc + int(j / 8.f) + i * lRowLen;
+			BYTE *pSrcTemp = pSrc + int(j / 8.f) + y1;
 			// *pSrcTemp的第mod二进制位
 			BYTE temp = ( *pSrcTemp>>(7 - mod) ) & 1;
-			BYTE *pDstTemp = pDst + nChannelNew * j + i * lRowLenNew;
+			BYTE *pDstTemp = pDst + nChannelNew * j + y2;
 			*pDstTemp = *(pDstTemp + 1) = *(pDstTemp + 2) = 255 * temp;
 		}
 	}
 	SAFE_DELETE(pSrc);
+}
+
+
+/** - 制作备份图像 - 需要delete方法 - */
+CyImage* CyImage::MakeCopy()
+{
+	CyImage* pCopy = NULL;
+	try
+	{
+		pCopy = new CyImage(*this);
+	}
+	catch (const std::bad_alloc)
+	{
+	}
+	
+	return pCopy;
+}
+
+
+/** - 将图像的背景分割出来 - 
+* @param[in] threahold 阈值
+* @param[in] background 背景像素
+* @return 背景图像
+* @note 该函数返回值需要delete方法
+*/
+CyImage* CyImage::GetBackground(float threahold, float3 background)
+{
+	CyImage* pBackground = MakeCopy();
+	ASSERT(NULL != pBackground);
+
+	int nWidth = pBackground->GetWidth();
+	int nHeight = pBackground->GetHeight();
+	int nChannel = pBackground->GetChannel();
+	int nRowlen = pBackground->GetFloatDataRowlen();
+	float* pHead = pBackground->GetFloatDataHead();
+	float fGray = background.ToGray();
+	float fMAX = pBackground->GetMaximum();
+	switch (nChannel)
+	{
+	case 1:// 8位色图像
+		{
+			for (int i = 0; i < nHeight; ++i)
+			{
+				int y = i * nRowlen;
+				for (int j = 0; j < nWidth; ++j)
+				{
+					// 将前景色全部置成白色
+					if (fabsf(pHead[j + y] - fGray) > threahold)
+					{
+						pHead[j + i * nRowlen] = fMAX;
+					}
+				}
+			}
+			break;
+		}
+	case 3:// 彩色图像
+	case 4:
+		{
+			for (int i = 0; i < nHeight; ++i)
+			{
+				int y = i * nRowlen;
+				for (int j = 0; j < nWidth; ++j)
+				{
+					int x = j * nChannel;
+					float3 current(pHead[2 + x + y], pHead[1 + x + y], pHead[x + y]);
+					if (Distance(current, background) > threahold)
+					{
+						pHead[x + y] = pHead[1 + x + y] = pHead[2 + x + y] = fMAX;
+					}
+				}
+			}
+			break;
+		}
+	default:
+		break;
+	}
+	pBackground->MemcpyFloatToByte();
+	return pBackground;
+}
+
+
+/** - 根据矩形区域提取感兴趣区域的图像 - */
+CyImage* CyImage::ROI(CLogoRect rect)
+{
+	if (rect == CLogoRect(0, 0, 0, 0))
+		return MakeCopy();
+	float *pSrc = GetFloatDataHead();
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nRowlen = GetRowlen();
+	int nChannel = GetChannel();
+	float *pDst = ImageCut(pSrc, nWidth, nHeight, nRowlen, nChannel, rect);
+	CyImage *pImage = NULL;
+	try
+	{
+		pImage = new CyImage;
+	}
+	catch (const std::bad_alloc)
+	{
+		SAFE_DELETE(pDst);
+		return pImage;
+	}
+	pImage->Create(pDst, nWidth, nHeight, nRowlen);
+	SAFE_DELETE(pDst);
+	return pImage;
+}
+
+
+/** - 裁剪图像 - */
+void CyImage::Cut(CLogoRect rect)
+{
+	/// 下述两种情况不需要裁剪
+	if (rect == CLogoRect(0, 0, 0, 0))
+		return;
+	if (rect.left == 0 && rect.top == 0 && rect.right == GetWidth() && rect.bottom == GetHeight())
+		return;
+	/// 其他情况，获得感兴趣区域，并赋值给当前图像
+	int nWidth = GetWidth();
+	int nHeight = GetHeight();
+	int nRowlen = GetRowlen();
+	float *pDst = ImageCut(GetFloatDataHead(), nWidth, nHeight, nRowlen, GetChannel(), rect);
+	Create(pDst, nWidth, nHeight, nRowlen);
+	SAFE_DELETE(pDst);
 }

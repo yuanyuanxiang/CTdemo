@@ -5,6 +5,7 @@
 #include "CTdemo.h"
 #include "DlgConvluteW.h"
 #include "afxdialogex.h"
+#include "Functions.h"
 
 
 // CDlgConvluteW ¶Ô»°¿ò

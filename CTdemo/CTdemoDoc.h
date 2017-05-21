@@ -4,6 +4,8 @@
 
 #pragma once
 #include "CyImage.h"
+#include <vector>
+using namespace std;
 
 class CCTdemoView;
 class CCurveView;

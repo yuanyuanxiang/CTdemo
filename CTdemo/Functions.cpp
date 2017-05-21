@@ -34,84 +34,6 @@ float biLinearInterp(float *pSrc, int &nWidth, int &nHegiht, int &nRowlen, int &
 }
 
 
-void PositionTransform(float &x, float &y, float theta, float x0, float y0)
-{
-	float delta_x = x - x0;
-	float delta_y = y - y0;
-	PositionTransform(delta_x, delta_y, theta);
-	x = x0 + delta_x;
-	y = y0 + delta_y;
-}
-
-
-void PositionTransform(float &x, float &y, float theta)
-{
-	float cos_theta = cos(theta);
-	float sin_theta = sin(theta);
-	float x_temp = x * cos_theta - y * sin_theta;
-	y = x * sin_theta + y * cos_theta;
-	x = x_temp;
-}
-
-
-// 坐标旋转，输入参数为旋转角度的余弦、正弦值
-void PositionTransform(float &x, float &y, float cos_sin[2], float x0, float y0)
-{
-	float delta_x = x - x0;
-	float delta_y = y - y0;
-	PositionTransform(delta_x, delta_y, cos_sin);
-	x = x0 + delta_x;
-	y = y0 + delta_y;
-}
-
-
-// 坐标旋转，输入参数为旋转角度的余弦、正弦值
-void PositionTransform(float &x, float &y, float cos_sin[2])
-{
-	float x_temp = x * cos_sin[0] - y * cos_sin[1];
-	y = x * cos_sin[1] + y * cos_sin[0];
-	x = x_temp;
-}
-
-
-// 坐标旋转，输入参数为旋转角度的余弦、正弦值
-void PositionTransform(float &x, float &y, float cos_theta, float sin_theta, float x0, float y0)
-{
-	float delta_x = x - x0;
-	float delta_y = y - y0;
-	PositionTransform(delta_x, delta_y, cos_theta, sin_theta);
-	x = x0 + delta_x;
-	y = y0 + delta_y;
-}
-
-
-// 坐标旋转，输入参数为旋转角度的余弦、正弦值
-void PositionTransform(float &x, float &y, float cos_theta, float sin_theta)
-{
-	float x_temp = x * cos_theta - y * sin_theta;
-	y = x * sin_theta + y * cos_theta;
-	x = x_temp;
-}
-
-
-float FindMaxBetween4Numbers(float x, float y, float z, float w)
-{
-	float Max1, Max2;
-	Max1 = x > y ? x : y;
-	Max2 = z > w ? z : w;
-	return (Max1 > Max2 ? Max1 : Max2);
-}
-
-
-float FindMinBetween4Numbers(float x, float y, float z, float w)
-{
-	float Min1, Min2;
-	Min1 = x < y ? x : y;
-	Min2 = z < w ? z : w;
-	return (Min1 < Min2 ? Min1 : Min2);
-}
-
-
 /*
 float* pDst					目标
 float* pSrc					指向投影数据的指针
@@ -429,17 +351,6 @@ void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, i
 
 	SAFE_DELETE(cos_fai);
 	SAFE_DELETE(sin_fai);
-}
-
-
-void SetColorTabFor8BitImage(CImage *pImage)
-{
-	RGBQUAD ColorTab[256];
-	for(int i = 0; i < 256; i++)
-	{
-		ColorTab[i].rgbBlue = ColorTab[i].rgbGreen = ColorTab[i].rgbRed = i;
-	}
-	pImage->SetColorTable(0, 256, ColorTab);
 }
 
 

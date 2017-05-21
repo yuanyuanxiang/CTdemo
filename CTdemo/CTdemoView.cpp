@@ -23,6 +23,7 @@
 #include "DlgArtSettings.h"
 #include "NewView.h"
 #include "ChildFrm.h"
+#include "Functions.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -462,8 +463,7 @@ void CCTdemoView::OnToolbarChangeBpp()
 	CCTdemoDoc *pDoc = GetDocument();
 	// ### 注意temp的空间是由DLL分配的。 ###
 	pDllFunc(m_pCurrent);
-	m_pCurrent->UpdateInfomation();
-	if (m_pCurrent->m_nyBpp != pDoc->m_nBPP)
+	if (m_pCurrent->GetBPP() != pDoc->m_nBPP)
 	{
 		pDoc->UpdateImageInfomation();
 		if (m_pCurrent == pDoc->m_pImage)
@@ -632,7 +632,7 @@ void CCTdemoView::OnToolbarConvolute()
 		if (m_bUsingGpu)
 		{
 #ifdef CUDA
-			const char* result = cudaConvolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, dlg.m_fW);
+			const char* result = cudaConvolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, dlg.m_fW);
 			if (result != NULL)
 			{
 				CString str(result);
@@ -650,10 +650,10 @@ void CCTdemoView::OnToolbarConvolute()
 			switch(pDoc->m_nProjectionType)
 			{
 			case PROJECT_TYPE_PAR:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, dlg.m_nConvKernel);
+				Convolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, dlg.m_nConvKernel);
 				break;
 			case PROJECT_TYPE_PAN:
-				Convolute(pDoc->m_pAfterFilter->m_pfFloat, pDoc->m_pProject->m_pfFloat, pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD, dlg.m_nConvKernel);
+				Convolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD, dlg.m_nConvKernel);
 				break;
 			default:
 				break;
@@ -684,9 +684,9 @@ void CCTdemoView::OnToolbarBackProject()
 	BeginWaitCursor();
 	float *pRadonSrc = NULL;
 	if (!CHECK_IMAGE_NULL(pDoc->m_pAfterFilter))
-		pRadonSrc = pDoc->m_pAfterFilter->m_pfFloat;
+		pRadonSrc = pDoc->m_pAfterFilter->GetFloatDataHead();
 	else
-		pRadonSrc = pDoc->m_pProject->m_pfFloat;
+		pRadonSrc = pDoc->m_pProject->GetFloatDataHead();
 	if (m_bUsingGpu == false && (pDoc->m_nWidth > m_nCpuMaxImageSize || pDoc->m_nHeight > m_nCpuMaxImageSize))
 	{
 		if(MessageBox(_T("采样比较密集，用CPU处理比较费时，是否加速？\n请用CUDA加速，方法：菜单->编辑->加速重建。"), 
@@ -697,7 +697,7 @@ void CCTdemoView::OnToolbarBackProject()
 	{
 #ifdef CUDA
 
-		const char* result = cudaBackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
+		const char* result = cudaBackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 		if (result != NULL)
 		{
 			CString str(result);
@@ -716,10 +716,10 @@ void CCTdemoView::OnToolbarBackProject()
 		switch(pDoc->m_nProjectionType)
 		{
 		case PROJECT_TYPE_PAR:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
+			BackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 			break;
 		case PROJECT_TYPE_PAN:
-			BackProject(pDoc->m_pReconstruct->m_pfFloat, pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+			BackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 			break;
 		default:
 			break;
@@ -729,7 +729,7 @@ void CCTdemoView::OnToolbarBackProject()
 	if (pDoc->m_nProjectionType == PROJECT_TYPE_PAN)
 	{
 		// 扇束重建的图像像素值不在[0, 255]之间，加权可能错误
-		pDoc->Popup(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
+		pDoc->Popup(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
 		pDoc->m_pReconstruct->MemcpyFloatToByte();
 		return;
 	}
@@ -1242,7 +1242,7 @@ void CCTdemoView::OnDbpImage()
 	float theta = RAD(dlg.m_fHilberAngle - 90.f);
 	pDoc->m_pfDBPImage = new float[pDoc->m_nWidth * pDoc->m_nHeight * sizeof(float)];
 	BeginWaitCursor();
-	DBPImage(pDoc->m_pfDBPImage, pDoc->m_pProject->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, theta);
+	DBPImage(pDoc->m_pfDBPImage, pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, theta);
 	EndWaitCursor();
 	pDoc->Popup(pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
 }
@@ -1260,10 +1260,10 @@ void CCTdemoView::OnToolbarInverseHilbert()
 	CCTdemoDoc* pDoc = GetDocument();
 	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
 	BeginWaitCursor();
-	InverseHilbert(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, 1.f);
+	InverseHilbert(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, 1.f);
 	EndWaitCursor();
 	pDoc->m_pReconstruct->MemcpyFloatToByte();
-	pDoc->Popup(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
+	pDoc->Popup(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
 }
 
 
@@ -1284,7 +1284,7 @@ void CCTdemoView::OnArtMethod()
 		return;
 	BeginWaitCursor();
 	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
-	const char* result = Art(pDoc->m_pReconstruct->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_pProject->m_pfFloat, 
+	const char* result = Art(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_pProject->GetFloatDataHead(), 
 		pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, dlg.m_nArtItNum);
 	EndWaitCursor();
 	if (result != NULL)
@@ -1316,8 +1316,8 @@ void CCTdemoView::OnArtRadon()
 	}
 	pDoc->m_pProject->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
 	BeginWaitCursor();
-	const char* result = ArtRadon(pDoc->m_pProject->m_pfFloat, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 
-		pDoc->m_pImage->m_pfFloat, pDoc->m_nWidth, pDoc->m_nHeight, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
+	const char* result = ArtRadon(pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nRaysNum, pDoc->m_nAnglesNum, 
+		pDoc->m_pImage->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight, 1 / pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 	EndWaitCursor();
 	if (result != NULL)
 	{
@@ -1687,7 +1687,7 @@ void CCTdemoView::OnUpdateToolbarPrevImage(CCmdUI *pCmdUI)
 void CCTdemoView::OnToolbarTransposeImage()
 {
 	m_pCurrent->Transpose();
-	SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->m_nyWidth, m_PaintRect.top + m_pCurrent->m_nyHeight);
+	SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->GetWidth(), m_PaintRect.top + m_pCurrent->GetHeight());
 }
 
 

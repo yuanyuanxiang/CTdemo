@@ -19,17 +19,14 @@
     <Filter Include="程序框架">
       <UniqueIdentifier>{fa1a5d6e-fd9b-4999-979c-dfd5a224198c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MFC">
+      <UniqueIdentifier>{0e9ec2a8-e602-497c-85b6-490c9c2758fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3DCode">
+      <UniqueIdentifier>{7b7466ce-4761-46dc-8129-8563f411d38c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DlgRotateAngle.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DlgProjectSettings.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DlgConvluteW.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CUDA\BackProject.h">
       <Filter>CUDA</Filter>
     </ClInclude>
@@ -42,47 +39,14 @@
     <ClInclude Include="IntSection.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="DlgPanParameter.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CUDA\PanRadon.h">
       <Filter>CUDA</Filter>
-    </ClInclude>
-    <ClInclude Include="DlgReconstructSettings.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CurveDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CurveWnd.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CurveView.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CyImage.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Functions.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NewView.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="SplitterWndDerived.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DlgHilbertAngle.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Art.h">
       <Filter>CUDA</Filter>
-    </ClInclude>
-    <ClInclude Include="DlgArtSettings.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageViewerDllFuncs.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>程序框架</Filter>
@@ -108,58 +72,79 @@
     <ClInclude Include="stdafx.h">
       <Filter>程序框架</Filter>
     </ClInclude>
+    <ClInclude Include="CurveDlg.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="CurveWnd.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="CurveView.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgArtSettings.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgConvluteW.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgHilbertAngle.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgPanParameter.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgProjectSettings.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
     <ClInclude Include="DlgRawDataSize.h">
-      <Filter>头文件</Filter>
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgReconstructSettings.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgRotateAngle.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="NewView.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="SplitterWndDerived.h">
+      <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="CyImage.h">
+      <Filter>3DCode</Filter>
+    </ClInclude>
+    <ClInclude Include="FileIO.h">
+      <Filter>3DCode</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageTransform.h">
+      <Filter>3DCode</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageViewerDllFuncs.h">
+      <Filter>3DCode</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageSrc.h">
+      <Filter>3DCode</Filter>
+    </ClInclude>
+    <ClInclude Include="DataTypes.h">
+      <Filter>3DCode</Filter>
+    </ClInclude>
+    <ClInclude Include="templateFuncs.h">
+      <Filter>3DCode</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>3DCode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DlgRotateAngle.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DlgProjectSettings.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DlgConvluteW.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="IntSection.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DlgPanParameter.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DlgReconstructSettings.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CurveDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CurveWnd.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CurveView.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CyImage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Functions.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NewView.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="SplitterWndDerived.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DlgHilbertAngle.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Art.cpp">
       <Filter>CUDA</Filter>
-    </ClCompile>
-    <ClCompile Include="DlgArtSettings.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ChildFrm.cpp">
       <Filter>程序框架</Filter>
@@ -179,8 +164,59 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>程序框架</Filter>
     </ClCompile>
+    <ClCompile Include="CurveDlg.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="CurveView.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="CurveWnd.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgArtSettings.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgConvluteW.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgHilbertAngle.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgPanParameter.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgProjectSettings.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
     <ClCompile Include="DlgRawDataSize.cpp">
-      <Filter>源文件</Filter>
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgReconstructSettings.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgRotateAngle.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="NewView.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitterWndDerived.cpp">
+      <Filter>MFC</Filter>
+    </ClCompile>
+    <ClCompile Include="CyImage.cpp">
+      <Filter>3DCode</Filter>
+    </ClCompile>
+    <ClCompile Include="FileIO.cpp">
+      <Filter>3DCode</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageTransform.cpp">
+      <Filter>3DCode</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageSrc.cpp">
+      <Filter>3DCode</Filter>
+    </ClCompile>
+    <ClCompile Include="DataTypes.cpp">
+      <Filter>3DCode</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

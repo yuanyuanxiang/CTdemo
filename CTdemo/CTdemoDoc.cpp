@@ -24,6 +24,7 @@ using namespace std;
 #include "CurveView.h"
 #include "MainFrm.h"
 #include "ChildFrm.h"
+#include "Functions.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -526,7 +527,13 @@ void CCTdemoDoc::RadonTransform()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
 	BeginWaitCursor();
-	float *pDst = m_pImage->Radon(m_fAnglesSeparation, m_nAnglesNum, m_fSubPixel, m_nRaysNum);
+	int nWidth = m_pImage->GetWidth();
+	int nHeight = m_pImage->GetHeight();
+	int nRowlen = m_pImage->GetRowlen();
+	int nChannel = m_pImage->GetChannel();
+	float *pDst = new float[nChannel * nWidth * nHeight];
+	ImageRadon(pDst, m_pImage->GetFloatDataHead(), nWidth, nHeight, nRowlen, nChannel, 0,
+		m_fAnglesSeparation, m_nAnglesNum, m_fSubPixel, m_nRaysNum);
 	EndWaitCursor();
 	m_pProject->SetFloatData(pDst, m_nAnglesNum, m_nRaysNum);
 	m_pProject->MemcpyFloatToByte();
@@ -566,7 +573,7 @@ void CCTdemoDoc::OnProjectUsingGpu()
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	BeginWaitCursor();
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	const char *result = cudaRadon(m_pProject->m_pfFloat, m_nRaysNum, m_nAnglesNum, m_fSubPixel, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen);
+	const char *result = cudaRadon(m_pProject->GetFloatDataHead(), m_nRaysNum, m_nAnglesNum, m_fSubPixel, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen);
 	if (result != NULL)
 	{
 		CString str(result);
@@ -648,13 +655,13 @@ void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 		{
 			float k = tan(theta_0 + j * m_fPan_delta_fai - PI / 2);
 			float c = R * k + y0;
-			m_pProject->m_pfFloat[i + j * angles] = LineIntegrate(pSrc, NewWidth, NewHeight, NewRowlen, m_nChannel, 0, Xmin, Ymin, Xmax, Ymax, k, c);
+			m_pProject->GetFloatDataHead()[i + j * angles] = LineIntegrate(pSrc, NewWidth, NewHeight, NewRowlen, m_nChannel, 0, Xmin, Ymin, Xmax, Ymax, k, c);
 		}
 		SAFE_DELETE(pSrc);
 	}
 	EndWaitCursor();
 
-	PopImageViewerDlg(m_pProject->m_pfFloat, angles, rays, angles);
+	PopImageViewerDlg(m_pProject->GetFloatDataHead(), angles, rays, angles);
 }
 
 
@@ -690,7 +697,7 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 			float u = -m_fPan_u0 + j * m_fPan_delta_u;
 			float k = -u / D;
 			float c = -R * k + y0;
-			m_pProject->m_pfFloat[i + j * angles] = LineIntegrate(pSrc, NewWidth, NewHeight, NewRowlen, m_nChannel, 0, Xmin, Ymin, Xmax, Ymax, k, c);
+			m_pProject->GetFloatDataHead()[i + j * angles] = LineIntegrate(pSrc, NewWidth, NewHeight, NewRowlen, m_nChannel, 0, Xmin, Ymin, Xmax, Ymax, k, c);
 		}
 		SAFE_DELETE(pSrc);
 	}
@@ -704,7 +711,7 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 
 	m_pProject->MemcpyFloatToByte();
 	
-	PopImageViewerDlg(m_pProject->m_pfFloat, angles, rays, angles);
+	PopImageViewerDlg(m_pProject->GetFloatDataHead(), angles, rays, angles);
 }
 
 extern const char* cudaPanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
@@ -733,7 +740,7 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 	long t1 = GetTickCount();
 
 	BeginWaitCursor();
-	const char* result = cudaPanRadon(pZoom, Width, Height, m_pProject->m_pfFloat, angles, rays, m_fAnglesRange, R, D);
+	const char* result = cudaPanRadon(pZoom, Width, Height, m_pProject->GetFloatDataHead(), angles, rays, m_fAnglesRange, R, D);
 	EndWaitCursor();
 
 	// 程序段结束后取得系统运行时间(ms)
@@ -754,7 +761,7 @@ void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 
 	m_pProject->MemcpyFloatToByte();
 
-	PopImageViewerDlg(m_pProject->m_pfFloat, angles, rays, angles);
+	PopImageViewerDlg(m_pProject->GetFloatDataHead(), angles, rays, angles);
 
 #endif // CUDA
 }
