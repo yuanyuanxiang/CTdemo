@@ -476,8 +476,8 @@ void CDlgImageViewer::OnSaveImage()
 {
 	// 过滤器
 	CString strFilter = L"所有图像|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG;*.ICO|"\
-		"BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"\
-		"GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
+		L"BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"\
+		L"GIF (*.GIF)|*.GIF|图标 (*.ICO)|*.ICO|所有文件|*.*||";
 
 	// 获取系统时间
 	SYSTEMTIME CurTime;
