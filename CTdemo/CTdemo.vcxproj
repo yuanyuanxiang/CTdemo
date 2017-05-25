@@ -62,7 +62,6 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>lib/Win32/vld.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(CUDA_PATH_V5_0)\lib\Win32\</AdditionalLibraryDirectories>
     </Link>
     <Midl>

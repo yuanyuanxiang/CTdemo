@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "include/vld.h"
-#pragma comment(lib, "lib/Win32/vld.lib")
+#include "vld.h"
+#pragma comment(lib, "vld.lib")
 
 #ifndef VC_EXTRALEAN
 #define VC_EXTRALEAN            // 从 Windows 头中排除极少使用的资料

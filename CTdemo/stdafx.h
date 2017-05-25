@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "include/vld.h"
+#include "vld.h"
 
 #ifndef VC_EXTRALEAN
 #define VC_EXTRALEAN            // 从 Windows 头中排除极少使用的资料
