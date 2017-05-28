@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Art.h"
+#include "Functions.h"
 
 // 2016-12-4增加，保证在不安装CUDA的条件下仍可编译成功
 #ifndef CUDA
@@ -52,7 +53,7 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 	for (int i = Xmin; i <= Xmax; ++i)
 	{
 		float x = i;
-		float y = LineGetYValue(k, c, x);
+		float y = CT::LineGetYValue(k, c, x);
 		if (y < Ymin || y > Ymax)
 			continue;
 		temp[n++] = make_float3(x, y, 0);
@@ -64,7 +65,7 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 		for (int j = Ymin; j <= Ymax; ++j)
 		{
 			float y = j;
-			float x = LineGetXValue(k, c, y);
+			float x = CT::LineGetXValue(k, c, y);
 			if (x < Xmin || x > Xmax)
 				continue;
 			temp[n++] = make_float3(x, y, 0);
@@ -75,7 +76,7 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 		for (int j = Ymax; j >= Ymin; --j)
 		{
 			float y = j;
-			float x = LineGetXValue(k, c, y);
+			float x = CT::LineGetXValue(k, c, y);
 			if (x < Xmin || x > Xmax)
 				continue;
 			temp[n++] = make_float3(x, y, 0);
@@ -128,12 +129,6 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 		pDst[i].z = Distance(pDst[i], pDst[i + 1]);
 	}
 	return s;
-}
-
-
-float Distance(const float3 &a, const float3 &b)
-{
-	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
 

@@ -135,6 +135,9 @@
     <ClInclude Include="Transform.h">
       <Filter>3DCode</Filter>
     </ClInclude>
+    <ClInclude Include="FileOp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IntSection.cpp">
@@ -217,6 +220,9 @@
     </ClCompile>
     <ClCompile Include="DataTypes.cpp">
       <Filter>3DCode</Filter>
+    </ClCompile>
+    <ClCompile Include="FileOp.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

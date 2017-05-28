@@ -48,6 +48,43 @@ BEGIN_MESSAGE_MAP(CCTdemoDoc, CDocument)
 END_MESSAGE_MAP()
 
 
+vector<CString> ScanDiskFile(const CString strPath)
+{
+	// 支持文件格式列表
+	CString Formats[SUPPORTED_FORMATS_NUM] = { _T("*.BMP"), _T("*.DIB"), _T("*.RLE"),
+		_T("*.JPG"), _T("*.JPEG"), _T("*.JPE"), _T("*.JFIF"),
+		_T("*.GIF"), _T("*.EMF"), _T("*.WMF"), _T("*.TIF"), _T("*.TIFF"), _T("*.PNG"), _T("*.ICO"),
+		_T("*.TXT"), _T("*.RAW") };
+	CFileFind find;
+	vector<CString> vStrAllFiles;
+	for (int i = 0; i < SUPPORTED_FORMATS_NUM; ++i)
+	{
+		ScanFormatFile(find, vStrAllFiles, strPath, Formats[i]);
+	}
+	find.Close();
+	return vStrAllFiles;
+}
+
+
+// 从文件夹扫描某一类型的文件，存放到容器中
+void ScanFormatFile(CFileFind &find, vector<CString> &vStrAllFiles, CString strPath, CString format)
+{
+	if (format == _T(""))
+		return;
+	BOOL IsFind = find.FindFile(strPath + _T("\\") + format);
+	while (IsFind)
+	{
+		IsFind = find.FindNextFile();
+		// 如果是"." 则不扫描
+		if (find.IsDots())
+			continue;
+		// 文件
+		else
+			vStrAllFiles.push_back(find.GetFileName());
+	}
+}
+
+
 // CCTdemoDoc 构造/析构
 
 CCTdemoDoc::CCTdemoDoc()
@@ -380,7 +417,7 @@ void CCTdemoDoc::SetReconstructImageSize()
 		m_ptOrigin.y = (m_nHeight + 1) / 2;
 		m_Ox = m_nWidth / 2.f;
 		m_Oy = m_nHeight / 2.f;
-		m_fRaysDensity = 1.f * m_nRaysNum / ComputeRaysNum(m_nWidth, m_nHeight);	//射线密度
+		m_fRaysDensity = 1.f * m_nRaysNum / CT::ComputeRaysNum(m_nWidth, m_nHeight);	//射线密度
 		m_nDetectorCenter = (m_nRaysNum + 1) / 2;									//探测器中心
 	}
 }
@@ -475,7 +512,7 @@ void CCTdemoDoc::UpdateImageInfomation()
 
 void CCTdemoDoc::InitScanningParameters()
 {
-	m_nRaysNum = ComputeRaysNum(m_nWidth, m_nHeight);		//射线条数
+	m_nRaysNum = CT::ComputeRaysNum(m_nWidth, m_nHeight);		//射线条数
 	m_fRaysDensity = 1.0f;									//射线密度
 	m_nDetectorCenter = (m_nRaysNum + 1) / 2;				//探测器中心
 	m_fPanSOR = m_nImageDiag * 8;
@@ -526,18 +563,23 @@ void CCTdemoDoc::RadonTransform()
 {
 	m_nProjectionType = PROJECT_TYPE_PAR;
 	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
+	clock_t start = clock();
 	BeginWaitCursor();
 	int nWidth = m_pImage->GetWidth();
 	int nHeight = m_pImage->GetHeight();
 	int nRowlen = m_pImage->GetRowlen();
 	int nChannel = m_pImage->GetChannel();
 	float *pDst = new float[nChannel * nWidth * nHeight];
-	ImageRadon(pDst, m_pImage->GetFloatDataHead(), nWidth, nHeight, nRowlen, nChannel, 0,
-		m_fAnglesSeparation, m_nAnglesNum, m_fSubPixel, m_nRaysNum);
+	CT ct(m_pImage->GetFloatDataHead(), nWidth, nHeight);
+	ct.ImageRadon(pDst, m_fAnglesSeparation, m_nAnglesNum, m_fSubPixel, m_nRaysNum);
 	EndWaitCursor();
 	m_pProject->SetFloatData(pDst, m_nAnglesNum, m_nRaysNum);
 	m_pProject->MemcpyFloatToByte();
 	SAFE_DELETE(pDst);
+	int mm = clock() - start;
+	CString str;
+	str.Format(_T("耗时：%d mm."), mm);
+	AfxMessageBox(str, MB_ICONINFORMATION);
 	OnWindowProject();
 }
 
@@ -648,14 +690,16 @@ void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 #pragma omp parallel for
 	for (int i = 0; i < angles; ++i)
 	{
-		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
+		int NewWidth, NewHeight, NewRowlen;
 		float theta = i * m_fAnglesSeparation;
-		float *pSrc = m_pImage->Rotate(theta, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+		CLogoRect rect;
+		float *pSrc = m_pImage->Rotate(PositionTransform(theta), NewWidth, NewHeight, rect);
 		for (int j = 0; j < rays; ++j)
 		{
 			float k = tan(theta_0 + j * m_fPan_delta_fai - PI / 2);
 			float c = R * k + y0;
-			m_pProject->GetFloatDataHead()[i + j * angles] = LineIntegrate(pSrc, NewWidth, NewHeight, NewRowlen, m_nChannel, 0, Xmin, Ymin, Xmax, Ymax, k, c);
+			CT ct(pSrc, NewWidth, NewHeight);
+			m_pProject->GetFloatDataHead()[i + j * angles] = ct.LineIntegrate(rect, k, c);
 		}
 		SAFE_DELETE(pSrc);
 	}
@@ -689,15 +733,17 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 #pragma omp parallel for
 	for (int i = 0; i < angles; ++i)
 	{
-		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
+		int NewWidth, NewHeight, NewRowlen;
 		float theta = i * m_fAnglesSeparation;
-		float *pSrc = m_pImage->Rotate(theta, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+		CLogoRect rect;
+		float *pSrc = m_pImage->Rotate(PositionTransform(theta, x0, y0), NewWidth, NewHeight, rect);
 		for (int j = 0; j < rays; ++j)
 		{
 			float u = -m_fPan_u0 + j * m_fPan_delta_u;
 			float k = -u / D;
 			float c = -R * k + y0;
-			m_pProject->GetFloatDataHead()[i + j * angles] = LineIntegrate(pSrc, NewWidth, NewHeight, NewRowlen, m_nChannel, 0, Xmin, Ymin, Xmax, Ymax, k, c);
+			CT ct(pSrc, NewWidth, NewHeight);
+			m_pProject->GetFloatDataHead()[i + j * angles] = ct.LineIntegrate(rect, k, c);
 		}
 		SAFE_DELETE(pSrc);
 	}

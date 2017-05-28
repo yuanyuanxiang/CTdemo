@@ -1,10 +1,14 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
-#include <cmath>
-#include <fstream>
+#include "IntSection.h"
+#include "ImageTransform.h"
+#include <algorithm>
+#include <limits>
 #include <vector>
 using namespace std;
+
+#include "templateFuncs.h"
 
 // 窗函数
 #define CONVOLUTE_KERNEL_COSINE		0
@@ -12,132 +16,82 @@ using namespace std;
 #define CONVOLUTE_KERNEL_SL			2
 #define CONVOLUTE_KERNEL_HAMMING	3
 
-// 获取坐标(x, y)处的值
-float GetPositionValue(float *pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, int x, int y);
+class CT : public ImageTransform
+{
+public:
 
-// 插值出浮点(x, y)处的值,双线性插值
-float biLinearInterp(float *pSrc, int &nWidth, int &nHegiht, int &nRowlen, int &nChannel, int nCurChannel, float x, float y);
+	CT(const float* pSrc, int nWidth, int nHeight) : 
+		ImageTransform(pSrc, nWidth, nHeight, nWidth, 1) { }
 
-// 对坐标(x, y)旋转angle角度,坐标原点由后两个参数给定
-void PositionTransform(float &x, float &y, float theta, float x0, float y0);
+	// 卷积核函数
+	static float CosineKernel(float x, float w0);
 
-// 对坐标(x, y)旋转angle角度, 绕坐标原点旋转
-void PositionTransform(float &x, float &y, float theta);
+	// R_L窗函数:n-探测器编号；d-探测器间距
+	static float R_LKernel(int n, float d);
 
-// 对坐标(x, y)旋转angle角度,坐标原点由后两个参数给定
-void PositionTransform(float &x, float &y, float cos_sin[2], float x0, float y0);
+	// S_L窗函数:n-探测器编号；d-探测器间距
+	static float S_LKernel(int n, float d);
 
-// 对坐标(x, y)旋转angle角度, 绕坐标原点旋转
-void PositionTransform(float &x, float &y, float cos_sin[2]);
+	// Hamming窗函数:n-探测器编号；d-探测器间距
+	static float HammingKernel(int n, float d, float a);
 
-// 对坐标(x, y)旋转angle角度,坐标原点由后两个参数给定
-void PositionTransform(float &x, float &y, float cos_theta, float sin_theta, float x0, float y0);
+	// 希尔伯特卷积核
+	static float HilbertKernel(float x);
 
-// 对坐标(x, y)旋转angle角度, 绕坐标原点旋转
-void PositionTransform(float &x, float &y, float cos_theta, float sin_theta);
+	// 获取直线的自变量
+	static float LineGetXValue(float &k, float &c, float y);
 
-// 找到四个数中最大的
-float FindMaxBetween4Numbers(float x, float y, float z, float w);
+	// 获取直线的函数值
+	static float LineGetYValue(float &k, float &c, float x);
 
-// 找到四个数中最小的
-float FindMinBetween4Numbers(float x, float y, float z, float w);
+	// 根据图像的宽度与高度计算出最佳的射线采样条数，参考自MATLAB
+	static int ComputeRaysNum(int nWidth, int nHeight);
 
-// 卷积核函数
-float CosineKernel(float x, float w0);
+	// 线性一维插值:插值出x的值.
+	float LinearInterp(const float* pSrc, int nWidth, float x)
+	{
+		int x1 = floor(x), x2 = x1 + 1;
+		if ( x1 < 0 || x2 >= nWidth)
+			return 0;
+		return pSrc[x1] * (1 - x + x1) + pSrc[x2] * (x - x1);
+	}
 
-// R_L窗函数:n-探测器编号；d-探测器间距
-float R_LKernel(int n, float d);
+	// 线性二维插值:在width*height网格中插值出(x, y)的值.
+	float LinearInterp(const float* pSrc, int nWidth, int nHeight, int x, float y)
+	{
+		int h1 = floor(y), h2 = h1 + 1;
+		if ( h1 < 0 || h2 >= nHeight)
+			return 0;
+		return pSrc[x + h1 * nWidth] * (1 - y + h1) + pSrc[x + h2 * nWidth] * (y - h1);
+	}
 
-// S_L窗函数:n-探测器编号；d-探测器间距
-float S_LKernel(int n, float d);
+	// 卷积
+	void Convolute(float* pDst, float delta_r, float w0, int nConvKernel);
 
-// Hamming窗函数:n-探测器编号；d-探测器间距
-float HammingKernel(int n, float d, float a);
+	// 平行束反投影
+	void BackProject(float* pDst, int nRays, int nAngles, float delta_r, float delta_fai);
 
-// 平行束卷积
-void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, int nConvKernel = CONVOLUTE_KERNEL_COSINE);
+	void Convolute(float* pDst, float delta_r, float w0, float R, float D, int nConvKernel);
 
-// 一维线性插值
-float LinearInterp(float* pPrj, int nWidth, float x);
+	void BackProject(float* pDst, int nRays, int nAngles, float delta_r, float delta_fai, float R, float D);
 
-// 二维线性插值
-float LinearInterp(float* pPrj, int nWidth, int nHeight, int x, float y);
+	// 导数图像
+	float* DiffImage(const float* pPrj, int nRays, int nAngles, float delta_r);
 
-// 平行束反投影
-void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai);
+	// 有限区域希尔伯特逆变换
+	void InverseHilbert(float* pDst, float delta_r);
 
-// 扇形束卷积
-void Convolute(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r, float w0, float R, float D, int nConvKernel = CONVOLUTE_KERNEL_COSINE);
+	// 线积分
+	float LineIntegrate(const CLogoRect &rect, float &k, float &c);
 
-// 扇形束反投影
-void BackProject(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai, float R, float D);
+	// Radon变换
+	void ImageRadon(float* pDst, float angles_separation, int nAnglesNum, float pixels_separation, int nRaysNum);
 
-// 为8位色图像设置颜色表
-void SetColorTabFor8BitImage(CImage *pImage);
+	// DBP图像
+	void DBPImage(float* pDst, int nRays, int nAngles, float delta_r, float delta_fai, float theta);
 
-// 将浮点数写入文本文档
-bool Write2Txt(float* pSrc, int nWidth, int nHeight, CString path);
-
-bool ReadTxt(float* &pDst, int &nWidth, int &nHeight, CString path);
-
-// 将浮点数写入专有RAW文件
-bool Write2Raw(float* pSrc, int nWidth, int nHeight, CString path);
-
-// 读取专有raw格式文件
-bool ReadPropRaw(float* &pDst, int &nWidth, int &nHeight, CString path);
-
-// 读取一般的裸数据
-bool ReadRaw(float* &pDst, int &nWidth, int &nHeight, CString path);
-
-// 获取直线的自变量
-float LineGetXValue(float &k, float &c, float y);
-
-// 获取直线的函数值
-float LineGetYValue(float &k, float &c, float x);
-
-// 图像的线积分
-float LineIntegrate(float* pSrc, int &Width, int &Height, int &Rowlen, int &Channel, int CurChannel, int Xmin, int Ymin, int Xmax, int Ymax, float &k, float &c);
-
-// 图像radon变换
-void ImageRadon(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angles_separation, int nAnglesNum, float rays_separation, int nRaysNum);
-
-// 图像沿某个方向线积分
-void ImageIntegrate(float* pDst, float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int nCurChannel, float angle, int &nLength);
-
-// 图像旋转(以左下角为原点)
-float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, float angle, int &NewWidth, int &NewHeight, int &NewRowlen);
-
-// 图像旋转，输出参数较少
-float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, float angle, float x0, float y0, int &NewWidth, int &NewHeight, int &NewRowlen);
-
-// 图像旋转
-float* ImageRotate(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, float angle, float x0, float y0, int &Xmin, int &Ymin, int &Xmax, int &Ymax, int &NewWidth, int &NewHeight, int &NewRowlen);
-
-// 图像缩放
-float* ImageZoom(float* pSrc, int &nWidth, int &nHeight, int &nRowlen, int &nChannel, int NewWidth, int NewHeight);
-
-// 根据图像的宽度与高度计算出最佳的射线采样条数，参考自MATLAB
-int ComputeRaysNum(int nWidth, int nHeight);
-
-// 导数图像
-float* DiffImage(float* pPrj, int nRays, int nAngles, float delta_r);
-
-// 导数反投影图像
-void DBPImage(float* pDst, float* pPrj, int nWidth, int nHeight, int nRays, int nAngles, float delta_r, float delta_fai, float theta = 0.f);
-
-// 希尔伯特卷积核
-float HilbertKernel(float x);
-
-// 有限区域希尔伯特逆变换
-void InverseHilbert(float* pDst, float* pSrc, int nWidth, int nHeight, float delta_r);
-
-void *loadRawFile(CString filename, size_t size);
-
-// 扫描某个目录下面文件
-vector<CString> ScanDiskFile(const CString strPath);
-
-// 从文件夹扫描某一类型的文件，存放到容器中
-void ScanFormatFile(CFileFind &find, vector<CString> &vStrAllFiles, CString strPath, CString format);
-
+	// 沿单个方向线积分，单个方向的radon变换
+	void ImageIntegrate(float* pDst, float angle, int nLength);
+};
 
 #endif

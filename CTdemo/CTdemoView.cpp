@@ -24,6 +24,7 @@
 #include "NewView.h"
 #include "ChildFrm.h"
 #include "Functions.h"
+#include "ImageTransform.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -502,9 +503,9 @@ void CCTdemoView::OnToolbarTransform()
 	{
 		if (dlg.m_fRotateAngle == 0)
 			return;
-		int Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen;
-		float* pSrc = m_pCurrent->Rotate(RAD(dlg.m_fRotateAngle), 0, 0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
-		m_pCurrent->Create(pSrc, NewWidth, NewHeight, NewRowlen);
+		int NewWidth, NewHeight;
+		float* pSrc = m_pCurrent->Rotate(PositionTransform(RAD(dlg.m_fRotateAngle)), NewWidth, NewHeight, CLogoRect());
+		m_pCurrent->Create(pSrc, NewWidth, NewHeight, NewWidth * m_pCurrent->GetChannel());
 		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->GetWidth(), m_PaintRect.top + m_pCurrent->GetHeight());
 		SAFE_DELETE(pSrc);
 		Invalidate();
@@ -565,7 +566,7 @@ void CCTdemoView::OnProjectSettings()
 		if (pDoc->m_nRaysNum != dlg.m_nRaysNum)
 		{
 			pDoc->m_nRaysNum = dlg.m_nRaysNum;
-			int temp = ComputeRaysNum(pDoc->m_nWidth, pDoc->m_nHeight);
+			int temp = CT::ComputeRaysNum(pDoc->m_nWidth, pDoc->m_nHeight);
 			pDoc->m_fRaysDensity = 1.f * pDoc->m_nRaysNum / temp;
 			modified = true;
 		}
@@ -647,13 +648,14 @@ void CCTdemoView::OnToolbarConvolute()
 		else 
 		{
 			// 扇形束做卷积需要加权
+			CT ct(pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nAnglesNum, pDoc->m_nRaysNum);
 			switch(pDoc->m_nProjectionType)
 			{
 			case PROJECT_TYPE_PAR:
-				Convolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, dlg.m_nConvKernel);
+				ct.Convolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_fRaysDensity, dlg.m_fW, dlg.m_nConvKernel);
 				break;
 			case PROJECT_TYPE_PAN:
-				Convolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nAnglesNum, pDoc->m_nRaysNum, pDoc->m_fRaysDensity, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD, dlg.m_nConvKernel);
+				ct.Convolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_fRaysDensity, dlg.m_fW, pDoc->m_fPanSOR, pDoc->m_fPanSOD, dlg.m_nConvKernel);
 				break;
 			default:
 				break;
@@ -713,13 +715,14 @@ void CCTdemoView::OnToolbarBackProject()
 	else
 	{
 		// 扇形束反投影需要加权
+		CT ct(pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight);
 		switch(pDoc->m_nProjectionType)
 		{
 		case PROJECT_TYPE_PAR:
-			BackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
+			ct.BackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
 			break;
 		case PROJECT_TYPE_PAN:
-			BackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
+			ct.BackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, pDoc->m_fPanSOR, pDoc->m_fPanSOD);
 			break;
 		default:
 			break;
@@ -1242,7 +1245,8 @@ void CCTdemoView::OnDbpImage()
 	float theta = RAD(dlg.m_fHilberAngle - 90.f);
 	pDoc->m_pfDBPImage = new float[pDoc->m_nWidth * pDoc->m_nHeight * sizeof(float)];
 	BeginWaitCursor();
-	DBPImage(pDoc->m_pfDBPImage, pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, theta);
+	CT ct(pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight);
+	ct.DBPImage(pDoc->m_pfDBPImage, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation, theta);
 	EndWaitCursor();
 	pDoc->Popup(pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);
 }
@@ -1260,7 +1264,8 @@ void CCTdemoView::OnToolbarInverseHilbert()
 	CCTdemoDoc* pDoc = GetDocument();
 	pDoc->m_pReconstruct->Create(pDoc->m_nWidth, pDoc->m_nHeight, 8);
 	BeginWaitCursor();
-	InverseHilbert(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight, 1.f);
+	CT ct(pDoc->m_pfDBPImage, pDoc->m_nWidth, pDoc->m_nHeight);
+	ct.InverseHilbert(pDoc->m_pReconstruct->GetFloatDataHead(), 1.f);
 	EndWaitCursor();
 	pDoc->m_pReconstruct->MemcpyFloatToByte();
 	pDoc->Popup(pDoc->m_pReconstruct->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nWidth);

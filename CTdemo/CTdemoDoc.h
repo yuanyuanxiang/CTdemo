@@ -143,3 +143,11 @@ public:
 	afx_msg void OnWindowAfterFilter();
 	afx_msg void OnUpdateWindowAfterFilter(CCmdUI *pCmdUI);
 };
+
+#define SUPPORTED_FORMATS_NUM 20
+
+// 扫描某个目录下面文件
+vector<CString> ScanDiskFile(const CString strPath);
+
+// 从文件夹扫描某一类型的文件，存放到容器中
+void ScanFormatFile(CFileFind &find, vector<CString> &vStrAllFiles, CString strPath, CString format);

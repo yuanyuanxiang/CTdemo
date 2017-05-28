@@ -1,13 +1,11 @@
 #include "stdafx.h"
 #include "CyImage.h"
 #include <new>
-#include <math.h>
 
 #include <algorithm>
 using namespace std;
 
 #include "FileIO.h"
-#include "ImageTransform.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -395,6 +393,8 @@ BOOL CyImage::Create(int nWidth, int nHeight, int nBPP, DWORD dwFlags) throw()
 */
 BOOL CyImage::Create(const float* pSrc, int nWidth, int nHeight, int nRowlen) throw()
 {
+	if(NULL == pSrc)
+		return FALSE;
 	Destroy();
 	int nBPP = 8 * nRowlen / nWidth;
 	if (FALSE == CImage::Create(nWidth, nHeight, nBPP))
@@ -571,12 +571,11 @@ void CyImage::Rotate(float degree)
 	float angle = RAD(degree);
 	int NewWidth = 0;
 	int NewHeight = 0;
-	int NewRowlen = 0;
 	InitFloatData();
 	MemcpyByteToFloat();
-	float *pDst = ImageRotate(m_pFloatData, GetWidth(), GetHeight(), 
-		GetFloatDataRowlen(), GetChannel(), angle,NewWidth, NewHeight, NewRowlen);
-	Create(pDst, NewWidth, NewHeight, NewRowlen);
+	ImageTransform it(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), GetChannel());
+	float *pDst = it.ImageRotate(PositionTransform(angle, 0, 0), NewWidth, NewHeight, CLogoRect());
+	Create(pDst, NewWidth, NewHeight, NewWidth * GetChannel());
 	SAFE_DELETE(pDst);
 }
 
@@ -585,50 +584,12 @@ void CyImage::Rotate(float degree)
 * @param[in] angle 旋转角度
 * @param[out] &NewWidth 新图像宽度
 * @param[out] &NewHeight 新图像高度
-* @param[out] &NewRowlen 新图像每行浮点元素个数
 * @return 新图像数据块头指针
 */
-float* CyImage::Rotate(float angle, int &NewWidth, int &NewHeight, int &NewRowlen)
+float* CyImage::Rotate(const PositionTransform &pt, int &NewWidth, int &NewHeight, CLogoRect &dstArea)
 {
-	return ImageRotate(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), 
-		GetChannel(), angle, NewWidth, NewHeight, NewRowlen);
-}
-
-
-/** - 旋转图像，并返回旋转得到的图像数据 -
-* @param[in] angle 旋转角度
-* @param[in] x0 旋转中心
-* @param[in] y0 旋转中心
-* @param[out] &NewWidth 新图像宽度
-* @param[out] &NewHeight 新图像高度
-* @param[out] &NewRowlen 新图像每行浮点元素个数
-* @return 新图像数据块头指针
-*/
-float* CyImage::Rotate(float angle, float x0, float y0, int &NewWidth, int &NewHeight, int &NewRowlen)
-{
-	return ImageRotate(m_pFloatData, GetWidth(), GetHeight(), 
-		GetFloatDataRowlen(), GetChannel(), angle, x0, y0, NewWidth, NewHeight, NewRowlen);
-}
-
-
-/** - 旋转图像，并返回旋转得到的图像数据 -
-* @param[in] angle 旋转角度
-* @param[in] x0 旋转中心
-* @param[in] y0 旋转中心
-* @param[in] Xmin 图像边界
-* @param[in] Xmax 图像边界
-* @param[in] Ymin 图像边界
-* @param[in] YMax 图像边界
-* @param[out] &NewWidth 新图像宽度
-* @param[out] &NewHeight 新图像高度
-* @param[out] &NewRowlen 新图像每行浮点元素个数
-* @return 新图像数据块头指针
-*/
-float* CyImage::Rotate(float angle, float x0, float y0, int &Xmin, int &Ymin, int &Xmax, int &Ymax, 
-					   int &NewWidth, int &NewHeight, int &NewRowlen)
-{
-	return ImageRotate(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), GetChannel(), 
-		angle, x0, y0, Xmin, Ymin, Xmax, Ymax, NewWidth, NewHeight, NewRowlen);
+	ImageTransform it(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), GetChannel());
+	return it.ImageRotate(pt, NewWidth, NewHeight, dstArea);
 }
 
 
@@ -640,8 +601,8 @@ float* CyImage::Rotate(float angle, float x0, float y0, int &Xmin, int &Ymin, in
 */
 float* CyImage::Zoom(int NewWidth, int NewHeight, int bNeededReturn)
 {
-	return ImageZoom(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), 
-		GetChannel(), NewWidth, NewHeight);
+	ImageTransform it(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), GetChannel());
+	return it.ImageZoom(NewWidth, NewHeight);
 }
 
 
@@ -666,8 +627,9 @@ void CyImage::Zoom(int nNewWidth, int nNewHeight)
 {
 	if (nNewWidth == GetWidth() && nNewHeight == GetHeight())
 		return;
-	float *pDst = ImageZoom(m_pFloatData, GetWidth(), GetHeight(), GetFloatDataRowlen(), 
-		GetChannel(), nNewWidth, nNewHeight);
+	ImageTransform it(m_pFloatData, GetWidth(), GetHeight(), 
+		GetFloatDataRowlen(), GetChannel());
+	float *pDst = it.ImageZoom(nNewWidth, nNewHeight);
 	Create(pDst, nNewWidth, nNewHeight, nNewWidth * GetChannel());
 	SAFE_DELETE(pDst);
 }
@@ -1389,12 +1351,8 @@ CyImage* CyImage::ROI(CLogoRect rect)
 {
 	if (rect == CLogoRect(0, 0, 0, 0))
 		return MakeCopy();
-	float *pSrc = GetFloatDataHead();
-	int nWidth = GetWidth();
-	int nHeight = GetHeight();
-	int nRowlen = GetRowlen();
-	int nChannel = GetChannel();
-	float *pDst = ImageCut(pSrc, nWidth, nHeight, nRowlen, nChannel, rect);
+	ImageTransform it(m_pFloatData, GetWidth(), GetHeight(), GetRowlen(), GetChannel());
+	float *pDst = it.ImageRoi(rect);
 	CyImage *pImage = NULL;
 	try
 	{
@@ -1405,7 +1363,7 @@ CyImage* CyImage::ROI(CLogoRect rect)
 		SAFE_DELETE(pDst);
 		return pImage;
 	}
-	pImage->Create(pDst, nWidth, nHeight, nRowlen);
+	pImage->Create(pDst, rect.Width(), rect.Height(), rect.Width() * GetChannel());
 	SAFE_DELETE(pDst);
 	return pImage;
 }
@@ -1420,10 +1378,8 @@ void CyImage::Cut(CLogoRect rect)
 	if (rect.left == 0 && rect.top == 0 && rect.right == GetWidth() && rect.bottom == GetHeight())
 		return;
 	/// 其他情况，获得感兴趣区域，并赋值给当前图像
-	int nWidth = GetWidth();
-	int nHeight = GetHeight();
-	int nRowlen = GetRowlen();
-	float *pDst = ImageCut(GetFloatDataHead(), nWidth, nHeight, nRowlen, GetChannel(), rect);
-	Create(pDst, nWidth, nHeight, nRowlen);
+	ImageTransform it(m_pFloatData, GetWidth(), GetHeight(), GetRowlen(), GetChannel());
+	float *pDst = it.ImageRoi(rect);
+	Create(pDst, rect.Width(), rect.Height(), rect.Width() * GetChannel());
 	SAFE_DELETE(pDst);
 }

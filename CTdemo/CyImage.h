@@ -3,8 +3,8 @@
 #pragma once
 
 #include "atlimage.h"
-#include "DataTypes.h"
 #include "ImageSrc.h"
+#include "ImageTransform.h"
 
 /** 
 * @file CyImage.h
@@ -87,10 +87,7 @@ public:
 	CyImage* ROI(CLogoRect rect = CLogoRect(0, 0, 0, 0));
 
 	/* 对图像旋转，返回新图像的数据，宽度、高度和每行浮点数，需要delete方法 */
-	float* Rotate(float angle, int &NewWidth, int &NewHeight, int &NewRowlen);
-	float* Rotate(float angle, float x0, float y0, int &NewWidth, int &NewHeight, int &NewRowlen);
-	float* Rotate(float angle, float x0, float y0, int &Xmin, int &Ymin, int &Xmax, int &Ymax, 
-		int &NewWidth, int &NewHeight, int &NewRowlen);
+	float* Rotate(const PositionTransform &pt, int &NewWidth, int &NewHeight, CLogoRect &dstArea);
 
 	/* 根据参数放大图像，返回浮点数据，需要delete方法 */
 	float* Zoom(int NewWidth, int NewHeight, int bNeededReturn);
