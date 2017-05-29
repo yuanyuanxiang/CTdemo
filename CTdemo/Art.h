@@ -28,7 +28,9 @@ float3 make_float3(float x0, float y0, float z0);
 #include <vector>
 using namespace std;
 
+#ifndef SAFE_DELETE
 #define SAFE_DELETE(p) { if(p != NULL){ delete [] p; p = NULL; } }	//°²È«É¾³ýÖ¸Õëp
+#endif
 
 float Distance(const float3 &a, const float3 &b);
 

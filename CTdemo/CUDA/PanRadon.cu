@@ -283,7 +283,7 @@ __device__ __host__ void cudaIntsections(float2* pDst, float2* temp, float* pPrj
 		}
 	}
 	
-	float sum = 0.f;
+	float sum = 0;
 	for (int i = 0; i < s - 1; ++i)
 	{
 		int x = dst_pos[i].x - Xmin;
@@ -309,7 +309,7 @@ int Width, int Height		图像宽度与高度
 __device__ void cudaIntergrate(float2* Intsections, float *pDst, float *pSrc, int pan_angles, int intsection_length, int angles_index, int line_index, int Xmin, int Ymin, int Width, int Height)
 {
 	float2* Pos = Intsections + line_index * intsection_length;
-	float s = 0.f;
+	float s = 0;
 	for (int i = 0; i < intsection_length - 1; ++i)
 	{
 		int x = Pos[i].x - Xmin;

@@ -675,7 +675,7 @@ inline float fabs(const float3 & pos)
 void ZoomRect(CLogoRect &rect, float rate = 1.f);
 
 // 按方向(dx, dy)移动矩形
-void MoveRect(CLogoRect &rect, float dx = 0.f, float dy = 0.f);
+void MoveRect(CLogoRect &rect, float dx = 0, float dy = 0);
 
 // 对数据进行掩码操作
 void XOR(int *nCodes, const int *nMaskingNo, int nLength);

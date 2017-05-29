@@ -79,7 +79,7 @@ __device__ float cudaConvKernel(float x, float w0)
 __device__ float cudaRLFilter(int n, float d)
 {
 	if (n == 0) return 1.f / (4 * d * d);
-	if (n % 2 == 0) return 0.f;
+	if (n % 2 == 0) return 0;
 	return -1.f / (PI * PI * n * n * d * d);
 }
 
@@ -139,7 +139,7 @@ __host__ const char* cudaConvolute(float* h_pDst, float* h_prj, int row, int col
 	error = cudaGetLastError();
 	CHECK_ERRORS(error, errstr);
 
-	float alpha = delta_r, belta = 0.f;
+	float alpha = delta_r, belta = 0;
 	cublasHandle_t handle;
 	cublasCreate(&handle);
 	//P = C * P -> P' = P' * C';

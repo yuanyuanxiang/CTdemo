@@ -13,7 +13,7 @@ IMPLEMENT_DYNAMIC(CDlgHilbertAngle, CDialogEx)
 
 CDlgHilbertAngle::CDlgHilbertAngle(CWnd* pParent /*=NULL*/) : CDialogEx(CDlgHilbertAngle::IDD, pParent)
 {
-	m_fHilberAngle = 90.f;
+	m_fHilberAngle = 90;
 }
 
 CDlgHilbertAngle::~CDlgHilbertAngle()

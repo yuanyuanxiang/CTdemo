@@ -18,7 +18,7 @@ CDlgConvluteW::CDlgConvluteW(CWnd* pParent /*=NULL*/) : CDialogEx(CDlgConvluteW:
 	// 实际扫描中，探测器单元尺寸（对第一代CT扫描就是探测器和光机步进的距离）是固定的
 	// 即采样间隔是给定的,不妨记其为d。通常假设该采样间隔是足够小的，即d < Tm/2
 	// 由此我们可以推导出截止频率 Wm <= 1/(2d)
-	m_fW = 0.4;
+	m_fW = 0.4F;
 }
 
 CDlgConvluteW::~CDlgConvluteW()
@@ -65,7 +65,7 @@ void CDlgConvluteW::OnCbnSelchangeComboConvKernel()
 	switch (m_nConvKernel)
 	{
 	case CONVOLUTE_KERNEL_COSINE:
-		m_fW = 0.4;
+		m_fW = 0.4F;
 		m_EditW.EnableWindow(TRUE);
 		m_EditW.SetWindowTextW(_T("0.4"));
 		m_StaticVar.SetWindowTextW(_T("w = "));
@@ -79,7 +79,7 @@ void CDlgConvluteW::OnCbnSelchangeComboConvKernel()
 		m_StaticVar.SetWindowTextW(_T(""));
 		break;
 	case CONVOLUTE_KERNEL_HAMMING:
-		m_fW = 0.1;
+		m_fW = 0.1F;
 		m_EditW.EnableWindow(TRUE);
 		m_EditW.SetWindowTextW(_T("0.1"));
 		m_StaticVar.SetWindowTextW(_T("a = "));

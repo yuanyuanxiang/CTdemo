@@ -25,13 +25,13 @@ float &k, float &c						直线斜率与截距
 void ComputeIntsections(float3* pDst, float3* temp, float* pPrj, int nRaysIndex, int nAnglesIndex, int nAngles, float* pSrc, int Xmin, int Ymin, int Xmax, int Ymax, float &k, float &c)
 {
 	int s = ComputeIntsections(pDst, temp, Xmin, Ymin, Xmax, Ymax, k, c);
-	float sum = 0.f;
+	float sum = 0;
 	int Width = Xmax - Xmin;
 	int Height = Ymax - Ymin;
 	for (int i = 0; i < s - 1; ++i)
 	{
-		int x = pDst[i].x - Xmin;
-		int y = pDst[i].y - Ymin;
+		int x = (int)pDst[i].x - Xmin;
+		int y = (int)pDst[i].y - Ymin;
 		pDst[i].z = Distance(pDst[i], pDst[i + 1]);
 		if (0 <= x && x < Width && 0 <= y && y < Height)
 			sum += pDst[i].z * pSrc[x + y * Width];
@@ -52,7 +52,7 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 	int n = 0, n1, n2, s = 0;
 	for (int i = Xmin; i <= Xmax; ++i)
 	{
-		float x = i;
+		float x = (float)i;
 		float y = CT::LineGetYValue(k, c, x);
 		if (y < Ymin || y > Ymax)
 			continue;
@@ -64,7 +64,7 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 	{
 		for (int j = Ymin; j <= Ymax; ++j)
 		{
-			float y = j;
+			float y = (float)j;
 			float x = CT::LineGetXValue(k, c, y);
 			if (x < Xmin || x > Xmax)
 				continue;
@@ -75,7 +75,7 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 	{
 		for (int j = Ymax; j >= Ymin; --j)
 		{
-			float y = j;
+			float y = (float)j;
 			float x = CT::LineGetXValue(k, c, y);
 			if (x < Xmin || x > Xmax)
 				continue;
@@ -121,7 +121,7 @@ int ComputeIntsections(float3* pDst, float3* temp, int Xmin, int Ymin, int Xmax,
 		}
 	}
 
-	float sum = 0.f;
+	float sum = 0;
 	int Width = Xmax - Xmin;
 	int Height = Ymax - Ymin;
 	for (int i = 0; i < s - 1; ++i)
@@ -153,7 +153,7 @@ const char* Art(float* pDst, int nWidth, int nHeight, float* pPrj, int nRays, in
 		IntSecs = new float3[nRays * nAngles * Length];
 		memset(IntSecs, 0, nRays * nAngles * Length * sizeof(float3));
 	}
-	catch (const std::bad_alloc &e)
+	catch (const std::bad_alloc )
 	{
 		return "分配内存失败！";
 	}
@@ -166,7 +166,7 @@ const char* Art(float* pDst, int nWidth, int nHeight, float* pPrj, int nRays, in
 		curIntSecs = IntSecs + j * nAngles * Length;
 		if (Xmin <= distance && distance <= Xmax)
 		{
-			for (int y = Ymin; y <= Ymax; ++y)
+			for (float y = Ymin; y <= Ymax; ++y)
 			{
 				curIntSecs[n++] = make_float3(distance, y, 1.f);
 			}
@@ -194,7 +194,7 @@ const char* Art(float* pDst, int nWidth, int nHeight, float* pPrj, int nRays, in
 		R_Square = new float[nRays * nAngles];
 		memset(R_Square, 0, nRays * nAngles * sizeof(float));
 	}
-	catch (const std::bad_alloc &e)
+	catch (const std::bad_alloc )
 	{
 		SAFE_DELETE(temp);
 		SAFE_DELETE(IntSecs);
@@ -229,13 +229,13 @@ const char* Art(float* pDst, int nWidth, int nHeight, float* pPrj, int nRays, in
 
 				for (int k = 0; k < Length; ++k)
 				{
-					x[k] = curIntSecs[k].x - Xmin;
-					y[k] = curIntSecs[k].y - Ymin;
+					x[k] = int(curIntSecs[k].x - Xmin);
+					y[k] = int(curIntSecs[k].y - Ymin);
 					R[k] = curIntSecs[k].z;
 					judge[k] = (0 <= x[k] && x[k] < nWidth && 0 <= y[k] && y[k] < nHeight);
 				}
 
-				float RX = 0.f;
+				float RX = 0;
 				for (int k = 0; k < Length; ++k)
 				{
 					if (judge[k])
@@ -286,10 +286,10 @@ const char* ArtRadon(float* pPrj, int nRays, int nAngles, float* pSrc, int nWidt
 	for (int j = 0; j < nRays; ++j)
 	{
 		float distance = -med + rays_separation * j;
-		for (int i = Ymin; i < Ymax; ++i)
+		for (float i = Ymin; i < Ymax; ++i)
 		{
-			int x = nWidth / 2.f + distance;
-			int y = i - Ymin;
+			int x = int(nWidth / 2.f + distance);
+			int y = int(i - Ymin);
 			if (0 <= x && x < nWidth && 0 <= y && y < nHeight)
 				pPrj[j * nAngles] += pSrc[x + y * nWidth];
 		}

@@ -39,29 +39,27 @@ public:
 	static float HilbertKernel(float x);
 
 	// 获取直线的自变量
-	static float LineGetXValue(float &k, float &c, float y);
+	static float LineGetXValue(float k, float c, float y);
 
 	// 获取直线的函数值
-	static float LineGetYValue(float &k, float &c, float x);
+	static float LineGetYValue(float k, float c, float x);
 
 	// 根据图像的宽度与高度计算出最佳的射线采样条数，参考自MATLAB
 	static int ComputeRaysNum(int nWidth, int nHeight);
 
 	// 线性一维插值:插值出x的值.
-	float LinearInterp(const float* pSrc, int nWidth, float x)
+	inline float LinearInterp(const float* pSrc, int nWidth, float x)
 	{
-		int x1 = floor(x), x2 = x1 + 1;
-		if ( x1 < 0 || x2 >= nWidth)
-			return 0;
+		int x1 = (int)floor(x), x2 = x1 + 1;
+		ASSERT(x1 >= 0 || x2 < nWidth);
 		return pSrc[x1] * (1 - x + x1) + pSrc[x2] * (x - x1);
 	}
 
 	// 线性二维插值:在width*height网格中插值出(x, y)的值.
-	float LinearInterp(const float* pSrc, int nWidth, int nHeight, int x, float y)
+	inline float LinearInterp(const float* pSrc, int nWidth, int nHeight, int x, float y)
 	{
-		int h1 = floor(y), h2 = h1 + 1;
-		if ( h1 < 0 || h2 >= nHeight)
-			return 0;
+		int h1 = (int)floor(y), h2 = h1 + 1;
+		ASSERT(h1 >= 0 || h2 < nHeight);
 		return pSrc[x + h1 * nWidth] * (1 - y + h1) + pSrc[x + h2 * nWidth] * (y - h1);
 	}
 

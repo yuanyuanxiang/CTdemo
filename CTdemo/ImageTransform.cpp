@@ -39,19 +39,27 @@ float* ImageTransform::ImageRotate(const PositionTransform &pt, int &NewWidth, i
 	NewHeight = Ymax - Ymin + 1;
 	int NewRowlen = m_nChannel * NewWidth;
 	float *pDst = new float[NewRowlen * NewHeight];
+	float x0 = pt.x0, y0 = pt.y0, cos_theta = pt.cos_theta, sin_theta = -pt.sin_theta;
 
 	for (int nCurChannel = 0; nCurChannel < m_nChannel; ++nCurChannel)
 	{
 		float *p0 = pDst + nCurChannel;
 		for (int i = 0; i < NewWidth; ++i, p0 += m_nChannel)
 		{
+			float x = float(i + Xmin), dx = x - x0, t1 = dx * cos_theta, t2 = dx * sin_theta;
 			float *p = p0;
 			for (int j = 0; j < NewHeight; ++j, p += NewRowlen)
 			{
-				float x = float(i + Xmin);
-				float y = float(j + Ymin);
-				pt.InvTransform(x, y);
-				*p = biLinearInterp(nCurChannel, x, y);
+				float y = float(j + Ymin), dy = y - y0, s1 = dy * sin_theta, s2 = dy * cos_theta;
+				x = x0 + t1 - s1; y = y0 + t2 + s2;
+				// 参看biLinearInterp
+				int x1 = int(x), y1 = int(y), x3 = x1 + 1, y3 = y1 + 1;
+				// 左下角的点
+				const float* pLB = m_pSrc + nCurChannel + x1 * m_nChannel + y1 * m_nRowlen;
+				// 对越界的处理
+				*p = (x1 < 0 || x3 >= m_nWidth || y1 < 0 || y3 >= m_nHeight) ? 0 :
+					(*pLB * (x3 - x) + *(pLB + m_nChannel) * (x - x1)) * (y3 - y)
+					+ (*(pLB + m_nRowlen) * (x3 - x) + *(pLB + m_nChannel + m_nRowlen) * (x - x1)) * (y - y1);
 			}
 		}
 	}

@@ -129,6 +129,6 @@ __device__ float cudaLinearInterp(float r_id, int fai_id, float* prj, int angles
 {
 	int r1 = floor(r_id), r2 = r1 + 1;
 	if ( r1 < 0 || r2 >= rays)
-		return 0.f;
+		return 0;
 	return prj[fai_id + r1 * angles] * (1 - r_id + r1) + prj[fai_id + r2 * angles] * (r_id - r1);
 }

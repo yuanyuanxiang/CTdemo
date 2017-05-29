@@ -16,9 +16,9 @@ public:
 public:
 	CIntSection(void) : m_xPos(0), m_yPos(0), m_Value(0){ }
 
-	CIntSection(int x, int y) : m_xPos(x), m_yPos(y), m_Value(0){ }
+	CIntSection(float x, float y) : m_xPos(x), m_yPos(y), m_Value(0){ }
 
-	CIntSection(int x, int y, int v) : m_xPos(x), m_yPos(y), m_Value(v){ }
+	CIntSection(float x, float y, float v) : m_xPos(x), m_yPos(y), m_Value(v){ }
 
 	~CIntSection(void){ }
 

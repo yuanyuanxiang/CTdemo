@@ -464,7 +464,7 @@ void CyImage::MemcpyByteToFloat()
 	if (m_fMaximum == m_fMinimum)
 	{
 		fRate = 1.f;
-		fMinimum = 0.f;
+		fMinimum = 0;
 	}
 
 	int nWidth = GetWidth();

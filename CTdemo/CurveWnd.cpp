@@ -998,9 +998,9 @@ void CCurveWnd::OnCmdImportCurve()
 				ar>>Temp.m_dRatioX;
 				ar>>Temp.m_dRatioY;
 			}
-			catch (CMemoryException* e)	{}
-			catch (CFileException* e)	{}
-			catch (CException* e)		{}
+			catch (CMemoryException* )	{ }
+			catch (CFileException* )	{ }
+			catch (CException* )		{ }
 			if (Temp.m_dRatioX < 0 || Temp.m_dRatioY < 0)
 			{
 				MessageBox(L"\"" + FilePath + L"\"" + L"不是有效的曲线文件!", L"出现错误", MB_OK | MB_ICONERROR);

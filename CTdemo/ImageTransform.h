@@ -15,7 +15,7 @@
 */
 class PositionTransform
 {
-protected:
+public:
 	float theta;		/**< 旋转角度 */
 	float sin_theta;	/**< 角度正弦 */
 	float cos_theta;	/**< 角度余弦 */

@@ -99,7 +99,7 @@ CCTdemoDoc::CCTdemoDoc()
 	m_pHead = NULL;
 	// 图像信息
 	m_ptOrigin = CPoint(0, 0);
-	m_Ox = m_Oy = 0.f;
+	m_Ox = m_Oy = 0;
 	m_nWidth = 0;
 	m_nHeight = 0;
 	m_nRowlen = 0;
@@ -119,7 +119,7 @@ CCTdemoDoc::CCTdemoDoc()
 	m_fPanSOD = 1.f;
 	m_fPan_u0 = 1.f;
 	m_fPan_delta_u = 1.f;
-	m_fPan_delta_fai = 0.f;
+	m_fPan_delta_fai = 0;
 	// 导数图像
 	m_pfDBPImage = NULL;
 	m_nCurrentFile = -1;
@@ -690,7 +690,7 @@ void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 #pragma omp parallel for
 	for (int i = 0; i < angles; ++i)
 	{
-		int NewWidth, NewHeight, NewRowlen;
+		int NewWidth, NewHeight;
 		float theta = i * m_fAnglesSeparation;
 		CLogoRect rect;
 		float *pSrc = m_pImage->Rotate(PositionTransform(theta), NewWidth, NewHeight, rect);
@@ -733,7 +733,7 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 #pragma omp parallel for
 	for (int i = 0; i < angles; ++i)
 	{
-		int NewWidth, NewHeight, NewRowlen;
+		int NewWidth, NewHeight;
 		float theta = i * m_fAnglesSeparation;
 		CLogoRect rect;
 		float *pSrc = m_pImage->Rotate(PositionTransform(theta, x0, y0), NewWidth, NewHeight, rect);

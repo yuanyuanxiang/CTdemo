@@ -600,9 +600,9 @@ void CCTdemoView::OnSaveProjectImg()
 {
 	CCTdemoDoc *pDoc = GetDocument();
 	BeginWaitCursor();
-	bool result = pDoc->m_pProject->Save();
+	BOOL result = pDoc->m_pProject->Save();
 	EndWaitCursor();
-	if (result != true)
+	if (result != TRUE)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
 }
 
@@ -753,9 +753,9 @@ void CCTdemoView::OnSaveBackProjectImg()
 {
 	CCTdemoDoc *pDoc = GetDocument();
 	BeginWaitCursor();
-	bool result = pDoc->m_pReconstruct->Save();
+	BOOL result = pDoc->m_pReconstruct->Save();
 	EndWaitCursor();
-	if(result != true)
+	if(result != TRUE)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
 }
 
@@ -771,9 +771,9 @@ void CCTdemoView::OnSaveAfterFilterImg()
 {
 	CCTdemoDoc *pDoc = GetDocument();
 	BeginWaitCursor();
-	bool result = pDoc->m_pAfterFilter->Save();
+	BOOL result = pDoc->m_pAfterFilter->Save();
 	EndWaitCursor();
-	if (result != true)
+	if (result != TRUE)
 		MessageBox(_T("出现问题，保存图像失败。"), _T("警告"), MB_OK | MB_ICONWARNING);
 }
 
@@ -1242,7 +1242,7 @@ void CCTdemoView::OnDbpImage()
 	SAFE_DELETE(pDoc->m_pfDBPImage);
 	CDlgHilbertAngle dlg;
 	dlg.DoModal();
-	float theta = RAD(dlg.m_fHilberAngle - 90.f);
+	float theta = RAD(dlg.m_fHilberAngle - 90);
 	pDoc->m_pfDBPImage = new float[pDoc->m_nWidth * pDoc->m_nHeight * sizeof(float)];
 	BeginWaitCursor();
 	CT ct(pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nWidth, pDoc->m_nHeight);

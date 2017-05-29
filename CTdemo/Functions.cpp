@@ -1,47 +1,52 @@
 #include "stdafx.h"
 #include "Functions.h"
 
+// pi*pi
+const float PI_2 = PI * PI;
 
 // 卷积核：HW(r). w0 - 高频截止
-float CT::CosineKernel(float x, float w0)
+inline float CT::CosineKernel(float x, float w0)
 {
 	if(x == 0)
 		return w0 * w0;
 	float theta = 2 * PI * w0 * x;
-	return (-1 + cos(theta) + theta * sin(theta)) / (2 * PI * PI * x * x);
+	return (-1 + cos(theta) + theta * sin(theta)) / (2 * PI_2 * x * x);
 }
 
 
 // R_L窗函数:n-探测器编号；d-探测器间距
-float CT::R_LKernel(int n, float d)
+inline float CT::R_LKernel(int n, float d)
 {
 	if (n == 0)
 		return 1 / (4 * d * d);
-	return (n % 2 == 0) ? 0 : -1 / (PI * PI * n * n * d * d);
+	return (n % 2 == 0) ? 0 : -1 / (PI_2 * n * n * d * d);
 }
 
 
 // S_L窗函数:n-探测器编号；d-探测器间距
-float CT::S_LKernel(int n, float d)
+inline float CT::S_LKernel(int n, float d)
 {
-	return 2 / ((PI * PI * d * d) * (1 - 4 * n * n));
+	return 2 / ((PI_2 * d * d) * (1 - 4 * n * n));
 }
 
 
 // Hamming窗函数:n-探测器编号；d-探测器间距
-float CT::HammingKernel(int n, float d, float a)
+inline float CT::HammingKernel(int n, float d, float a)
 {
+	int n_2 = n * n;//n*n
+	float d_2 = d * d;//d*d
 	if (n == 0)
-		return -(4 + (-4 + PI * PI) * a) / (4 * d * d * PI * PI);
+		return -(4 + (-4 + PI_2) * a) / (4 * d_2 * PI_2);
 	if (n == 1 || n == -1)
-		return (PI * PI * (-1 + a) - 8 * a) / (8 * d * d * PI * PI);
-	return n % 2 == 0 ? (-a + n * n * (-(-3 * a + n * n + 1)) + (a + (2 * a - 1) * n * n * n * n - (a + 1) * n * n)) / (2 * PI * PI * d * d * n * n * (n * n - 1) * (n * n - 1)) : 
-		(-a + n * n * (-(-3 * a + n * n + 1)) - (a + (2 * a - 1) * n * n * n * n - (a + 1) * n * n)) / (2 * PI * PI * d * d * n * n * (n * n - 1) * (n * n - 1));
+		return (PI_2 * (-1 + a) - 8 * a) / (8 * d_2 * PI_2);
+	return n % 2 == 0 ? 
+		(-a + n_2 * (-(-3 * a + n_2 + 1)) + (a + (2 * a - 1) * n_2 * n_2 - (a + 1) * n_2)) / (2 * PI_2 * d_2 * n_2 * (n_2 - 1) * (n_2 - 1)) : 
+		(-a + n_2 * (-(-3 * a + n_2 + 1)) - (a + (2 * a - 1) * n_2 * n_2 - (a + 1) * n_2)) / (2 * PI_2 * d_2 * n_2 * (n_2 - 1) * (n_2 - 1));
 }
 
 
 // 希尔伯特卷积核函数
-float CT::HilbertKernel(float x)
+inline float CT::HilbertKernel(float x)
 {
 	return 0 == x ? 0 : 1 / (PI * x);
 }
@@ -49,11 +54,11 @@ float CT::HilbertKernel(float x)
 
 /** 
 * @brief 获得直线的x值
-* @param[in] &k		直线斜率
-* @param[in] &c		直线截距
+* @param[in] k		直线斜率
+* @param[in] c		直线截距
 * @param[in] y		已知y值
 */
-float CT::LineGetXValue(float &k, float &c, float y)
+inline float CT::LineGetXValue(float k, float c, float y)
 {
 	return 0 == k ? 0 : (y - c) / k;
 }
@@ -65,7 +70,7 @@ float CT::LineGetXValue(float &k, float &c, float y)
 * @param[in] &c		直线截距
 * @param[in] x		已知x值
 */
-float CT::LineGetYValue(float &k, float &c, float x)
+inline float CT::LineGetYValue(float k, float c, float x)
 {
 	return (k * x + c);
 }
@@ -164,7 +169,7 @@ void CT::BackProject(float* pDst, int nRays, int nAngles, float delta_r, float d
 	int cx = (m_nWidth + 1) / 2;
 	int cy = (m_nHeight + 1) / 2;
 	int med = (nRays + 1) / 2;
-	float sum = 0.f;
+	float sum = 0;
 
 	// 2015.5.19 将三角函数放到循环体外面
 	float *cos_fai = new float[nAngles];
@@ -181,7 +186,7 @@ void CT::BackProject(float* pDst, int nRays, int nAngles, float delta_r, float d
 	{
 		for (n = 0; n < m_nWidth; ++n)
 		{
-			sum = 0.f;
+			sum = 0;
 			for (i = 0; i < nAngles; ++i)
 			{
 				float fai = i * delta_fai;
@@ -199,7 +204,7 @@ void CT::BackProject(float* pDst, int nRays, int nAngles, float delta_r, float d
 void CT::Convolute(float* pDst, float delta_r, float w0, float R, float D, int nConvKernel)
 {
 	int m, n, i;
-	float sum = 0.f;
+	float sum = 0;
 	float theta_0 = acos(m_nHeight * delta_r / 2.f / R);
 	float u0 = D / tan(theta_0);
 	float delta_u = (2.f * u0) / m_nHeight;
@@ -285,7 +290,7 @@ void CT::BackProject(float* pDst, int nRays, int nAngles, float delta_r, float d
 	int cx = (m_nWidth + 1) / 2;
 	int cy = (m_nHeight + 1) / 2;
 	int med = (nRays + 1) / 2;
-	float sum = 0.f;
+	float sum = 0;
 
 	// 2015.5.19 将三角函数放到循环体外面
 	float *cos_fai = new float[nAngles];
@@ -302,11 +307,11 @@ void CT::BackProject(float* pDst, int nRays, int nAngles, float delta_r, float d
 	{
 		for (n = 0; n < m_nWidth; ++n)
 		{
-			sum = 0.f;
+			sum = 0;
 			for (i = 0; i < nAngles; ++i)
 			{
-				float x1 = n - cx;
-				float x2 = m - cy;
+				float x1 = (float)n - cx;
+				float x2 = (float)m - cy;
 				float fai = i * delta_fai;
 				float r = x1 * cos_fai[i] + x2 * sin_fai[i];
 				float alpha = R * D / ((R - x2 * cos_fai[i] + x1 * sin_fai[i]) * (R - x2 * cos_fai[i] + x1 * sin_fai[i]));
@@ -330,17 +335,21 @@ void CT::BackProject(float* pDst, int nRays, int nAngles, float delta_r, float d
 */
 float* CT::DiffImage(const float* pSrc, int nRays, int nAngles, float delta_r)
 {
-	float* pDst = new float[nRays * nAngles * sizeof(float)];
-	for (int n = 0; n < nAngles; ++n)
+	float* pDst = new float[nRays * nAngles];
+	delta_r = 1.f / delta_r;
+	for (int n = 0; n < nAngles; ++n)// 第1行
 	{
-		pDst[n] =  pSrc[n] / delta_r;
+		pDst[n] =  pSrc[n] * delta_r;
 	}
-
-	for (int m = 1; m < nRays; ++m)
+	float *p0 = pDst + nAngles;
+	const float *q0 = pSrc + nAngles;
+	for (int m = 1; m < nRays; ++m, p0 += nAngles, q0 += nAngles)
 	{
-		for (int n = 0; n < nAngles; ++n)
+		float *p = p0;
+		const float *q1 = q0, *q2 = q1 - nAngles;
+		for (int n = 0; n < nAngles; ++n, ++p, ++q1)
 		{
-			pDst[n + m * nAngles] =  (pSrc[n + m * nAngles] - pSrc[n + (m - 1) * nAngles]) / delta_r;
+			*p = (*q1 - *q2) * delta_r;
 		}
 	}
 	return pDst;
@@ -357,18 +366,18 @@ float* CT::DiffImage(const float* pSrc, int nRays, int nAngles, float delta_r)
 void CT::InverseHilbert(float* pDst, float delta_r)
 {
 	int s, t, s1;
-	float sum = 0.f;
+	float sum = 0;
 
 	float Lt = 0;
-	float Ut = m_nHeight;
-	float s0 = 0.f, Ct = 0.f;
+	float Ut = (float)m_nHeight;
+	float s0 = 0, Ct = 0;
 
 	for (t = 0; t < m_nWidth; ++t)
 	{
 		for (s = 0; s < m_nHeight; ++s)
 		{
-			sum = 0.f;
-			Ct = 0.f;
+			sum = 0;
+			Ct = 0;
 			for (s1 = Lt; s1 < Ut; ++s1)
 			{
 				sum += sqrt((s1 - Lt) * (Ut - s1)) * m_pSrc[t + s1 * m_nWidth] * HilbertKernel(s - s1);
@@ -395,7 +404,7 @@ float CT::LineIntegrate(const CLogoRect &rect, float &k, float &c)
 	int Ymax = rect.bottom;
 	for (int i = Xmin; i <= Xmax; ++i)
 	{
-		float x = i;
+		float x = (float)i;
 		float y = LineGetYValue(k, c, x);
 		if (y < Ymin || y > Ymax)
 			continue;
@@ -404,7 +413,7 @@ float CT::LineIntegrate(const CLogoRect &rect, float &k, float &c)
 
 	for (int j = Ymin; j <= Ymax; ++j)
 	{
-		float y = j;
+		float y = (float)j;
 		float x = LineGetXValue(k, c, y);
 		if (x < Xmin || x > Xmax)
 			continue;
@@ -418,8 +427,8 @@ float CT::LineIntegrate(const CLogoRect &rect, float &k, float &c)
 	int Num = Sections.size() - 1;
 	for (int i = 0; i < Num; ++i)
 	{
-		int x = Sections[i].m_xPos - Xmin;
-		int y = Sections[i].m_yPos - Ymin;
+		int x = (int)Sections[i].m_xPos - Xmin;
+		int y = (int)Sections[i].m_yPos - Ymin;
 		if (0 <= x && x < m_nWidth && 0 <= y && y < m_nHeight)
 			s += Distance(Sections[i], Sections[i + 1]) * m_pSrc[x * m_nChannel + y * m_nRowlen];
 	}
@@ -429,41 +438,38 @@ float CT::LineIntegrate(const CLogoRect &rect, float &k, float &c)
 /** 
 * @brief radon变换
 * @param[in] *pDst
-* @param[in] 角度间距 angles_separation
-* @param[in] 角度个数 nAnglesNum
-* @param[in] 射线间距 pixels_separation
-* @param[in] 射线个数 nRaysNum
+* @param[in] angles_separation 角度间距 
+* @param[in] nAnglesNum 角度个数 
+* @param[in] pixels_separation 射线间距 
+* @param[in] nRaysNum 射线个数 
 */
 void CT::ImageRadon(float* pDst, float angles_separation, int nAnglesNum, float pixels_separation, int nRaysNum)
 {
 	float zoom_rate = 1 / pixels_separation;
 	int nNewWidth = zoom_rate * m_nWidth;
 	int nNewHeight = zoom_rate * m_nHeight;
-	int nNewRowlen = nNewWidth * m_nChannel;
-	ImageTransform it(m_pSrc, m_nWidth, m_nHeight, m_nRowlen, m_nChannel);
-	float *pSrc2 = it.ImageZoom(nNewWidth, nNewHeight);
 
+	ImageTransform it(m_pSrc, m_nWidth, m_nHeight, m_nRowlen, m_nChannel);
+	float *pZoomSrc = it.ImageZoom(nNewWidth, nNewHeight);
+	CT ct(pZoomSrc, nNewWidth, nNewHeight);
 	int nNewRaysNum = ComputeRaysNum(nNewWidth, nNewHeight);
 	int nDetectorCenter = (nNewRaysNum + 1) / 2;
-	float density = 1.f * nNewRaysNum / nRaysNum;
-
-	for (int i = 0; i < nAnglesNum; ++i)
+	float density = float(nNewRaysNum) / nRaysNum;
+	float angle = 0;
+	for (int i = 0; i < nAnglesNum; ++i, angle += angles_separation)
 	{
 		float *temp = new float[nNewRaysNum];
 		memset(temp, 0, nNewRaysNum * sizeof(float));
-		float angle = i * angles_separation;
-		CT ct(pSrc2, nNewWidth, nNewHeight);
 		ct.ImageIntegrate(temp, angle, nNewRaysNum);
-
-		for (int j = 0; j < nRaysNum; ++j)
+		float *p = pDst + i, x = 0;
+		for (int j = 0; j < nRaysNum; ++j, p += nAnglesNum, x += density)
 		{
-			float x = j * density;
-			pDst[i + j * nAnglesNum] = LinearInterp(temp, nNewRaysNum, x) * pixels_separation;
+			*p = LinearInterp(temp, nNewRaysNum, x) * pixels_separation;
 		}
 		SAFE_DELETE(temp);
 	}
 
-	SAFE_DELETE(pSrc2);
+	SAFE_DELETE(pZoomSrc);
 }
 
 /** 
@@ -481,7 +487,7 @@ void CT::DBPImage(float* pDst, int nRays, int nAngles, float delta_r, float delt
 	int cx = (m_nWidth + 1) / 2;
 	int cy = (m_nHeight + 1) / 2;
 	int med = (nRays + 1) / 2;
-	float sum = 0.f;
+	float sum = 0;
 
 	// 2015.5.19 将三角函数放到循环体外面
 	float *cos_fai = new float[nAngles];
@@ -503,7 +509,7 @@ void CT::DBPImage(float* pDst, int nRays, int nAngles, float delta_r, float delt
 		else if (sin_fai_theta < 0)
 			sgn[i] = -1.f;
 		else
-			sgn[i] = 0.f;
+			sgn[i] = 0;
 	}
 
 	float* pDiff = DiffImage(m_pSrc, nRays, nAngles, delta_r);
@@ -512,7 +518,7 @@ void CT::DBPImage(float* pDst, int nRays, int nAngles, float delta_r, float delt
 	{
 		for (n = 0; n < m_nWidth; ++n)
 		{
-			sum = 0.f;
+			sum = 0;
 			for (i = 0; i < nAngles; ++i)
 			{
 				float fai = i * delta_fai;
@@ -538,8 +544,7 @@ void CT::DBPImage(float* pDst, int nRays, int nAngles, float delta_r, float delt
 void CT::ImageIntegrate(float* pDst, float angle, int nLength)
 {
 	// 图像旋转之后的信息及顶点坐标
-	int NewWidth = 0, NewHeight = 0, NewRowlen = 0;
-	int Xmin = 0, Ymin = 0, Xmax = 0, Ymax = 0;
+	int NewWidth = 0, NewHeight = 0;
 	float *pBits = ImageRotate(PositionTransform(angle, 0, 0), NewWidth, NewHeight, CLogoRect());
 	// 图像按行累加
 	float* add_width = new float[NewWidth];
@@ -547,7 +552,7 @@ void CT::ImageIntegrate(float* pDst, float angle, int nLength)
 	const float *p = pBits;
 	for (int i = 0; i < NewWidth; ++i, p += m_nChannel)
 	{
-		float sum = 0.f;
+		float sum = 0;
 		const float *t = p;
 		for (int j = 0; j < NewHeight; ++j, t += nNewRowlen)
 		{
@@ -565,7 +570,6 @@ void CT::ImageIntegrate(float* pDst, float angle, int nLength)
 		int s = (i - nDetectorCenter) + nHalfWidth;
 		if (s >= 0 && s < NewWidth)
 			pDst[i] = add_width[s];
-		//TRACE("序号 = %d, 值 = %f\n", i, pDst[i]);
 	}
 
 	SAFE_DELETE(add_width);

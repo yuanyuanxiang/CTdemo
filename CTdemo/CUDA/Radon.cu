@@ -223,10 +223,10 @@ __host__ const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float 
 		cudaVectorAssigned<<<(NewHeight + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pOnes, NewHeight, 1.f);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
-		cudaVectorAssigned<<<(nNewRaysNum + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp, nNewRaysNum, 0.f);
+		cudaVectorAssigned<<<(nNewRaysNum + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pTemp, nNewRaysNum, 0);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
-		cudaVectorAssigned<<<(NewWidth + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pWidth_add, NewWidth, 0.f);
+		cudaVectorAssigned<<<(NewWidth + ThreadsNum - 1) / ThreadsNum, ThreadsNum>>>(d_pWidth_add, NewWidth, 0);
 		error = cudaGetLastError();
 		CHECK_ERRORS(error, errstr);
 		cubStatus = cublasSgemv(cubHandle, cubTrans, NewWidth, NewHeight, &fAlpha, d_pRotatedBits, NewWidth, d_pOnes, 1, &fBeta, d_pWidth_add, 1);
