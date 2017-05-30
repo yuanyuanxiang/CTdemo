@@ -43,7 +43,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>D:\Program Files %28x86%29\Visual Leak Detector;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Program Files %28x86%29\Visual Leak Detector;$(CUDA_PATH_V8_0)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -53,11 +53,11 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;CUDA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <OpenMPSupport>true</OpenMPSupport>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
-      <AdditionalIncludeDirectories>$(CUDA_PATH_V5_0)\include;$(NVCUDASAMPLES5_0_ROOT)\common\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CUDA_PATH_V8_0)\include;$(NVCUDASAMPLES8_0_ROOT)\common\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -111,12 +111,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Art.h" />
-    <ClInclude Include="CUDA\BackProject.h" />
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="CTdemo.h" />
     <ClInclude Include="CTdemoDoc.h" />
     <ClInclude Include="CTdemoView.h" />
-    <ClInclude Include="CUDA\PanRadon.h" />
     <ClInclude Include="CurveDlg.h" />
     <ClInclude Include="CurveWnd.h" />
     <ClInclude Include="CyImage.h" />
@@ -129,7 +127,6 @@
     <ClInclude Include="DlgRawDataSize.h" />
     <ClInclude Include="DlgReconstructSettings.h" />
     <ClInclude Include="DlgRotateAngle.h" />
-    <ClInclude Include="CUDA\Filter.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="FileOp.h" />
     <ClInclude Include="Functions.h" />
@@ -197,31 +194,6 @@
     <Image Include="res\ZoomOut.ico" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="CUDA\BackProjcet.cu">
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">InheritFromHost</Runtime>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_11,sm_11</CodeGeneration>
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">InheritFromHost</Runtime>
-    </CudaCompile>
-    <CudaCompile Include="CUDA\Filter.cu">
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">InheritFromHost</Runtime>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_11,sm_11</CodeGeneration>
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">InheritFromHost</Runtime>
-    </CudaCompile>
-    <CudaCompile Include="CUDA\PanRadon.cu">
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">InheritFromHost</Runtime>
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">InheritFromHost</Runtime>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_11,sm_11</CodeGeneration>
-    </CudaCompile>
-    <CudaCompile Include="CUDA\Radon.cu">
-      <FileType>Document</FileType>
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">InheritFromHost</Runtime>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_11,sm_11</CodeGeneration>
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">InheritFromHost</Runtime>
-    </CudaCompile>
-    <ClInclude Include="CUDA\Radon.h">
-      <Runtime Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">InheritFromHost</Runtime>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
-    </ClInclude>
     <None Include="res\CTdemo.rc2" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

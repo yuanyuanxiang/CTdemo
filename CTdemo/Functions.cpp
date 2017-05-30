@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Functions.h"
+#include "templateFuncs.h"
 
 // pi*pi
 const float PI_2 = PI * PI;
@@ -449,9 +450,7 @@ void CT::ImageRadon(float* pDst, float angles_separation, int nAnglesNum, float 
 	int nNewWidth = zoom_rate * m_nWidth;
 	int nNewHeight = zoom_rate * m_nHeight;
 
-	ImageTransform it(m_pSrc, m_nWidth, m_nHeight, m_nRowlen, m_nChannel);
-	float *pZoomSrc = it.ImageZoom(nNewWidth, nNewHeight);
-	CT ct(pZoomSrc, nNewWidth, nNewHeight);
+	CT ct = ImageZoom(nNewWidth, nNewHeight);
 	int nNewRaysNum = ComputeRaysNum(nNewWidth, nNewHeight);
 	int nDetectorCenter = (nNewRaysNum + 1) / 2;
 	float density = float(nNewRaysNum) / nRaysNum;
@@ -468,8 +467,6 @@ void CT::ImageRadon(float* pDst, float angles_separation, int nAnglesNum, float 
 		}
 		SAFE_DELETE(temp);
 	}
-
-	SAFE_DELETE(pZoomSrc);
 }
 
 /** 
@@ -543,13 +540,13 @@ void CT::DBPImage(float* pDst, int nRays, int nAngles, float delta_r, float delt
 */
 void CT::ImageIntegrate(float* pDst, float angle, int nLength)
 {
+	ImageTransform pBits = ImageRotate(PositionTransform(angle, 0, 0), CLogoRect());
 	// 图像旋转之后的信息及顶点坐标
-	int NewWidth = 0, NewHeight = 0;
-	float *pBits = ImageRotate(PositionTransform(angle, 0, 0), NewWidth, NewHeight, CLogoRect());
+	int NewWidth = pBits.GetWidth(), NewHeight = pBits.GetHeight();
 	// 图像按行累加
 	float* add_width = new float[NewWidth];
 	int nNewRowlen = NewWidth * m_nChannel;
-	const float *p = pBits;
+	const float *p = pBits.GetImage();
 	for (int i = 0; i < NewWidth; ++i, p += m_nChannel)
 	{
 		float sum = 0;
@@ -573,5 +570,4 @@ void CT::ImageIntegrate(float* pDst, float angle, int nLength)
 	}
 
 	SAFE_DELETE(add_width);
-	SAFE_DELETE(pBits);
 }

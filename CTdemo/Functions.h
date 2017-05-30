@@ -8,7 +8,6 @@
 #include <vector>
 using namespace std;
 
-#include "templateFuncs.h"
 
 // ´°º¯Êý
 #define CONVOLUTE_KERNEL_COSINE		0
@@ -20,8 +19,14 @@ class CT : public ImageTransform
 {
 public:
 
-	CT(const float* pSrc, int nWidth, int nHeight) : 
-		ImageTransform(pSrc, nWidth, nHeight, nWidth, 1) { }
+	CT(const float* pSrc, int nWidth, int nHeight, int nRefCount = 1) : 
+		ImageTransform(pSrc, nWidth, nHeight, 1, nRefCount) { }
+
+	CT(ImageTransform &base) : ImageTransform(base) { }
+
+	CT(CT &other) : ImageTransform(other) { }
+
+	~CT() { }
 
 	// ¾í»ýºËº¯Êý
 	static float CosineKernel(float x, float w0);

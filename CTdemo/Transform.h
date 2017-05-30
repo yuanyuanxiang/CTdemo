@@ -288,7 +288,7 @@ template <typename Type> void ZoomImage(Type** pfHead, int &nWidth, int &nHeight
 			{
 				int x1 = int(s), y1 = int(t), x3 = x1 + 1, y3 = y1 + 1;
 				// 左下角的点
-				const Type* pLB = *pfHead + nCurChannel + x1 * nChannel + y1 * nRowlen;
+				const BYTE* pLB = *pfHead + nCurChannel + x1 * nChannel + y1 * nRowlen;//必须转换为BYTE*
 				// 对越界的处理
 				pDst[nCurChannel + x + y] = (x1 < 0 || x3 >= nWidth || y1 < 0 || y3 >= nHeight) ? 0 : 
 					(*pLB * (x3 - s) + *(pLB + nChannel) * (s - x1)) * (y3 - t) 
@@ -321,7 +321,7 @@ template <typename Type> void ZoomImage(Type** pfHead, int &nWidth, int &nHeight
 * @param[in] nChannel 图像通道
 * @param[in] nMaxSize 最大边长320
 * @note 当图像有一边长度超过限制时进行缩放并更新信息
-* @warning 宽度、高度、每行字节数会被修改
+* @warning 输入图像需为字节类型，宽度、高度、每行字节数会被修改
 */
 template <typename Type> void LimitImage(Type** pfHead, int &nWidth, int &nHeight, int &nRowlen, int nChannel, int nMaxSize)
 {

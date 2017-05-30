@@ -2,15 +2,13 @@
 #include "Art.h"
 #include "Functions.h"
 
-// 2016-12-4增加，保证在不安装CUDA的条件下仍可编译成功
-#ifndef CUDA
 
 float3 make_float3(float x0, float y0, float z0)
 {
 	return float3(x0, y0, z0);
 }
 
-#endif
+
 /*
 float3* pDst							存放交线长度的数组，x、y存放像素坐标，z存放交线长度
 float3* temp							大小和pDst一样，是中间变量

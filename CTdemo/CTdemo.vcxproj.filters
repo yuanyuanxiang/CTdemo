@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="CUDA">
-      <UniqueIdentifier>{1414ed53-a55b-4645-acb0-3e91e6d77f62}</UniqueIdentifier>
-    </Filter>
     <Filter Include="程序框架">
       <UniqueIdentifier>{fa1a5d6e-fd9b-4999-979c-dfd5a224198c}</UniqueIdentifier>
     </Filter>
@@ -27,26 +24,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CUDA\BackProject.h">
-      <Filter>CUDA</Filter>
-    </ClInclude>
-    <ClInclude Include="CUDA\Filter.h">
-      <Filter>CUDA</Filter>
-    </ClInclude>
-    <ClInclude Include="CUDA\Radon.h">
-      <Filter>CUDA</Filter>
-    </ClInclude>
     <ClInclude Include="IntSection.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CUDA\PanRadon.h">
-      <Filter>CUDA</Filter>
-    </ClInclude>
     <ClInclude Include="Functions.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Art.h">
-      <Filter>CUDA</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>程序框架</Filter>
@@ -138,6 +120,9 @@
     <ClInclude Include="FileOp.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Art.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IntSection.cpp">
@@ -145,9 +130,6 @@
     </ClCompile>
     <ClCompile Include="Functions.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Art.cpp">
-      <Filter>CUDA</Filter>
     </ClCompile>
     <ClCompile Include="ChildFrm.cpp">
       <Filter>程序框架</Filter>
@@ -224,6 +206,9 @@
     <ClCompile Include="FileOp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Art.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CTdemo.rc">
@@ -269,19 +254,5 @@
     <None Include="res\CTdemo.rc2">
       <Filter>资源文件</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="CUDA\BackProjcet.cu">
-      <Filter>CUDA</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA\Filter.cu">
-      <Filter>CUDA</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA\Radon.cu">
-      <Filter>CUDA</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA\PanRadon.cu">
-      <Filter>CUDA</Filter>
-    </CudaCompile>
   </ItemGroup>
 </Project>

@@ -503,11 +503,9 @@ void CCTdemoView::OnToolbarTransform()
 	{
 		if (dlg.m_fRotateAngle == 0)
 			return;
-		int NewWidth, NewHeight;
-		float* pSrc = m_pCurrent->Rotate(PositionTransform(RAD(dlg.m_fRotateAngle)), NewWidth, NewHeight, CLogoRect());
-		m_pCurrent->Create(pSrc, NewWidth, NewHeight, NewWidth * m_pCurrent->GetChannel());
+		ImageTransform pSrc = m_pCurrent->Rotate(PositionTransform(RAD(dlg.m_fRotateAngle)), CLogoRect());
+		m_pCurrent->Create(&pSrc);
 		SetPaintRect(m_PaintRect.left, m_PaintRect.top, m_PaintRect.left + m_pCurrent->GetWidth(), m_PaintRect.top + m_pCurrent->GetHeight());
-		SAFE_DELETE(pSrc);
 		Invalidate();
 		CCTdemoDoc* pDoc = GetDocument();
 		if (m_pCurrent == pDoc->m_pImage)
@@ -613,7 +611,6 @@ void CCTdemoView::OnUpdateSaveProjectImg(CCmdUI *pCmdUI)
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
-extern const char* cudaConvolute(float* h_pDst, float* h_prj, int row, int col, float delta_r, float w0);
 
 void CCTdemoView::OnToolbarConvolute()
 {
@@ -632,17 +629,6 @@ void CCTdemoView::OnToolbarConvolute()
 		pDoc->m_pAfterFilter->Create(pDoc->m_nAnglesNum, pDoc->m_nRaysNum, 8);
 		if (m_bUsingGpu)
 		{
-#ifdef CUDA
-			const char* result = cudaConvolute(pDoc->m_pAfterFilter->GetFloatDataHead(), pDoc->m_pProject->GetFloatDataHead(), pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, dlg.m_fW);
-			if (result != NULL)
-			{
-				CString str(result);
-				AfxMessageBox(_T("程序出现错误。CUDA 错误信息:\n") + str, MB_OK | MB_ICONWARNING);
-				EndWaitCursor();
-				m_bUsingGpu = false;
-				return;
-			}
-#endif
 			m_bUsingGpu = false;
 		}
 		else 
@@ -675,7 +661,6 @@ void CCTdemoView::OnUpdateToolbarConvolute(CCmdUI *pCmdUI)
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(pDoc->m_pProject));
 }
 
-extern const char* cudaBackProject(float* pDst, float* prj, int width, int height, int rays, int angles, float delta_r, float delta_fai);
 
 // 反投影
 void CCTdemoView::OnToolbarBackProject()
@@ -697,19 +682,6 @@ void CCTdemoView::OnToolbarBackProject()
 	}
 	if (m_bUsingGpu)
 	{
-#ifdef CUDA
-
-		const char* result = cudaBackProject(pDoc->m_pReconstruct->GetFloatDataHead(), pRadonSrc, pDoc->m_nWidth, pDoc->m_nHeight, pDoc->m_nRaysNum, pDoc->m_nAnglesNum, pDoc->m_fRaysDensity, pDoc->m_fAnglesSeparation);
-		if (result != NULL)
-		{
-			CString str(result);
-			AfxMessageBox(_T("程序出现错误。CUDA 错误信息:\n") + str, MB_OK | MB_ICONWARNING);
-			m_bUsingGpu = false;
-			EndWaitCursor();
-			return;
-		}
-
-#endif // CUDA
 		m_bUsingGpu = false;
 	}
 	else

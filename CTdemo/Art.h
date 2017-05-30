@@ -3,26 +3,9 @@
 #include <stdio.h>
 #include <assert.h>
 
-#ifdef CUDA
-
-// CUDA runtime
-#include <cuda_runtime.h>
-
-// CUDA helper functions
-#include <helper_cuda.h>         // helper functions for CUDA error check
-
-// Helper functions and utilities to work with CUDA
-#include <helper_functions.h>
-
-#include "cuda_runtime_api.h"
-
-#else 
-
 #include "DataTypes.h"
 
 float3 make_float3(float x0, float y0, float z0);
-
-#endif // CUDA
 
 #include <iostream>
 #include <vector>

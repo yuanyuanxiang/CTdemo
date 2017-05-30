@@ -567,7 +567,6 @@ void CCTdemoDoc::RadonTransform()
 	BeginWaitCursor();
 	int nWidth = m_pImage->GetWidth();
 	int nHeight = m_pImage->GetHeight();
-	int nRowlen = m_pImage->GetRowlen();
 	int nChannel = m_pImage->GetChannel();
 	float *pDst = new float[nChannel * nWidth * nHeight];
 	CT ct(m_pImage->GetFloatDataHead(), nWidth, nHeight);
@@ -597,36 +596,11 @@ void CCTdemoDoc::OnUpdateWindowProject(CCmdUI *pCmdUI)
 	pCmdUI->Enable(!CHECK_IMAGE_NULL(m_pProject));
 }
 
-extern const char* cudaRadon(float* h_pDst, int RaysNum, int AnglesNum, float pixel_separation, float angle_separation, BYTE* h_pSrc, int Width, int Height, int Rowlen);
 
 // 使用CUDA加速投影
 void CCTdemoDoc::OnProjectUsingGpu()
 {
 #ifdef CUDA
-
-	// TODO: 在此添加命令处理程序代码
-	if (m_nBPP == 0)
-		return;
-	if (m_nBPP > 8)
-	{
-		AfxMessageBox(_T("图像必须先转化为8位色图像。"), MB_OK | MB_ICONINFORMATION);
-		return;
-	}
-	m_nProjectionType = PROJECT_TYPE_PAR;
-	BeginWaitCursor();
-	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	const char *result = cudaRadon(m_pProject->GetFloatDataHead(), m_nRaysNum, m_nAnglesNum, m_fSubPixel, m_fAnglesSeparation, m_pHead, m_nWidth, m_nHeight, m_nRowlen);
-	if (result != NULL)
-	{
-		CString str(result);
-		AfxMessageBox(_T("程序出现错误。CUDA 错误信息:\n") + str, MB_OK | MB_ICONWARNING);
-		EndWaitCursor();
-		return;
-	}
-	m_pProject->MemcpyFloatToByte();
-	EndWaitCursor();
-
-	OnWindowProject();
 
 #endif // CUDA
 }
@@ -690,18 +664,16 @@ void CCTdemoDoc::RandPanDiffAngles(float R, float D, int angles, int rays)
 #pragma omp parallel for
 	for (int i = 0; i < angles; ++i)
 	{
-		int NewWidth, NewHeight;
 		float theta = i * m_fAnglesSeparation;
 		CLogoRect rect;
-		float *pSrc = m_pImage->Rotate(PositionTransform(theta), NewWidth, NewHeight, rect);
+		ImageTransform pSrc = m_pImage->Rotate(PositionTransform(theta), rect);
 		for (int j = 0; j < rays; ++j)
 		{
 			float k = tan(theta_0 + j * m_fPan_delta_fai - PI / 2);
 			float c = R * k + y0;
-			CT ct(pSrc, NewWidth, NewHeight);
+			CT ct(pSrc);
 			m_pProject->GetFloatDataHead()[i + j * angles] = ct.LineIntegrate(rect, k, c);
 		}
-		SAFE_DELETE(pSrc);
 	}
 	EndWaitCursor();
 
@@ -733,19 +705,17 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 #pragma omp parallel for
 	for (int i = 0; i < angles; ++i)
 	{
-		int NewWidth, NewHeight;
 		float theta = i * m_fAnglesSeparation;
 		CLogoRect rect;
-		float *pSrc = m_pImage->Rotate(PositionTransform(theta, x0, y0), NewWidth, NewHeight, rect);
+		ImageTransform pSrc = m_pImage->Rotate(PositionTransform(theta, x0, y0), rect);
 		for (int j = 0; j < rays; ++j)
 		{
 			float u = -m_fPan_u0 + j * m_fPan_delta_u;
 			float k = -u / D;
 			float c = -R * k + y0;
-			CT ct(pSrc, NewWidth, NewHeight);
+			CT ct(pSrc);
 			m_pProject->GetFloatDataHead()[i + j * angles] = ct.LineIntegrate(rect, k, c);
 		}
-		SAFE_DELETE(pSrc);
 	}
 	EndWaitCursor();
 
@@ -760,54 +730,10 @@ void CCTdemoDoc::RandPanDiffRays(float R, float D, int angles, int rays)
 	PopImageViewerDlg(m_pProject->GetFloatDataHead(), angles, rays, angles);
 }
 
-extern const char* cudaPanRadon(float* pSrc, int src_width, int src_height, float* pDst, int pan_angles, int pan_rays, float scan_range, float R, float D);
 
 void CCTdemoDoc::PanProject(float R, float D, int angles, int rays)
 {
 #ifdef CUDA
-
-	m_nProjectionType = PROJECT_TYPE_PAN;
-	m_pProject->Create(m_nAnglesNum, m_nRaysNum, 8);
-	float *pZoom = NULL;
-	m_fRaysDensity = 1.f;
-	float Rate = 1 / m_fRaysDensity;
-	int Width = Rate * m_nWidth;
-	int Height = Rate * m_nHeight;
-	pZoom = m_pImage->Zoom(Width, Height, 0);
-
-	float theta_0 = acos(m_nImageDiag / 2.f / R);
-	float theta_n = PI - theta_0;
-	m_fPan_delta_fai = (theta_n - theta_0) / angles;
-	m_fPan_u0 = D / tan(theta_0);
-	m_fPan_delta_u = (2.f * m_fPan_u0) / rays;
-
-	CString str;
-	// 程序段开始前取得系统运行时间(ms)
-	long t1 = GetTickCount();
-
-	BeginWaitCursor();
-	const char* result = cudaPanRadon(pZoom, Width, Height, m_pProject->GetFloatDataHead(), angles, rays, m_fAnglesRange, R, D);
-	EndWaitCursor();
-
-	// 程序段结束后取得系统运行时间(ms)
-	long t2 = GetTickCount();
-
-	if (result != NULL)
-	{
-		CString str(result);
-		AfxMessageBox(_T("程序出现错误。CUDA 错误信息:\n") + str, MB_OK | MB_ICONWARNING);
-		t2 = t1;
-	}
-
-	// 前后之差即程序运行时间  
-	str.Format(_T("提示：程序耗时 %d ms."), t2 - t1);
-	AfxMessageBox(str);
-
-	SAFE_DELETE(pZoom);
-
-	m_pProject->MemcpyFloatToByte();
-
-	PopImageViewerDlg(m_pProject->GetFloatDataHead(), angles, rays, angles);
 
 #endif // CUDA
 }
